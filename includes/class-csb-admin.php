@@ -40,7 +40,7 @@ class CSB_Admin {
         
         ?>
         <div class="wrap">
-            <h1>Générateur de Cocon SémantiqueLllllllllllllllllllllllllllllllllllllllllll</h1>
+            <h1>Générateur de Cocon Sémantique2</h1>
             
             <?php $this->render_keyword_form($keyword, $nd, $structure);?>
         </div>
