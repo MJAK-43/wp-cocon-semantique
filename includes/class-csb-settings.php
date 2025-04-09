@@ -31,7 +31,7 @@ class CSB_Settings {
     public function render_settings_page() {
         ?>
         <div class="wrap">
-            <h1>🔐 Configuration de l'API OpenAI & Freepik et c'est un test</h1>
+            <h1>🔐 Configuration de l'API OpenAI & Freepik</h1>
             <form method="post" action="options.php">
                 <?php settings_fields('csb_settings_group'); ?>
                 <?php do_settings_sections('csb_settings_group'); ?>
