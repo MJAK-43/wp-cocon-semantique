@@ -1,1 +1,1 @@
-# wp-cocon-semantique
+# Plugin Cocon Sémantique
