@@ -20,7 +20,7 @@ require_once CSB_PATH . 'includes/class-csb-publisher.php';
 require_once CSB_PATH . 'includes/class-csb-generator.php';
 
 echo "DOG";
-
+new CSB_Admin();
 // new CSB_Publisher();
 // new CSB_Generator();
 // new CSB_Settings();
