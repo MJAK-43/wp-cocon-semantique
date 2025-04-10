@@ -37,7 +37,11 @@ class CSB_Admin {
             $this->handle_structure_actions($this->last_tree); // 👈 Gère les ajouts/suppressions
     
             if (isset($_POST['csb_validate_publish'])) {
-                $this->process_structure($this->last_tree);
+                //$this->process_structure($this->last_tree);
+                echo '<pre>';
+                print_r($this->last_tree);
+                echo '</pre>';
+
                 echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
             }
         }
