@@ -65,11 +65,11 @@ class CSB_Admin {
     }
 
     private function render_structure_fields($tree, $prefix, $level) {
-        echo '<ul style="list-style-type: none; margin-left: 0;">';
+        echo '<ul>';
         foreach ($tree as $index => $node) {
             $node_prefix = $prefix . "[$index]";
             $indent = str_repeat('&nbsp;', $level * 4);
-            echo '<li style="margin-bottom: 8px;">';
+            echo '<li">';
             echo $indent . '- <input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" required />';
             echo ' <button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '">🗑️</button> ';
             echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '">➕ Sous-thème</button>';
