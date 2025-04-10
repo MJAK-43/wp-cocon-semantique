@@ -66,7 +66,8 @@ class CSB_Admin {
     }
 
     private function render_structure_fields($tree, $prefix, $level) {
-        echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . (($level+=1) * 30) . 'px;">';
+        echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . (($level+=1)) . 'px;">';
+        print_r($level);
     
         foreach ($tree as $index => $node) {
             $node_prefix = $prefix . "[$index]";
@@ -80,7 +81,7 @@ class CSB_Admin {
             echo '</div>';
     
             if (!empty($node['children'])) {
-                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level + 1);
+                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level*=2);
             }
     
             echo '</li>';
