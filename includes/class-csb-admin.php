@@ -40,7 +40,7 @@ class CSB_Admin {
         
         ?>
         <div class="wrap">
-            <h1>Générateur de Cocon Sémantique</h1>
+            <h1>Générateur de Cocon Sémantique1</h1>
             
             <?php $this->render_keyword_form($keyword, $nd, $structure);?>
         </div>
@@ -151,24 +151,28 @@ class CSB_Admin {
     }
 
     private function handle_structure_submission($structureText){
-        //$structureText = sanitize_textarea_field($structureText);
-        $structureText = trim(wp_unslash($structureText));
+        $structureText = sanitize_textarea_field($structureText);
+        //$structureText = trim(wp_unslash($structureText));
 
         $this->save_structure($structureText);
-        //echo "<p>$structureText</p>";    
+        
+        echo "<p>$structureText</p>";  
+
         $tree = $this->parse_structure_to_array($structureText);
-        //var_dump($tree);
+        echo "<p>"; 
+        var_dump($tree);
+        echo "</p>"; 
         // Génération de contenu avec contexte global
-        $generator = new CSB_Generator();
-        $generator->generate_full_content($tree);
+        //$generator = new CSB_Generator();
+       // $generator->generate_full_content($tree);
 
 
         $this->last_tree = $tree;
     
     
         // Publication automatique des articles
-        $publisher = new CSB_Publisher();
-        $publisher->publish_structure($tree);
+        //$publisher = new CSB_Publisher();
+        //$publisher->publish_structure($tree);
     
         echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
     
