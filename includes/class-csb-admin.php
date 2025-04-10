@@ -103,9 +103,9 @@ class CSB_Admin {
     }
 
     private function generate_slug($title) {
-        $slug = strtolower($title);
-        $slug = remove_accents($slug);
-        $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
-        return trim($slug, '-');
+        // $slug = strtolower($title);
+        // $slug = remove_accents($slug);
+        // $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
+        // return trim($slug, '-');
     }
 }
