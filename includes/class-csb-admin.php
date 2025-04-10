@@ -35,10 +35,10 @@ class CSB_Admin {
 
         // Si l'utilisateur clique sur "Valider et publier"
         if (isset($_POST['csb_validate_publish'])) {
-            echo "<p>";
-            echo $$_POST['csb_validate_publish'];
-            echo "dog";
-            echo "</p>";
+            //echo "<p>";
+            //echo $$_POST['csb_validate_publish'];
+            //echo "dog";
+            //echo "</p>";
             //$this->handle_structure_submission($_POST['csb_structure'], $structure);
         }
         
@@ -136,9 +136,13 @@ class CSB_Admin {
     }
 
     private function render_structure_textarea_html($structure) {
-        if (empty($structure)) return;
-        //echo 'DOG';
-
+        echo '////////////////////////////////////////////////////////////////////////////////////////////////////////////';
+        if (empty($structure)) {
+           
+            return;
+        }
+        //
+        var_dump($structure);
         //$structure_clean = preg_replace('/\[IMAGE:\s*.*?\]/', '', $structure);
 
         echo '<tr>';
