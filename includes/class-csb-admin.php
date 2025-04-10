@@ -30,7 +30,7 @@ class CSB_Admin {
         if (!empty($keyword) && !empty($nd) && isset($_POST['submit'])) {
             $generator = new CSB_Generator();
             $structure = $generator->generate_structure($keyword, $nd);
-            //var_dump($structure);
+            var_dump($structure);
         }
 
         // Si l'utilisateur clique sur "Valider et publier"
@@ -136,9 +136,8 @@ class CSB_Admin {
     }
 
     private function render_structure_textarea_html($structure) {
-        echo '////////////////////////////////////////////////////////////////////////////////////////////////////////////';
         if (empty($structure)) {
-           
+            //echo '////////////////////////////////////////////////////////////////////////////////////////////////////////////';
             return;
         }
         //
