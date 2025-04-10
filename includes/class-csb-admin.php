@@ -35,12 +35,12 @@ class CSB_Admin {
 
         // Si l'utilisateur clique sur "Valider et publier"
         if (isset($_POST['csb_validate_publish'])) {
-            $this->handle_structure_submission($_POST['csb_structure'], $structure);
+            $this->handle_structure_submission($_POST['csb_structure']);
         }
         
         ?>
         <div class="wrap">
-            <h1>Générateur de Cocon SémantiqueLllllllllllllllllllllllllllllllllllllllllll</h1>
+            <h1>Générateur de Cocon Sémantique</h1>
             
             <?php $this->render_keyword_form($keyword, $nd, $structure);?>
         </div>
@@ -76,6 +76,7 @@ class CSB_Admin {
                 $level = (strlen($line) - strlen(ltrim($line))) / 2;
                 $node = ['title' => $title, 'children' => []];
                 $node['slug'] = $this->generate_slug($node['title']);
+                
 
                 if ($level === 0) {
                     $root[] = $node;
@@ -149,12 +150,14 @@ class CSB_Admin {
         
     }
 
-    private function handle_structure_submission($structureText, &$structure) {
-        $structureText = sanitize_textarea_field($structureText);
+    private function handle_structure_submission($structureText){
+        //$structureText = sanitize_textarea_field($structureText);
+        $structureText = trim(wp_unslash($structureText));
+
         $this->save_structure($structureText);
         //echo "<p>$structureText</p>";    
         $tree = $this->parse_structure_to_array($structureText);
-        
+        //var_dump($tree);
         // Génération de contenu avec contexte global
         $generator = new CSB_Generator();
         $generator->generate_full_content($tree);

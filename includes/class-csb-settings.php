@@ -49,7 +49,7 @@ class CSB_Settings {
                         <td>
                             <select name="csb_model" id="csb_model">
                                 <option value="gpt-3.5-turbo" <?php selected(get_option('csb_model'), 'gpt-3.5-turbo'); ?>>gpt-3.5-turbo</option>
-                                <option value="gpt-4" <?php selected(get_option('csb_model'), 'gpt-4'); ?>>gpt-4</option>
+                                <option value="gpt-4o" <?php selected(get_option('csb_model'), 'gpt-4o'); ?>>gpt-4o</option>
                             </select>
                         </td>
                     </tr>

@@ -20,7 +20,7 @@ class CSB_Publisher {
                 'post_name'    => $slug, // ✅ slug utilisé ici
                 'post_content' => isset($node['content']) 
                 ? $this->append_freepik_image(
-                    $this->enrich_content_with_links($node['content']['content'], $node['children'] ?? [], $parent_id),
+                    $this->enrich_content_with_links($node['content'], $node['children'] ?? [], $parent_id),
                     $node['content']['image_url'] ?? '', // si tu récupères directement l’URL
                     $node['content']['image'] ?? ''      // sinon, alt avec description
                 )
