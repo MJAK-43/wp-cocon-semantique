@@ -131,30 +131,32 @@ class CSB_Generator {
         $root = [];
     
         foreach ($lines as $line) {
-            if (trim($line) === '' || preg_match('/^```/', trim($line))) {
-                continue;
-            }
-
-            if (preg_match('/^\s*-+\s*(.+)$/', $line, $matches)) {
-                $title = trim($matches[1]);
-                $level = substr_count($line, '-') - 1;
+            if (trim($line) === '') continue;
+    
+            // Match le titre avec indentation (espaces) et tiret
+            if (preg_match('/^(\s*)-\s*(.+)$/', $line, $matches)) {
+                $indent = strlen($matches[1]); // nombre d'espaces
+                $title = trim($matches[2]);
+    
+                $level = intval($indent / 4); // 4 espaces = 1 niveau
     
                 $node = ['title' => $title, 'children' => []];
     
-                if ($level === 0){
+                if ($level === 0) {
                     $root[] = $node;
-                    $stack = [&$root[count($root) - 1]];
-                } 
-                else{
+                    $stack = [&$root[array_key_last($root)]];
+                } else {
+                    // Trouve le bon parent selon le niveau
                     $parent = &$stack[$level - 1]['children'];
                     $parent[] = $node;
-                    $stack[$level] = &$parent[count($parent) - 1];
+                    $stack[$level] = &$parent[array_key_last($parent)];
                 }
             }
         }
     
         return $root;
     }
+    
 
     private function clean_generated_structure($text) {
         return preg_replace('/^```.*$\n?|```$/m', '', $text);
