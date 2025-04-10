@@ -158,23 +158,24 @@ class CSB_Admin {
     }
     
     private function delete_node_at_path(&$tree, $path) {
-        $current = &$tree;
+        $ref = &$tree;
     
-        // On va jusqu'à l'avant-dernier élément du chemin
+        // Accès jusqu'au parent du nœud à supprimer
         while (count($path) > 1) {
-            $index = array_shift($path);
-            if (!isset($current[$index]['children'])) {
-                return; // Rien à supprimer
-            }
-            $current = &$current[$index]['children'];
+            $key = array_shift($path);
+    
+            if (!isset($ref[$key]['children'])) return;
+    
+            $ref = &$ref[$key]['children'];
         }
     
-        // On supprime l'élément ciblé
-        $final_index = array_shift($path);
-        if (isset($current[$final_index])) {
-            array_splice($current, intval($final_index), 1);
+        $final_key = array_shift($path);
+        if (isset($ref[$final_key])) {
+            unset($ref[$final_key]);
+            $ref = array_values($ref); // Re-indexer le tableau (important !)
         }
     }
+    
     
     
 }
