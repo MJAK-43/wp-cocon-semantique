@@ -21,29 +21,30 @@ class CSB_Admin {
     }
 
     public function render_admin_page() {
-        $keyword = isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '';
-        $nd = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : '';
+        echo "DOG";
+        // $keyword = isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '';
+        // $nd = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : '';
 
-        if (!empty($keyword) && !empty($nd) && isset($_POST['submit'])) {
-            $generator = new CSB_Generator();
-            $this->last_tree = $generator->generate_structure_array($keyword, $nd);
-            //var_dump($this->last_tree);
-        }
+        // if (!empty($keyword) && !empty($nd) && isset($_POST['submit'])) {
+        //     $generator = new CSB_Generator();
+        //     $this->last_tree = $generator->generate_structure_array($keyword, $nd);
+        //     //var_dump($this->last_tree);
+        // }
 
-        if (isset($_POST['csb_validate_publish']) && isset($_POST['structure'])) {
-            $this->last_tree = $_POST['structure'];
-            $this->process_structure($this->last_tree);
-            echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
-        }
+        // if (isset($_POST['csb_validate_publish']) && isset($_POST['structure'])) {
+        //     $this->last_tree = $_POST['structure'];
+        //     $this->process_structure($this->last_tree);
+        //     echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
+        // }
 
-        echo '<div class="wrap">';
-        echo '<h1>Générateur de Cocon Sémantique</h1>';
-        $this->render_keyword_form($keyword, $nd);
-        $this->render_structure_form($this->last_tree);
-        echo '</div>';
-        echo '<div style="margin: 1em 0; padding: 1em; border-left: 4px solid #0073aa; background: #f1f1f1;">';
-        echo '<p><strong>🔐 Clé API :</strong> <a href="' . admin_url('admin.php?page=csb_settings') . '">Configurer ici</a></p>';
-        echo '</div>';
+        // echo '<div class="wrap">';
+        // echo '<h1>Générateur de Cocon Sémantique</h1>';
+        // $this->render_keyword_form($keyword, $nd);
+        // $this->render_structure_form($this->last_tree);
+        // echo '</div>';
+        // echo '<div style="margin: 1em 0; padding: 1em; border-left: 4px solid #0073aa; background: #f1f1f1;">';
+        // echo '<p><strong>🔐 Clé API :</strong> <a href="' . admin_url('admin.php?page=csb_settings') . '">Configurer ici</a></p>';
+        // echo '</div>';
     }
 
     private function render_keyword_form($keyword, $nd) {
