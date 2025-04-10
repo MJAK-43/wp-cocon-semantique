@@ -152,6 +152,7 @@ class CSB_Admin {
         }
         // Suppression d'un noeud
         if (isset($_POST['delete_node'])) {
+            echo "D////////////////////////////////////////////////////////////////";
             $path = explode('[', str_replace(']', '', str_replace('structure[', '', $_POST['delete_node'])));
             $this->delete_node_at_path($tree, $path);
         }
