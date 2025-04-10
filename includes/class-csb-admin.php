@@ -174,6 +174,10 @@ class CSB_Admin {
             unset($ref[$final_key]);
             $ref = array_values($ref); // Re-indexer le tableau (important !)
         }
+        echo '<pre>';
+            print_r($this->last_tree);
+        echo '</pre>';
+        
     }
     
     
