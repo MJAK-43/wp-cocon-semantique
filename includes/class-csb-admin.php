@@ -160,6 +160,9 @@ class CSB_Admin {
     
     private function delete_node_at_path(&$tree, $path) {
         $ref = &$tree;
+        echo '<pre>';
+            print_r($ref);
+        echo '</pre>';
     
         // Accès jusqu'au parent du nœud à supprimer
         while (count($path) > 1) {
