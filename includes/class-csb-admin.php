@@ -152,17 +152,18 @@ class CSB_Admin {
         }
         // Suppression d'un noeud
         if (isset($_POST['delete_node'])) {
-            echo "D////////////////////////////////////////////////////////////////";
+            //echo "D////////////////////////////////////////////////////////////////";
             $path = explode('[', str_replace(']', '', str_replace('structure[', '', $_POST['delete_node'])));
-            $this->delete_node_at_path($tree, $path);
+            echo '<pre>';
+            print_r($path);
+            echo '</pre>';
+            //$this->delete_node_at_path($tree, $path);
         }
     }
     
     private function delete_node_at_path(&$tree, $path) {
         $ref = &$tree;
-        echo '<pre>';
-            print_r($ref);
-        echo '</pre>';
+   
     
         // Accès jusqu'au parent du nœud à supprimer
         while (count($path) > 1) {
@@ -178,9 +179,9 @@ class CSB_Admin {
             unset($ref[$final_key]);
             $ref = array_values($ref); // Re-indexer le tableau (important !)
         }
-        echo '<pre>';
-            print_r($ref);
-        echo '</pre>';
+        // echo '<pre>';
+        //     print_r($ref);
+        // echo '</pre>';
         
     }
     
