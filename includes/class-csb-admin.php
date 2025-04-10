@@ -74,7 +74,7 @@ class CSB_Admin {
             echo ' <button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '">🗑️</button> ';
             echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '">➕ Sous-thème</button>';
             if (!empty($node['children'])) {
-                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level + 1);
+                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level + 15);
             }
             echo '</li>';
         }
