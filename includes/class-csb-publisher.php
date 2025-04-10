@@ -10,35 +10,36 @@ class CSB_Publisher {
      * @param int $level Profondeur (0 = racine)
      */
     public function publish_structure(array $tree, $parent_id = 0, $level = 0) {
-        foreach ($tree as $node) {
-    
-            // On récupère le slug (généré en amont ou à la volée si absent)
+        foreach ($tree as &$node) {
             $slug = !empty($node['slug']) ? $node['slug'] : $this->generate_slug($node['title']);
-    
+        
             $post_id = wp_insert_post([
                 'post_title'   => $node['title'],
-                'post_name'    => $slug, // ✅ slug utilisé ici
+                'post_name'    => $slug,
                 'post_content' => isset($node['content']) 
-                ? $this->append_freepik_image(
-                    $this->enrich_content_with_links($node['content']['content'], $node['children'] ?? [], $parent_id),
-                    $node['content']['image_url'] ?? '', // si tu récupères directement l’URL
-                    $node['content']['image'] ?? ''      // sinon, alt avec description
-                )
-                : '',
+                    ? $this->append_freepik_image(
+                        $this->enrich_content_with_links($node['content']['content'], $node['children'] ?? [], $parent_id),
+                        $node['content']['image_url'] ?? '',
+                        $node['content']['image'] ?? ''
+                    )
+                    : '',
                 'post_status'  => 'publish',
                 'post_type'    => 'post',
                 'post_parent'  => $parent_id,
             ]);
-    
+        
             if (!is_wp_error($post_id)) {
+                $node['post_id'] = $post_id; // 🔥 Ajout essentiel ici
+        
                 update_post_meta($post_id, '_csb_level', $level);
                 update_post_meta($post_id, '_csb_parent_id', $parent_id);
-    
+        
                 if (!empty($node['children'])) {
                     $this->publish_structure($node['children'], $post_id, $level + 1);
                 }
             }
         }
+        
     }
     private function append_freepik_image($content, $image_url, $alt = '') {
         if (!$image_url || str_starts_with($image_url, '❌')) return $content;
