@@ -19,11 +19,11 @@ require_once CSB_PATH . 'includes/class-csb-generator.php';
 
 // Initialiser l'admin
 new CSB_Admin();
-add_action('admin_menu', function() {
-    add_menu_page('Test debug', 'Test debug', 'manage_options', 'test_debug', function() {
-        echo '<h1>Page test ok</h1>';
-    });
-});
+// add_action('admin_menu', function() {
+//     add_menu_page('Test debug', 'Test debug', 'manage_options', 'test_debug', function() {
+//         echo '<h1>Page test ok</h1>';
+//     });
+// });
 
 // (Optionnel) Inclure linker s'il existe
 if (file_exists(CSB_PATH . 'includes/linker.php')) {
