@@ -96,16 +96,16 @@ class CSB_Admin {
     
 
     private function process_structure($tree) {
-        // $generator = new CSB_Generator();
-        // $generator->generate_full_content($tree);
-        // $publisher = new CSB_Publisher();
-        // $publisher->publish_structure($tree);
+        $generator = new CSB_Generator();
+        $generator->generate_full_content($tree);
+        $publisher = new CSB_Publisher();
+        $publisher->publish_structure($tree);
     }
 
     private function generate_slug($title) {
-        // $slug = strtolower($title);
-        // $slug = remove_accents($slug);
-        // $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
-        // return trim($slug, '-');
+        $slug = strtolower($title);
+        $slug = remove_accents($slug);
+        $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
+        return trim($slug, '-');
     }
 }
