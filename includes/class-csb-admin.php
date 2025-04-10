@@ -98,8 +98,8 @@ class CSB_Admin {
     private function process_structure($tree) {
         $generator = new CSB_Generator();
         $generator->generate_full_content($tree);
-        $publisher = new CSB_Publisher();
-        $publisher->publish_structure($tree);
+        //$publisher = new CSB_Publisher();
+        //$publisher->publish_structure($tree);
     }
 
     private function generate_slug($title) {
