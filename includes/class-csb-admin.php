@@ -82,7 +82,7 @@ class CSB_Admin {
     
             if (!empty($node['children'])) {
                 //echo "DOG";
-                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level*=3);
+                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level+3);
             }
             // else
             //     echo "cat";
