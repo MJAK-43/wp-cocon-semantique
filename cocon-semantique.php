@@ -13,6 +13,7 @@ define('CSB_URL', plugin_dir_url(__FILE__));
 
 
 // Inclure les fichiers du plugin
+echo "DOG";
 require_once CSB_PATH . './includes/class-csb-admin.php';
 require_once CSB_PATH . './includes/class-csb-settings.php';
 
