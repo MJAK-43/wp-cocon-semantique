@@ -32,10 +32,14 @@ class CSB_Admin {
             //var_dump($this->last_tree);
         }
 
-        if (isset($_POST['csb_validate_publish']) && isset($_POST['structure'])) {
+        if (isset($_POST['structure'])) {
             $this->last_tree = $_POST['structure'];
-            $this->process_structure($this->last_tree);
-            echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
+            $this->handle_structure_actions($this->last_tree); // 👈 Gère les ajouts/suppressions
+    
+            if (isset($_POST['csb_validate_publish'])) {
+                $this->process_structure($this->last_tree);
+                echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
+            }
         }
 
         echo '<div class="wrap">';
@@ -110,4 +114,37 @@ class CSB_Admin {
         $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
         return trim($slug, '-');
     }
+
+
+    private function handle_structure_actions(&$tree) {
+        // Ajout d'un enfant
+        if (isset($_POST['add_child'])) {
+            $path = str_replace(['structure', '][', '[', ']'], ['tree', '"]["', '["', '"]'], $_POST['add_child']);
+            $code = '$node = &$' . $path . ';';
+            eval($code);
+            if (!isset($node['children']) || !is_array($node['children'])) {
+                $node['children'] = [];
+            }
+            $node['children'][] = ['title' => 'Nouveau sous-thème', 'children' => []];
+        }
+    
+        // Suppression d'un noeud
+        if (isset($_POST['delete_node'])) {
+            $path = explode('[', str_replace(']', '', str_replace('structure[', '', $_POST['delete_node'])));
+            $this->delete_node_at_path($tree, $path);
+        }
+    }
+    
+    private function delete_node_at_path(&$tree, $path) {
+        if (count($path) === 1) {
+            array_splice($tree, intval($path[0]), 1);
+            return;
+        }
+    
+        $index = array_shift($path);
+        if (isset($tree[$index]['children'])) {
+            $this->delete_node_at_path($tree[$index]['children'], $path);
+        }
+    }
+    
 }
