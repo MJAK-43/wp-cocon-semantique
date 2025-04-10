@@ -36,7 +36,8 @@ class CSB_Admin {
         // Si l'utilisateur clique sur "Valider et publier"
         if (isset($_POST['csb_validate_publish'])) {
             echo "<p>";
-            print_r($$_POST['csb_validate_publish']);
+            // print_r($$_POST['csb_validate_publish']);
+            echo "dog";
             echo "</p>";
             //$this->handle_structure_submission($_POST['csb_structure'], $structure);
         }
