@@ -57,21 +57,24 @@ class CSB_Admin {
         echo '</form>';
     }
 
-    private function render_structure_form($tree, $prefix = 'structure') {
+    private function render_structure_form($tree, $prefix = 'structure', $level = 0) {
         echo '<form method="post">';
-        $this->render_structure_fields($tree, $prefix);
+        $this->render_structure_fields($tree, $prefix, $level);
         submit_button('Valider et publier', 'primary', 'csb_validate_publish');
         echo '</form>';
     }
 
-    private function render_structure_fields($tree, $prefix) {
-        echo '<ul style="list-style-type: disc; margin-left: 20px;">';
+    private function render_structure_fields($tree, $prefix, $level) {
+        echo '<ul style="list-style-type: none; margin-left: ' . (20 * $level) . 'px;">';
         foreach ($tree as $index => $node) {
             $node_prefix = $prefix . "[$index]";
-            echo '<li>';
+            echo '<li style="margin-bottom: 8px;">';
+            echo str_repeat('&nbsp;&nbsp;&nbsp;&nbsp;', $level);
             echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" required />';
+            echo '<button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '">🗑️</button> ';
+            echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '">➕ Sous-thème</button>';
             if (!empty($node['children'])) {
-                $this->render_structure_fields($node['children'], $node_prefix . '[children]');
+                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level + 1);
             }
             echo '</li>';
         }
