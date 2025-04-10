@@ -66,7 +66,8 @@ class CSB_Admin {
     }
 
     private function render_structure_fields($tree, $prefix, $level) {
-        echo '<div style="display: flex; align-items: center; gap: 6px; padding-left: ' . ($level * 30) . 'px;">';
+        echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . ($level * 30) . 'px;">';
+    
         foreach ($tree as $index => $node) {
             $node_prefix = $prefix . "[$index]";
             echo '<li style="margin-bottom: 10px;">';
@@ -87,6 +88,7 @@ class CSB_Admin {
     
         echo '</ul>';
     }
+    
     
 
     private function process_structure($tree) {
