@@ -26,5 +26,5 @@ new CSB_Admin();
 // new CSB_Settings();
 
 echo "DOG";
-if (file_exists(CSB_PATH . 'includes/linker.php')) require_once CSB_PATH . 'includes/linker.php';
+//if (file_exists(CSB_PATH . 'includes/linker.php')) require_once CSB_PATH . 'includes/linker.php';
 

@@ -6,6 +6,7 @@ class CSB_Admin {
 
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
+        echo "DOG";
     }
 
     public function add_admin_menu() {
