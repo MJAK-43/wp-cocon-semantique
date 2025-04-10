@@ -79,7 +79,7 @@ class CSB_Admin {
             echo '</div>';
     
             if (!empty($node['children'])) {
-                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level + 1);
+                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level + 150);
             }
     
             echo '</li>';
