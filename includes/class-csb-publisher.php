@@ -91,10 +91,11 @@ class CSB_Publisher {
     
         // 🔗 Liens vers les enfants
         foreach ($children as $child) {
-            $slug = sanitize_title($child['title']);
-            $child_post = get_page_by_path($slug, OBJECT, 'post');
-            if ($child_post) {
-                $links[] = '<a href="' . get_permalink($child_post) . '">' . esc_html($child['title']) . '</a>';
+            if (!empty($child['post_id'])) {
+                $url = get_permalink($child['post_id']);
+                if ($url) {
+                    $links[] = '<a href="' . esc_url($url) . '">' . esc_html($child['title']) . '</a>';
+                }
             }
         }
     
@@ -104,7 +105,7 @@ class CSB_Publisher {
         }
     
         return $content;
-    }
+    }    
     
 
 
