@@ -118,20 +118,38 @@ class CSB_Admin {
         $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
         return trim($slug, '-');
     }
+    private function &get_node_by_path(&$tree, $path_array) {
+        $ref = &$tree;
+        foreach ($path_array as $index) {
+            if (!isset($ref[$index]['children'])) {
+                $ref[$index]['children'] = [];
+            }
+            $ref = &$ref[$index]['children'];
+        }
+        return $ref;
+    }
+    
 
 
     private function handle_structure_actions(&$tree) {
         // Ajout d'un enfant
         if (isset($_POST['add_child'])) {
-            $path = str_replace(['structure', '][', '[', ']'], ['tree', '"]["', '["', '"]'], $_POST['add_child']);
-            $code = '$node = &$' . $path . ';';
-            eval($code);
-            if (!isset($node['children']) || !is_array($node['children'])) {
-                $node['children'] = [];
+            $path = str_replace(['structure[', ']'], '', $_POST['add_child']); // e.g. structure[0][children][1]
+            $segments = explode('[', $path); // ["0", "children", "1"]
+        
+            $current = array_filter($segments, fn($v) => $v !== 'children');
+            $last = array_pop($current);
+            $parent = &$this->get_node_by_path($tree, $current);
+        
+            if (!isset($parent[$last]['children'])) {
+                $parent[$last]['children'] = [];
             }
-            $node['children'][] = ['title' => 'Nouveau sous-thème', 'children' => []];
+        
+            $parent[$last]['children'][] = [
+                'title' => 'Nouveau sous-thème',
+                'children' => []
+            ];
         }
-    
         // Suppression d'un noeud
         if (isset($_POST['delete_node'])) {
             $path = explode('[', str_replace(']', '', str_replace('structure[', '', $_POST['delete_node'])));
