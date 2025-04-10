@@ -27,7 +27,7 @@ class CSB_Admin {
         if (!empty($keyword) && !empty($nd) && isset($_POST['submit'])) {
             $generator = new CSB_Generator();
             $this->last_tree = $generator->generate_structure_array($keyword, $nd);
-            var_dump($this->last_tree);
+            //var_dump($this->last_tree);
         }
 
         if (isset($_POST['csb_validate_publish']) && isset($_POST['structure'])) {
@@ -80,7 +80,7 @@ class CSB_Admin {
             echo '</div>';
     
             if (!empty($node['children'])) {
-                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level + 150);
+                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level + 1);
             }
     
             echo '</li>';
