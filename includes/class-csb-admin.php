@@ -30,7 +30,7 @@ class CSB_Admin {
         if (!empty($keyword) && !empty($nd) && isset($_POST['submit'])) {
             $generator = new CSB_Generator();
             $structure = $generator->generate_structure($keyword, $nd);
-            var_dump($structure);
+            var_dump($generator->generate_structure_array($keyword, $nd));
         }
 
         // Si l'utilisateur clique sur "Valider et publier"

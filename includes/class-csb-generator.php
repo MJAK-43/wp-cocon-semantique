@@ -76,7 +76,7 @@ class CSB_Generator {
 
     public function generate_structure_array($keyword, $depth = 1) {
         $markdown = $this->generate_structure($keyword, $depth);
-        //var_dump($this->parse_markdown_structure($markdown));
+        var_dump($this->parse_markdown_structure($markdown));
         return $this->parse_markdown_structure($markdown);
     }
 
