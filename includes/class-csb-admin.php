@@ -158,15 +158,23 @@ class CSB_Admin {
     }
     
     private function delete_node_at_path(&$tree, $path) {
-        if (count($path) === 1) {
-            array_splice($tree, intval($path[0]), 1);
-            return;
+        $current = &$tree;
+    
+        // On va jusqu'à l'avant-dernier élément du chemin
+        while (count($path) > 1) {
+            $index = array_shift($path);
+            if (!isset($current[$index]['children'])) {
+                return; // Rien à supprimer
+            }
+            $current = &$current[$index]['children'];
         }
     
-        $index = array_shift($path);
-        if (isset($tree[$index]['children'])) {
-            $this->delete_node_at_path($tree[$index]['children'], $path);
+        // On supprime l'élément ciblé
+        $final_index = array_shift($path);
+        if (isset($current[$final_index])) {
+            array_splice($current, intval($final_index), 1);
         }
     }
+    
     
 }
