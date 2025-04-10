@@ -14,11 +14,12 @@ class CSB_Admin {
             'Cocon Sémantique',
             'Cocon Sémantique',
             'manage_options',
-            'csb_admin',
+            'csb_admin', // <-- slug ici
             [$this, 'render_admin_page'],
             'dashicons-networking',
             30
         );
+        
     }
 
     public function render_admin_page() {
