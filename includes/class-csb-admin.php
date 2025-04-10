@@ -66,7 +66,7 @@ class CSB_Admin {
     }
 
     private function render_structure_fields($tree, $prefix, $level) {
-        echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . (($level+=1)) . 'px;">';
+        echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . (($level)) . 'px;">';
         //print_r($level);
     
         foreach ($tree as $index => $node) {
@@ -82,7 +82,7 @@ class CSB_Admin {
     
             if (!empty($node['children'])) {
                 echo "DOG";
-                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level*=2);
+                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level*=3);
             }
             else
                 echo "cat";
