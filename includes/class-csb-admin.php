@@ -35,12 +35,15 @@ class CSB_Admin {
 
         // Si l'utilisateur clique sur "Valider et publier"
         if (isset($_POST['csb_validate_publish'])) {
-            $this->handle_structure_submission($_POST['csb_structure'], $structure);
+            echo "<p>";
+            print_r($$_POST['csb_validate_publish']);
+            echo "</p>";
+            //$this->handle_structure_submission($_POST['csb_structure'], $structure);
         }
         
         ?>
         <div class="wrap">
-            <h1>Générateur de Cocon Sémantique7</h1>
+            <h1>Générateur de Cocon Sémantique</h1>
             
             <?php $this->render_keyword_form($keyword, $nd, $structure);?>
         </div>
