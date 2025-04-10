@@ -65,26 +65,29 @@ class CSB_Admin {
     }
 
     private function render_structure_fields($tree, $prefix, $level) {
-        echo '<ul style="list-style-type: none; margin-left: 0;">';
+        echo '<ul style="list-style-type: none; padding-left: ' . ($level * 30) . 'px;">';
+    
         foreach ($tree as $index => $node) {
             $node_prefix = $prefix . "[$index]";
-            $indent = str_repeat('&nbsp;', $level * 4);
-            echo '<li style="margin-bottom: 8px;">';
-            echo '<div style="display: flex; align-items: center; gap: 8px; margin-left: ' . ($level * 30) . 'px;">';
-            echo '<span style="min-width: 20px;">-</span>';
+            echo '<li style="margin-bottom: 10px;">';
+            
+            echo '<div style="display: flex; align-items: center; gap: 6px;">';
+            echo '<span style="min-width: 10px;">-</span>';
             echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" required />';
-            echo '<button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '">🗑️</button>';
-            echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '">➕ Sous-thème</button>';
+            echo '<button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">🗑️</button>';
+            echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">➕ Sous-thème</button>';
             echo '</div>';
-            echo ' <button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '">🗑️</button> ';
-            echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '">➕ Sous-thème</button>';
+    
             if (!empty($node['children'])) {
                 $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level + 1);
             }
+    
             echo '</li>';
         }
+    
         echo '</ul>';
     }
+    
 
     private function process_structure($tree) {
         $generator = new CSB_Generator();
