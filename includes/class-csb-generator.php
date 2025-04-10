@@ -10,28 +10,48 @@ class CSB_Generator {
     private $image_description;
 
     private function getPromptArticle($keyword, $depth) {
-        return "Génère une structure simple autour du mot-clé \"$keyword\".
+        return "Tu es un expert en SEO. Génère une structure hiérarchique de cocon sémantique en texte brut.
+        Consignes :
+        - Pas de format Markdown (pas de *, **, ni de ```).
         - Utilise uniquement des tirets `-` pour représenter la hiérarchie.
-        - $depth sous-thèmes, chacun avec $depth sous-sous-thèmes.
-        - Pas de commentaires, juste le texte brut.";
+        - Le mot-clé principal est : \"$keyword\"
+        - La structure doit comporter $depth sous-thèmes, et chacun de ces sous-thèmes doit avoir $depth sous-sous-thèmes.
+        - N’ajoute aucun commentaire ni explication. Juste la structure.
+        
+        Exemple attendu :
+        - Titre principal
+        - Sous-thème 1
+            - Sous-sous-thème 1
+            - Sous-sous-thème 2
+        - Sous-thème 2
+            - ...";
     }
-    
 
    
     
 
     private function getPromptContent($title, $context) {
-        return "Rédige un article court sur : \"$title\".  
-        Contexte : $context
-        - Introduction, 1 ou 2 paragraphes, conclusion.
-        - Pas de balises HTML ou Markdown.";
+        return "Tu es un rédacteur web SEO.
+    
+        Rédige un article optimisé pour le sujet : \"$title\".
+
+        Contexte :
+        Cet article s’inscrit dans un cocon sémantique avec la hiérarchie suivante :
+        $context
+
+        Consignes :
+        - Le contenu doit être du texte brut (pas de balises HTML ou Markdown).
+        - Structure : introduction, paragraphes avec sous-titres, conclusion.
+        - N’ajoute ni commentaires, ni balises.
+        - Sois clair, informatif, naturel et professionnel.
+        - N’inclus jamais le titre dans l’introduction.
+
+        À la fin de l’article, propose une description courte d’image (10 mots max) adaptée à ce sujet, que l’on pourra rechercher sur Freepik. Format :
+        [IMAGE: ...]";
     }
 
-    private function getPromptImage($title, $context) {
-        return "Propose une description très courte (max 10 mots) pour illustrer : \"$title\".
-        Contexte : $context
-        Cette description servira à rechercher une image sur Freepik. 
-        Juste la description sans commentaires ni balises.";
+    private function getProntImage($title,$context){
+
     }
     
     
@@ -141,31 +161,18 @@ class CSB_Generator {
     }
     
 
-    private function get_full_artical($title, $context) {
-        // Génère le prompt précis pour le contenu de l'article
-        $prompt = $this->getPromptContent($title, $context);
-        
-        // Appel API à ChatGPT avec le prompt
-        $result = $this->call_api($prompt);
-        
-        // Nettoie et retourne uniquement le texte brut généré
-        return trim($result);
-    }
     public function generate_full_content(&$tree, $breadcrumb = []) {
         foreach ($tree as &$node) {
             $title = $node['title'];
             $context = implode(" > ", array_merge($breadcrumb, [$title]));
     
-            // Appel à ta nouvelle méthode get_full_artical
-            $node['content'] = $this->get_full_artical($title, $context);
-            
+            $node['content'] = $this->generate_article_content($title, $context);
+    
             if (!empty($node['children'])) {
                 $this->generate_full_content($node['children'], array_merge($breadcrumb, [$title]));
             }
         }
     }
-    
-    
 
     private function generate_article_content($title, $context) {
         $prompt = $this->getPromptContent($title, $context);
@@ -176,16 +183,19 @@ class CSB_Generator {
         //echo "<p>$image_description</p>";
 
         // Récupération de l'URL de l'image depuis Freepik
-        //$image_url = $this->get_freepik_image($image_description);
+        $image_url = $this->get_freepik_image($image_description);
 
         // Intégration de l'image dans le contenu
-        // if (!str_starts_with($image_url, '❌')) {
-        //     $result .= "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($image_description) . "\" style=\"max-width:100%; height:auto;\" />";
-        // } else {
-        //     $result .= "\n\n<!-- Aucune image trouvée sur Freepik -->";
-        // }
+        if (!str_starts_with($image_url, '❌')) {
+            $result .= "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($image_description) . "\" style=\"max-width:100%; height:auto;\" />";
+        } else {
+            $result .= "\n\n<!-- Aucune image trouvée sur Freepik -->";
+        }
 
-        return ['content' => trim($result)];
+        return [
+            'content' => trim($result),
+            'image' => $image_description
+        ];
     }
 
     
@@ -198,7 +208,6 @@ class CSB_Generator {
         }
         return $image;
     }
-
     private function get_freepik_link($description) {
         $query = urlencode($description);
         return "https://www.freepik.com/search?format=search&query=$query";
@@ -231,21 +240,6 @@ class CSB_Generator {
         } else {
             return '❌ Aucune image trouvée pour cette description.';
         }
-    } 
-    private function get_full_freepik_image($title, $context) {
-        // Description générée par GPT
-        $image_prompt = $this->getPromptImage($title, $context);
-        $image_description = trim($this->call_api($image_prompt));
-    
-        // URL récupérée depuis Freepik
-        $image_url = $this->get_freepik_image($image_description);
-    
-        return [
-            'description' => $image_description,
-            'url' => $image_url
-        ];
-    }
-    
-       
+    }   
     
 }
