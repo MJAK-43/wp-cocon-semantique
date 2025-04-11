@@ -6,6 +6,7 @@ class CSB_Admin {
 
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
+        //echo "DOG";
     }
 
     public function add_admin_menu() {
@@ -13,11 +14,12 @@ class CSB_Admin {
             'Cocon Sémantique',
             'Cocon Sémantique',
             'manage_options',
-            'csb_admin',
+            'csb_admin', // <-- slug ici
             [$this, 'render_admin_page'],
             'dashicons-networking',
             30
         );
+        
     }
 
     public function render_admin_page() {
@@ -30,10 +32,18 @@ class CSB_Admin {
             //var_dump($this->last_tree);
         }
 
-        if (isset($_POST['csb_validate_publish']) && isset($_POST['structure'])) {
+        if (isset($_POST['structure'])) {
             $this->last_tree = $_POST['structure'];
-            $this->process_structure($this->last_tree);
-            echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
+            $this->handle_structure_actions($this->last_tree); // 👈 Gère les ajouts/suppressions
+    
+            if (isset($_POST['csb_validate_publish'])) {
+                //$this->process_structure($this->last_tree);
+                echo '<pre>';
+                print_r($this->last_tree);
+                echo '</pre>';
+
+                echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
+            }
         }
 
         echo '<div class="wrap">';
@@ -82,7 +92,7 @@ class CSB_Admin {
     
             if (!empty($node['children'])) {
                 //echo "DOG";
-                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level*=3);
+                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level + 30 );
             }
             // else
             //     echo "cat";
@@ -96,16 +106,85 @@ class CSB_Admin {
     
 
     private function process_structure($tree) {
-        // $generator = new CSB_Generator();
-        // $generator->generate_full_content($tree);
-        // $publisher = new CSB_Publisher();
-        // $publisher->publish_structure($tree);
+        $generator = new CSB_Generator();
+        $generator->generate_full_content($tree);
+        $publisher = new CSB_Publisher();
+        $publisher->publish_structure($tree);
     }
 
     private function generate_slug($title) {
-        // $slug = strtolower($title);
-        // $slug = remove_accents($slug);
-        // $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
-        // return trim($slug, '-');
+        $slug = strtolower($title);
+        $slug = remove_accents($slug);
+        $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
+        return trim($slug, '-');
     }
+    private function &get_node_by_path(&$tree, $path_array) {
+        $ref = &$tree;
+        foreach ($path_array as $index) {
+            if (!isset($ref[$index]['children'])) {
+                $ref[$index]['children'] = [];
+            }
+            $ref = &$ref[$index]['children'];
+        }
+        return $ref;
+    }
+    
+
+
+    private function handle_structure_actions(&$tree) {
+        // Ajout d'un enfant
+        if (isset($_POST['add_child'])) {
+            $path = str_replace(['structure[', ']'], '', $_POST['add_child']); // e.g. structure[0][children][1]
+            $segments = explode('[', $path); // ["0", "children", "1"]
+        
+            $current = array_filter($segments, fn($v) => $v !== 'children');
+            $last = array_pop($current);
+            $parent = &$this->get_node_by_path($tree, $current);
+        
+            if (!isset($parent[$last]['children'])) {
+                $parent[$last]['children'] = [];
+            }
+        
+            $parent[$last]['children'][] = [
+                'title' => 'Nouveau sous-thème',
+                'children' => []
+            ];
+        }
+        // Suppression d'un noeud
+        if (isset($_POST['delete_node'])) {
+            //echo "D////////////////////////////////////////////////////////////////";
+            $path = explode('[', str_replace(']', '', str_replace('structure[', '', $_POST['delete_node'])));
+            echo '<pre>';
+            print_r($path);
+            echo '</pre>';
+            //$this->delete_node_at_path($tree, $path);
+        }
+    }
+    
+    private function delete_node_at_path(&$tree, $path) {
+        $ref = &$tree;
+   
+    
+        // Accès jusqu'au parent du nœud à supprimer
+        while (count($path) > 1) {
+            $key = array_shift($path);
+    
+            if (!isset($ref[$key]['children'])) return;
+    
+            $ref = &$ref[$key]['children'];
+        }
+    
+        $final_key = array_shift($path);
+        if (isset($ref[$final_key])) {
+            unset($ref[$final_key]);
+            $ref = array_values($ref); // Re-indexer le tableau (important !)
+        }
+        // echo '<pre>';
+        //     print_r($ref);
+        // echo '</pre>';
+        
+    }
+    
+    
+    
 }
