@@ -11,21 +11,14 @@ class CSB_Generator {
 
     private function getPromptArticle($keyword, $depth) {
         return "Tu es un expert en SEO. Génère une structure hiérarchique de cocon sémantique en texte brut.
-        Consignes :
-        - Pas de format Markdown (pas de *, **, ni de ```).
-        - Utilise uniquement des tirets `-` pour représenter la hiérarchie.
-        - Le mot-clé principal est : \"$keyword\"
-        - La structure doit comporter $depth sous-thèmes, et chacun de ces sous-thèmes doit avoir $depth sous-sous-thèmes.
-        - N’ajoute aucun commentaire ni explication. Juste la structure.
-        
-        Exemple attendu :
-        - Titre principal
-        - Sous-thème 1
-            - Sous-sous-thème 1
-            - Sous-sous-thème 2
-        - Sous-thème 2
-            - ...";
+    Consignes :
+    - Utilise des tirets `-` pour chaque point.
+    - Utilise **4 espaces** pour chaque niveau d’imbrication (indentation).
+    - Le mot-clé principal est : \"$keyword\"
+    - $depth sous-thèmes, chacun avec $depth sous-sous-thèmes.
+    Pas de commentaires, pas de balises, juste le texte hiérarchique.";
     }
+    
 
    
     
@@ -76,7 +69,7 @@ class CSB_Generator {
 
     public function generate_structure_array($keyword, $depth = 1) {
         $markdown = $this->generate_structure($keyword, $depth);
-        var_dump($this->parse_markdown_structure($markdown));
+        //echo "<pre>STRUCTURE BRUTE:\n" . htmlentities($markdown) . "</pre>";
         return $this->parse_markdown_structure($markdown);
     }
 

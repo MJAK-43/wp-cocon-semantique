@@ -37,10 +37,11 @@ class CSB_Admin {
             $this->handle_structure_actions($this->last_tree); // 👈 Gère les ajouts/suppressions
     
             if (isset($_POST['csb_validate_publish'])) {
-                //$this->process_structure($this->last_tree);
-                echo '<pre>';
-                print_r($this->last_tree);
-                echo '</pre>';
+                $this->process_structure($this->last_tree);
+                
+                // echo '<pre>';
+                // print_r($this->last_tree);
+                // echo '</pre>';
 
                 echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
             }
@@ -54,6 +55,10 @@ class CSB_Admin {
         echo '<div style="margin: 1em 0; padding: 1em; border-left: 4px solid #0073aa; background: #f1f1f1;">';
         echo '<p><strong>🔐 Clé API :</strong> <a href="' . admin_url('admin.php?page=csb_settings') . '">Configurer ici</a></p>';
         echo '</div>';
+        if (isset($_POST['csb_validate_publish'])) {
+            //var_dump($this->last_tree);
+        }
+        
     }
 
     private function render_keyword_form($keyword, $nd) {
@@ -108,8 +113,9 @@ class CSB_Admin {
     private function process_structure($tree) {
         $generator = new CSB_Generator();
         $generator->generate_full_content($tree);
+        //var_dump($tree);
         $publisher = new CSB_Publisher();
-        $publisher->publish_structure($tree);
+        //$publisher->publish_structure($tree);
     }
 
     private function generate_slug($title) {
@@ -184,6 +190,24 @@ class CSB_Admin {
         // echo '</pre>';
         
     }
+    private function render_links_to_articles($tree) {
+        echo '<div style="margin-top: 2em;"><h2>📝 Articles publiés</h2><ul>';
+    
+        foreach ($tree as $node) {
+            if (!empty($node['post_id'])) {
+                $url = get_permalink($node['post_id']);
+                $title = esc_html($node['title']);
+                echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a></li>";
+            }
+    
+            if (!empty($node['children'])) {
+                $this->render_links_to_articles($node['children']); // récursif
+            }
+        }
+    
+        echo '</ul></div>';
+    }
+    
     
     
     
