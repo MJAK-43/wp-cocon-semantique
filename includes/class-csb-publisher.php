@@ -9,38 +9,55 @@ class CSB_Publisher {
      * @param int $parent_id ID du parent WordPress
      * @param int $level Profondeur (0 = racine)
      */
-    public function publish_structure(array $tree, $parent_id = 0, $level = 0) {
+    public function publish_structure(array &$tree, $parent_id = 0, $level = 0) {
+        //echo "//////////////////////////////////////////////////////////////////////////////////////";
         foreach ($tree as &$node) {
             $slug = !empty($node['slug']) ? $node['slug'] : $this->generate_slug($node['title']);
-        
+    
+            // On prépare le post, sans les liens enfants
+            $content = $node['content']['content'] ?? '';
+            $image_url = $node['content']['image_url'] ?? '';
+            $image_desc = $node['content']['image'] ?? '';
+    
             $post_id = wp_insert_post([
                 'post_title'   => $node['title'],
                 'post_name'    => $slug,
-                'post_content' => isset($node['content']) 
-                    ? $this->append_freepik_image(
-                        $this->enrich_content_with_links($node['content']['content'], $node['children'] ?? [], $parent_id),
-                        $node['content']['image_url'] ?? '',
-                        $node['content']['image'] ?? ''
-                    )
-                    : '',
+                'post_content' => '', // contenu temporaire
                 'post_status'  => 'publish',
                 'post_type'    => 'post',
                 'post_parent'  => $parent_id,
             ]);
-        
+    
             if (!is_wp_error($post_id)) {
-                $node['post_id'] = $post_id; // 🔥 Ajout essentiel ici
-        
+                $node['post_id'] = $post_id;
+    
                 update_post_meta($post_id, '_csb_level', $level);
                 update_post_meta($post_id, '_csb_parent_id', $parent_id);
-        
+    
+                // Publier les enfants en premier
+                // Si des enfants existent, publie-les un par un et garde leur post_id
                 if (!empty($node['children'])) {
                     $this->publish_structure($node['children'], $post_id, $level + 1);
+
                 }
+
+    
+                // Maintenant que les enfants ont un post_id, on peut ajouter les liens
+                $final_content = $this->append_freepik_image(
+                    $this->enrich_content_with_links($content, $node['children'] ?? [], $parent_id),
+                    $image_url,
+                    $image_desc
+                );
+                //var_dump($final_content);
+    
+                wp_update_post([
+                    'ID' => $post_id,
+                    'post_content' => $final_content,
+                ]);
             }
         }
-        
     }
+    
     private function append_freepik_image($content, $image_url, $alt = '') {
         if (!$image_url || str_starts_with($image_url, '❌')) return $content;
     
@@ -78,7 +95,9 @@ class CSB_Publisher {
         return $slug;
     }
 
-    private function enrich_content_with_links($content, $children, $parent_id) {
+    private function enrich_content_with_links($content, $children = [], $parent_id = 0) {
+        if (!is_array($children)) $children = [];
+    
         $links = [];
     
         // 🔗 Lien vers le parent
