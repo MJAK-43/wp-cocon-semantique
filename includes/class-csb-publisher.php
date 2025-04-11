@@ -10,7 +10,7 @@ class CSB_Publisher {
      * @param int $level Profondeur (0 = racine)
      */
     public function publish_structure(array &$tree, $parent_id = 0, $level = 0) {
-        echo "DOG";
+        //echo "//////////////////////////////////////////////////////////////////////////////////////";
         foreach ($tree as &$node) {
             $slug = !empty($node['slug']) ? $node['slug'] : $this->generate_slug($node['title']);
     
@@ -48,7 +48,7 @@ class CSB_Publisher {
                     $image_url,
                     $image_desc
                 );
-                var_dump($final_content);
+                //var_dump($final_content);
     
                 wp_update_post([
                     'ID' => $post_id,

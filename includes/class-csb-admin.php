@@ -34,23 +34,25 @@ class CSB_Admin {
 
         if (isset($_POST['structure'])) {
             $this->last_tree = $_POST['structure'];
-            $this->handle_structure_actions($this->last_tree); // 👈 Gère les ajouts/suppressions
+            $this->handle_structure_actions($this->last_tree); 
     
             if (isset($_POST['csb_validate_publish'])) {
-                $this->process_structure($this->last_tree);
+                $this->process_structure();
                 
                 // echo '<pre>';
                 // print_r($this->last_tree);
                 // echo '</pre>';
 
                 echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
+                $this->render_links_to_articles($this->last_tree);
             }
         }
 
         echo '<div class="wrap">';
         echo '<h1>Générateur de Cocon Sémantique</h1>';
         $this->render_keyword_form($keyword, $nd);
-        $this->render_structure_form($this->last_tree);
+        $this->render_structure_form($this->last_tree); // ✅
+
         echo '</div>';
         echo '<div style="margin: 1em 0; padding: 1em; border-left: 4px solid #0073aa; background: #f1f1f1;">';
         echo '<p><strong>🔐 Clé API :</strong> <a href="' . admin_url('admin.php?page=csb_settings') . '">Configurer ici</a></p>';
@@ -110,12 +112,12 @@ class CSB_Admin {
     
     
 
-    private function process_structure($tree) {
+    private function process_structure() {
         $generator = new CSB_Generator();
-        $generator->generate_full_content($tree);
+        $generator->generate_full_content($this->last_tree);
         //var_dump($tree);
         $publisher = new CSB_Publisher();
-        //$publisher->publish_structure($tree);
+        $publisher->publish_structure($this->last_tree);
     }
 
     private function generate_slug($title) {
@@ -160,10 +162,10 @@ class CSB_Admin {
         if (isset($_POST['delete_node'])) {
             //echo "D////////////////////////////////////////////////////////////////";
             $path = explode('[', str_replace(']', '', str_replace('structure[', '', $_POST['delete_node'])));
-            echo '<pre>';
-            print_r($path);
-            echo '</pre>';
-            //$this->delete_node_at_path($tree, $path);
+            // echo '<pre>';
+            // print_r($path);
+            // echo '</pre>';
+            $this->delete_node_at_path($tree, $path);
         }
     }
     
