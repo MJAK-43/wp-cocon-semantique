@@ -192,8 +192,6 @@ class CSB_Generator {
             'image' => $image_description
         ];
     }
-
-    
     
     private function extract_image_tag(&$text) {
         $image = null;
@@ -213,6 +211,8 @@ class CSB_Generator {
         }
     
         $query = urlencode($description);
+        // print_r("Voila la description ");
+        // print_r($description);
         $url = "https://api.freepik.com/v1/resources?query=$query&content_type=photo";
     
         $args = [
@@ -229,10 +229,15 @@ class CSB_Generator {
         }
     
         $body = json_decode(wp_remote_retrieve_body($response), true);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        error_log(print_r($body, true));
+
     
-        if (isset($body['data'][0]['image']['source']['url'])) {
-            return $body['data'][0]['image']['source']['url'];
-        } else {
+        if (!empty($body['data'])) {
+            $randomIndex = array_rand($body['data']);
+            return $body['data'][$randomIndex]['image']['source']['url'] ?? '❌ Aucune image valide trouvée.';
+        }
+         else {
             return '❌ Aucune image trouvée pour cette description.';
         }
     }   

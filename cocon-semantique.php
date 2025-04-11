@@ -24,7 +24,7 @@ new CSB_Admin();
 //         echo '<h1>Page test ok</h1>';
 //     });
 // });
-
+new CSB_Settings();
 // (Optionnel) Inclure linker s'il existe
 if (file_exists(CSB_PATH . 'includes/linker.php')) {
     require_once CSB_PATH . 'includes/linker.php';
