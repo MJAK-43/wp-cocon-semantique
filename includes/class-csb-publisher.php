@@ -10,19 +10,34 @@ class CSB_Publisher {
      * @param int $level Profondeur (0 = racine)
      */
     public function publish_structure(array &$tree, $parent_id = 0, $level = 0) {
-        //echo "//////////////////////////////////////////////////////////////////////////////////////";
-        foreach ($tree as &$node) {
-            $slug = !empty($node['slug']) ? $node['slug'] : $this->generate_slug($node['title']);
+        foreach ($tree as $slug => &$node) {
+            $title = $node['title'];
+            $content_parts = $node['content'] ?? [];
     
-            // On prépare le post, sans les liens enfants
-            $content = $node['content']['content'] ?? '';
-            $image_url = $node['content']['image_url'] ?? '';
-            $image_desc = $node['content']['image'] ?? '';
+            // Concatène proprement le contenu
+            $html = '';
+            if (!empty($content_parts['intro'])) {
+                $html .= '<p>' . esc_html($content_parts['intro']) . '</p>';
+            }
+    
+            if (!empty($content_parts['developments'])) {
+                foreach ($content_parts['developments'] as $dev) {
+                    $html .= '<h3>' . esc_html($dev['title']) . '</h3>';
+                    $html .= '<p>' . esc_html($dev['text']) . '</p>';
+                }
+            }
+    
+            if (!empty($content_parts['conclusion'])) {
+                $html .= '<p><strong>' . esc_html($content_parts['conclusion']) . '</strong></p>';
+            }
+    
+            $image_url = $content_parts['image_url'] ?? '';
+            $image_desc = $content_parts['image'] ?? '';
     
             $post_id = wp_insert_post([
-                'post_title'   => $node['title'],
+                'post_title'   => $title,
                 'post_name'    => $slug,
-                'post_content' => '', // contenu temporaire
+                'post_content' => '', // temporaire, sera remplacé
                 'post_status'  => 'publish',
                 'post_type'    => 'post',
                 'post_parent'  => $parent_id,
@@ -33,22 +48,18 @@ class CSB_Publisher {
     
                 update_post_meta($post_id, '_csb_level', $level);
                 update_post_meta($post_id, '_csb_parent_id', $parent_id);
+                update_post_meta($post_id, '_csb_slug', $slug);
     
-                // Publier les enfants en premier
-                // Si des enfants existent, publie-les un par un et garde leur post_id
                 if (!empty($node['children'])) {
                     $this->publish_structure($node['children'], $post_id, $level + 1);
-
                 }
-
     
-                // Maintenant que les enfants ont un post_id, on peut ajouter les liens
+                // Ajoute les liens + image
                 $final_content = $this->append_freepik_image(
-                    $this->enrich_content_with_links($content, $node['children'] ?? [], $parent_id),
+                    $this->enrich_content_with_links($html, $node['children'] ?? [], $parent_id),
                     $image_url,
                     $image_desc
                 );
-                //var_dump($final_content);
     
                 wp_update_post([
                     'ID' => $post_id,
@@ -57,6 +68,8 @@ class CSB_Publisher {
             }
         }
     }
+    
+    
     
     private function append_freepik_image($content, $image_url, $alt = '') {
         if (!$image_url || str_starts_with($image_url, '❌')) return $content;
@@ -83,17 +96,17 @@ class CSB_Publisher {
     /**
      * Génère un slug unique à partir du titre (optionnel)
      */
-    public function generate_slug($title) {
-        $slug = sanitize_title($title);
-        $base = $slug;
-        $i = 1;
+    // public function generate_slug($title) {
+    //     $slug = sanitize_title($title);
+    //     $base = $slug;
+    //     $i = 1;
 
-        while (get_page_by_path($slug, OBJECT, 'post')) {
-            $slug = $base . '-' . $i++;
-        }
+    //     while (get_page_by_path($slug, OBJECT, 'post')) {
+    //         $slug = $base . '-' . $i++;
+    //     }
 
-        return $slug;
-    }
+    //     return $slug;
+    // }
 
     private function enrich_content_with_links($content, $children = [], $parent_id = 0) {
         if (!is_array($children)) $children = [];

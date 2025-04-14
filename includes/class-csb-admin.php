@@ -29,7 +29,7 @@ class CSB_Admin {
         if (!empty($keyword) && !empty($nd) && isset($_POST['submit'])) {
             $generator = new CSB_Generator();
             $this->last_tree = $generator->generate_structure_array($keyword, $nd);
-            //var_dump($this->last_tree);
+            
         }
 
         if (isset($_POST['structure'])) {
@@ -39,12 +39,13 @@ class CSB_Admin {
             if (isset($_POST['csb_validate_publish'])) {
                 $this->process_structure();
                 
-                // echo '<pre>';
-                // print_r($this->last_tree);
-                // echo '</pre>';
+                print('<br>');print('<br>');print('<br>');
+                echo '<pre>';
+                print_r($this->last_tree);
+                echo '</pre>';
 
                 echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
-                //$this->render_links_to_articles($this->last_tree);
+                $this->render_links_to_articles($this->last_tree);
             }
         }
 
@@ -114,6 +115,9 @@ class CSB_Admin {
 
     private function process_structure() {
         $generator = new CSB_Generator();
+        // echo '<pre>';
+        // print_r($this->last_tree);
+        // echo '</pre>';
         $generator->generate_full_content($this->last_tree);
         //var_dump($tree);
         $publisher = new CSB_Publisher();
@@ -142,52 +146,60 @@ class CSB_Admin {
     private function handle_structure_actions(&$tree) {
         // Ajout d'un enfant
         if (isset($_POST['add_child'])) {
-            $path = str_replace(['structure[', ']'], '', $_POST['add_child']); // e.g. structure[0][children][1]
-            $segments = explode('[', $path); // ["0", "children", "1"]
-        
+            $path = str_replace(['structure[', ']'], '', $_POST['add_child']);
+            $segments = explode('[', $path);
             $current = array_filter($segments, fn($v) => $v !== 'children');
             $last = array_pop($current);
+    
+            // Accéder au parent via le chemin
             $parent = &$this->get_node_by_path($tree, $current);
-        
+    
             if (!isset($parent[$last]['children'])) {
                 $parent[$last]['children'] = [];
             }
-        
-            $parent[$last]['children'][] = [
-                'title' => 'Nouveau sous-thème',
+    
+            $title = 'Nouveau sous-thème';
+            $slug = $this->generate_slug($title);
+    
+            // Utiliser le slug comme clé
+            $parent[$last]['children'][$slug] = [
+                'title' => $title,
+                'slug' => $slug,
                 'children' => []
             ];
         }
-        // Suppression d'un noeud
+    
+        // Suppression d'un nœud
         if (isset($_POST['delete_node'])) {
             $raw_path = explode('[', str_replace(']', '', str_replace('structure[', '', $_POST['delete_node'])));
             $path = array_filter($raw_path, fn($v) => $v !== 'children');
             $path = array_values($path); // réindexer
             $this->delete_node_at_path($tree, $path);
         }
-        
     }
+    
+    
     
     private function delete_node_at_path(&$tree, $path) {
         $ref = &$tree;
     
         while (count($path) > 1) {
-            $key = intval(array_shift($path)); // S'assurer que c'est un entier
+            $key = array_shift($path); // pas de intval : on travaille avec des slugs
             if (!isset($ref[$key]['children'])) return;
             $ref = &$ref[$key]['children'];
         }
     
-        $final_key = intval(array_shift($path));
+        $final_key = array_shift($path);
         if (isset($ref[$final_key])) {
             unset($ref[$final_key]);
-            $ref = array_values($ref); // Re-indexer
         }
     }
-    
+       
+
     private function render_links_to_articles($tree) {
         echo '<div style="margin-top: 2em;"><h2>📝 Articles publiés</h2><ul>';
     
-        foreach ($tree as $node) {
+        foreach ($tree as $slug => $node) {
             if (!empty($node['post_id'])) {
                 $url = get_permalink($node['post_id']);
                 $title = esc_html($node['title']);
@@ -201,6 +213,7 @@ class CSB_Admin {
     
         echo '</ul></div>';
     }
+    
     
     
     

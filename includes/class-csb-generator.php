@@ -18,10 +18,25 @@ class CSB_Generator {
     - $depth sous-thèmes, chacun avec $depth sous-sous-thèmes.
     Pas de commentaires, pas de balises, juste le texte hiérarchique.";
     }
+    private function build_content_prompt(array $tree) {
+        $structure = $this->to_bullet_tree($tree);
     
-
-   
-    
+        return "Tu es un rédacteur professionnel en style {$this->style}.\n\n" .
+            "Voici une structure hiérarchique d'articles avec leurs slugs :\n\n{$structure}\n\n" .
+            "Ta mission : rédiger pour chaque titre un article optimisé, en suivant STRICTEMENT ce format :\n\n" .
+            "[TITRE: Le titre exact ici]\n" .
+            "INTRO: Introduction générale du sujet.\n" .
+            "CLICK_BAIT: Une phrase incitative qui donne envie de lire l'article (visible chez le parent).\n" .
+            "DEVELOPMENTS:\n" .
+            "- Titre 1: Texte du développement 1\n" .
+            "- Titre 2: Texte du développement 2\n" .
+            "...\n" .
+            "CONCLUSION: Conclusion synthétique de l’article.\n" .
+            "[IMAGE: description courte de l’image à générer sur Freepik]\n" .
+            "[SLUG: le slug EXACT donné ci-dessus — NE LE MODIFIE JAMAIS]\n\n" .
+            "⚠️ Respecte strictement le format pour CHAQUE titre, et copie exactement le slug affiché dans la structure.\n";
+    }
+     
 
     private function getPromptContent($title, $context) {
         return "Tu es un rédacteur web SEO.
@@ -43,14 +58,6 @@ class CSB_Generator {
         [IMAGE: ...]";
     }
 
-    private function getProntImage($title,$context){
-
-    }
-    
-    
-    
-
-
     public function __construct($api_key = null, $freepik_api_key = null) {
         $this->api_key = $api_key ?: get_option('csb_openai_api_key');
         $this->freepik_api_key = $freepik_api_key ?: get_option('csb_freepik_api_key');
@@ -59,6 +66,11 @@ class CSB_Generator {
         $this->style = get_option('csb_writing_style', 'SEO');
     }
 
+
+    private function normalize_title($title) {
+        return strtolower(trim(preg_replace('/\s+/', ' ', strip_tags($title))));
+    }
+    
 
 
     public function generate_structure($keyword, $depth = 1) {
@@ -69,9 +81,11 @@ class CSB_Generator {
 
     public function generate_structure_array($keyword, $depth = 1) {
         $markdown = $this->generate_structure($keyword, $depth);
-        //echo "<pre>STRUCTURE BRUTE:\n" . htmlentities($markdown) . "</pre>";
-        return $this->parse_markdown_structure($markdown);
+        $tree = $this->parse_markdown_structure($markdown);
+        $this->assign_slugs_recursively($tree);
+        return $this->tree_to_slug_map($tree);
     }
+    
 
     /**Utilise uniquement du texte brut sans mise en forme Markdown
      * Envoie une requête à l'API ChatGPT avec le prompt donne
@@ -150,23 +164,55 @@ class CSB_Generator {
         return $root;
     }
 
+    private function tree_to_slug_map(array $tree) {
+        $map = [];
+    
+        foreach ($tree as $node) {
+            $slug = $node['slug'];
+            $entry = [
+                'title' => $node['title'],
+            ];
+    
+            if (!empty($node['children'])) {
+                $entry['children'] = $this->tree_to_slug_map($node['children']);
+            }
+    
+            $map[$slug] = $entry;
+        }
+    
+        return $map;
+    }
+
     private function clean_generated_structure($text) {
         return preg_replace('/^```.*$\n?|```$/m', '', $text);
     }
     
 
-    public function generate_full_content(&$tree, $breadcrumb = []) {
-        foreach ($tree as &$node) {
-            $title = $node['title'];
-            $context = implode(" > ", array_merge($breadcrumb, [$title]));
-    
-            $node['content'] = $this->generate_article_content($title, $context);
-    
-            if (!empty($node['children'])) {
-                $this->generate_full_content($node['children'], array_merge($breadcrumb, [$title]));
-            }
+    public function generate_full_content(array &$tree) {
+        print_r("\nTableau vide\n");
+        print("<br>");
+        print_r($tree);
+        $prompt = $this->build_content_prompt($tree);
+        $raw = $this->call_api($prompt);
+        // print("<br>");print("<br>");print("<br>");
+        // print_r($raw);
+        // print("<br>");print("<br>");print("<br>");
+        $parsed = $this->parse_content_blocks($raw);
+        // print("<br>");
+        // print("<br>");
+        // print("<br>");
+        // print_r("\n\n\nElement à ajouter\n");
+        // print("<br>");
+        // print_r($parsed);
+
+        //print("<br>");
+        foreach ($tree as $slug => &$node) {
+            $this->fill_tree_node($slug, $node, $parsed);
         }
+        
     }
+    
+    
 
     private function generate_article_content($title, $context) {
         $prompt = $this->getPromptContent($title, $context);
@@ -243,13 +289,112 @@ class CSB_Generator {
         // 5. Analyse de la réponse JSON pour obtenir l'URL de l'image
         $data = json_decode($response, true);
         if (isset($data['data'][0]['image']['source']['url'])) {
-        print_r($data['data'][0]['image']['source']['url']);
+        //print_r($data['data'][0]['image']['source']['url']);
         return  $data['data'][0]['image']['source']['url'];
         } else {
         throw new Exception("Aucune image trouvée.");
         }
     }
 
+    private function parse_content_blocks($text) {
+        $result = [];
+        print_r($text);
+    
+        // Découper chaque bloc d'article complet
+        preg_match_all('/\[TITRE:\s*(.*?)\]\s*INTRO:\s*(.*?)\s*CLICK_BAIT:\s*(.*?)\s*DEVELOPMENTS:\s*((?:-.*?:.*?\n?)+?)CONCLUSION:\s*(.*?)\s*\[IMAGE:\s*(.*?)\]\s*\[SLUG:\s*(.*?)\]/s', $text, $matches, PREG_SET_ORDER);
+    
+        foreach ($matches as $m) {
+            $title = trim($m[1], " \t\n\r\0\x0B\"");
+            $intro = trim($m[2]);
+            $click_bait = trim($m[3]);
+            $dev_block = trim($m[4]);
+            $conclusion = trim($m[5]);
+            $image = trim($m[6]);
+    
+            // 🔧 Slug normalisé avec sanitize_title
+            $slug = CSB_Generator::generate_slug(trim($m[7]));
+    
+            // Extraction des sous-points de développement
+            $developments = [];
+            preg_match_all('/-\s*(.*?):\s*(.*?)(?=(?:-\s.*?:|$))/s', $dev_block, $dev_matches, PREG_SET_ORDER);
+            foreach ($dev_matches as $dev) {
+                $developments[] = [
+                    'title' => trim($dev[1]),
+                    'text' => trim($dev[2])
+                ];
+            }
+    
+            $result[$slug] = [
+                'content' => [
+                    'intro' => $intro,
+                    'developments' => $developments,
+                    'conclusion' => $conclusion,
+                    'image' => $image
+                ],
+                'click_bait' => $click_bait,
+                'slug' => $slug,
+                'title' => $title
+            ];
+        }
+    
+        return $result;
+    }
+    
+    private function fill_tree_node(string $slug, array &$node, array $parsed) {
+        if (isset($parsed[$slug])) {
+            $data = $parsed[$slug];
+            
+            try {
+                $image_url = $this->get_freepik_image($data['content']['image']);
+            } catch (Exception $e) {
+                $image_url = '❌ Image non trouvée';
+            }
+    
+            $node['content'] = [
+                'intro' => $data['content']['intro'],
+                'developments' => $data['content']['developments'],
+                'conclusion' => $data['content']['conclusion'],
+                'image' => $data['content']['image'],
+                'image_url' => $image_url
+            ];
+            $node['click_bait'] = $data['click_bait'];
+            
+        }else{/*echo "//////////////////////////////////////////////////////////";*/}
+    
+        if (!empty($node['children'])) {
+            foreach ($node['children'] as $child_slug => &$child) {
+                $this->fill_tree_node($child_slug, $child, $parsed);
+            }
+        }
+    }
+    
+    
+    private function assign_slugs_recursively(&$tree) {
+        foreach ($tree as &$node) {
+            $node['slug'] = self::generate_slug($node['title']); // ou sanitize_title()
+            if (!empty($node['children'])) {
+                $this->assign_slugs_recursively($node['children']);
+            }
+        }
+    }
 
+    public static function generate_slug($title){
+        $slug = sanitize_title($title);
+        return $slug;
+    }
+        
+    
+    private function to_bullet_tree(array $tree, $indent = 0) {
+        $out = '';
+        foreach ($tree as $slug => $node) {
+            $out .= str_repeat('    ', $indent) . "- {$node['title']} [SLUG: {$slug}]\n";
+            if (!empty($node['children'])) {
+                $out .= $this->to_bullet_tree($node['children'], $indent + 1);
+            }
+        }
+        return $out;
+    }
+    
+    
 
 }
