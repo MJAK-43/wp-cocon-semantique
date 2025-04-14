@@ -44,7 +44,7 @@ class CSB_Admin {
                 // echo '</pre>';
 
                 echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
-                $this->render_links_to_articles($this->last_tree);
+                //$this->render_links_to_articles($this->last_tree);
             }
         }
 
@@ -160,38 +160,30 @@ class CSB_Admin {
         }
         // Suppression d'un noeud
         if (isset($_POST['delete_node'])) {
-            //echo "D////////////////////////////////////////////////////////////////";
-            $path = explode('[', str_replace(']', '', str_replace('structure[', '', $_POST['delete_node'])));
-            // echo '<pre>';
-            // print_r($path);
-            // echo '</pre>';
+            $raw_path = explode('[', str_replace(']', '', str_replace('structure[', '', $_POST['delete_node'])));
+            $path = array_filter($raw_path, fn($v) => $v !== 'children');
+            $path = array_values($path); // réindexer
             $this->delete_node_at_path($tree, $path);
         }
+        
     }
     
     private function delete_node_at_path(&$tree, $path) {
         $ref = &$tree;
-   
     
-        // Accès jusqu'au parent du nœud à supprimer
         while (count($path) > 1) {
-            $key = array_shift($path);
-    
+            $key = intval(array_shift($path)); // S'assurer que c'est un entier
             if (!isset($ref[$key]['children'])) return;
-    
             $ref = &$ref[$key]['children'];
         }
     
-        $final_key = array_shift($path);
+        $final_key = intval(array_shift($path));
         if (isset($ref[$final_key])) {
             unset($ref[$final_key]);
-            $ref = array_values($ref); // Re-indexer le tableau (important !)
+            $ref = array_values($ref); // Re-indexer
         }
-        // echo '<pre>';
-        //     print_r($ref);
-        // echo '</pre>';
-        
     }
+    
     private function render_links_to_articles($tree) {
         echo '<div style="margin-top: 2em;"><h2>📝 Articles publiés</h2><ul>';
     

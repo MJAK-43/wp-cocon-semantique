@@ -149,7 +149,6 @@ class CSB_Generator {
     
         return $root;
     }
-    
 
     private function clean_generated_structure($text) {
         return preg_replace('/^```.*$\n?|```$/m', '', $text);
@@ -192,8 +191,6 @@ class CSB_Generator {
             'image' => $image_description
         ];
     }
-
-    
     
     private function extract_image_tag(&$text) {
         $image = null;
@@ -207,34 +204,52 @@ class CSB_Generator {
         $query = urlencode($description);
         return "https://www.freepik.com/search?format=search&query=$query";
     } 
-    private function get_freepik_image($description) {
-        if (!$this->freepik_api_key) {
-            return '❌ Clé API Freepik non configurée.';
+    
+    public function get_freepik_image($keywords)
+    {
+        //echo "andy";
+        // 1. Appel de la fonction pour obtenir les mots-clés via OpenAI
+        //$keywords = $this->openaiAutocompleteFreepik($contentId);
+        // echo '</br>';
+        // print_r($keywords);
+        // echo '</br>';
+        // 2. Vérification des mots-clés générés
+        if (empty($keywords)) {
+            throw new Exception("Aucun mot-clé généré.");
         }
-    
-        $query = urlencode($description);
-        $url = "https://api.freepik.com/v1/resources?query=$query&content_type=photo";
-    
-        $args = [
-            'headers' => [
-                'x-freepik-api-key' => $this->freepik_api_key,
-            ],
-            'timeout' => 60,
-        ];
-    
-        $response = wp_remote_get($url, $args);
-    
-        if (is_wp_error($response)) {
-            return '❌ Erreur API Freepik : ' . $response->get_error_message();
+        // 3. Préparation de la requête API Freepik
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+        CURLOPT_URL => "https://api.freepik.com/v1/resources?filters%5Bvector%5D%5Btype%5D=jpg&term=" . urlencode($keywords) . "&limit=1&page=1&filters%5Borientation%5D%5Blandscape%5D=1&filters%5Bpsd%5D%5Btype%5D=jpg&filters%5Bai-generated%5D%5Bexcluded%5D=1&filters%5Bcontent_type%5D%5Bphoto%5D=1&filters%5Bcontent_type%5D%5Bpsd%5D=1&order=relevance",
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => "",
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => "GET",
+        CURLOPT_HTTPHEADER => [
+            "Accept-Language: fr-FR",
+            "x-freepik-api-key: FPSXbef134979a9a48aeb5afacdb9793d74b"
+        ],
+        ]);
+        // 4. Exécution de la requête API
+        $response = curl_exec($curl);
+        //print_r($response);
+        $err = curl_error($curl);
+        curl_close($curl);
+        if ($err) {
+            throw new Exception("Erreur cURL : " . $err);
         }
-    
-        $body = json_decode(wp_remote_retrieve_body($response), true);
-    
-        if (isset($body['data'][0]['image']['source']['url'])) {
-            return $body['data'][0]['image']['source']['url'];
+        // 5. Analyse de la réponse JSON pour obtenir l'URL de l'image
+        $data = json_decode($response, true);
+        if (isset($data['data'][0]['image']['source']['url'])) {
+        print_r($data['data'][0]['image']['source']['url']);
+        return  $data['data'][0]['image']['source']['url'];
         } else {
-            return '❌ Aucune image trouvée pour cette description.';
+        throw new Exception("Aucune image trouvée.");
         }
-    }   
-    
+    }
+
+
+
 }
