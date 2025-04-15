@@ -25,44 +25,42 @@ class CSB_Admin {
     public function render_admin_page() {
         $keyword = isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '';
         $nd = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : '';
-
+    
         if (!empty($keyword) && !empty($nd) && isset($_POST['submit'])) {
             $generator = new CSB_Generator();
             $this->last_tree = $generator->generate_structure_array($keyword, $nd);
-            
         }
-
+    
         if (isset($_POST['structure'])) {
             $this->last_tree = $_POST['structure'];
             $this->handle_structure_actions($this->last_tree); 
     
             if (isset($_POST['csb_validate_publish'])) {
                 $this->process_structure();
-                
-                print('<br>');print('<br>');print('<br>');
-                echo '<pre>';
-                print_r($this->last_tree);
-                echo '</pre>';
-
+                // echo "<br>";echo "<br>";echo "<br>";
+                // print_r($this->last_tree);
+                // echo "<br>";echo "<br>";echo "<br>";
                 echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
-                $this->render_links_to_articles($this->last_tree);
             }
         }
-
+    
         echo '<div class="wrap">';
         echo '<h1>Générateur de Cocon Sémantique</h1>';
         $this->render_keyword_form($keyword, $nd);
-        $this->render_structure_form($this->last_tree); // ✅
-
+        $this->render_structure_form($this->last_tree); // ✅ toujours affiché, même après publication
         echo '</div>';
+    
         echo '<div style="margin: 1em 0; padding: 1em; border-left: 4px solid #0073aa; background: #f1f1f1;">';
         echo '<p><strong>🔐 Clé API :</strong> <a href="' . admin_url('admin.php?page=csb_settings') . '">Configurer ici</a></p>';
         echo '</div>';
-        if (isset($_POST['csb_validate_publish'])) {
-            //var_dump($this->last_tree);
+    
+        if (!empty($this->last_tree)) {
+            echo '<div class="wrap"><h2>🔗 Articles publiés</h2><ul>';
+            $this->render_links_to_articles($this->last_tree);
+            echo '</ul></div>';
         }
-        
     }
+    
 
     private function render_keyword_form($keyword, $nd) {
         echo '<form method="post">';
@@ -78,13 +76,19 @@ class CSB_Admin {
 
     private function render_structure_form($tree, $prefix = 'structure', $level = 0) {
         echo '<form method="post">';
+        echo '<fieldset style="padding: 1em; border: 1px solid #ccd0d4; background: #fff; margin-bottom: 1em;">';
+        echo '<legend style="font-weight: bold;">Structure générée</legend>';
+    
         $this->render_structure_fields($tree, $prefix, $level);
+    
+        echo '</fieldset>';
         submit_button('Valider et publier', 'primary', 'csb_validate_publish');
         echo '</form>';
     }
+    
 
     private function render_structure_fields($tree, $prefix, $level) {
-        echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . (($level)) . 'px;">';
+        echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . (($level+20)) . 'px;">';
         //print_r($level);
     
         foreach ($tree as $index => $node) {
@@ -142,7 +146,6 @@ class CSB_Admin {
     }
     
 
-
     private function handle_structure_actions(&$tree) {
         // Ajout d'un enfant
         if (isset($_POST['add_child'])) {
@@ -196,9 +199,7 @@ class CSB_Admin {
     }
        
 
-    private function render_links_to_articles($tree) {
-        echo '<div style="margin-top: 2em;"><h2>📝 Articles publiés</h2><ul>';
-    
+    private function render_links_to_articles($tree){
         foreach ($tree as $slug => $node) {
             if (!empty($node['post_id'])) {
                 $url = get_permalink($node['post_id']);
@@ -213,9 +214,5 @@ class CSB_Admin {
     
         echo '</ul></div>';
     }
-    
-    
-    
-    
-    
+      
 }
