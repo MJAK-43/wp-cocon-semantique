@@ -9,7 +9,7 @@ class CSB_Publisher {
         echo "<br";echo "<br";echo "<br";
         foreach ($tree as $slug => &$node) {
             // Appel à publish_node_simple avec le bon parent et niveau
-            $this->publish_node_simple($node, $slug, $parent_id, $level);
+            $this->publish_node($node, $slug, $parent_id, $level);
         }
     }
     
@@ -45,18 +45,18 @@ class CSB_Publisher {
             }
         }
         else {
-            echo "<br><br><br>";
-            echo "❌ Erreur lors de l'insertion de l'article '$title' (slug: $slug)<br>";
+            // echo "<br><br><br>";
+            // echo "❌ Erreur lors de l'insertion de l'article '$title' (slug: $slug)<br>";
         
-            if (is_wp_error($post_id)) {
-                echo 'Message : ' . esc_html($post_id->get_error_message()) . '<br>';
-                echo 'Code : ' . esc_html($post_id->get_error_code()) . '<br>';
-            } else {
-                echo 'Retour inattendu de wp_insert_post()<br>';
-                var_dump($post_id);
-            }
+            // if (is_wp_error($post_id)) {
+            //     echo 'Message : ' . esc_html($post_id->get_error_message()) . '<br>';
+            //     echo 'Code : ' . esc_html($post_id->get_error_code()) . '<br>';
+            // } else {
+            //     echo 'Retour inattendu de wp_insert_post()<br>';
+            //     var_dump($post_id);
+            // }
         
-            echo "<br><br><br>";
+            // echo "<br><br><br>";
         }
         
     }
