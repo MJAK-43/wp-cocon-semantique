@@ -77,7 +77,7 @@ class CSB_Publisher {
             $html = $this->generate_html_content($content_parts);
     
             $final_content = $this->append_freepik_image(
-                $linker->generate_structured_links($html, $post_id, $parent_id, $node['children'] ?? []),
+                $linker->generate_structured_links($html, $level,$post_id, $parent_id, $node['children'] ?? []),
                 $content_parts['image_url'] ?? '',
                 $content_parts['image'] ?? ''
             );
@@ -123,9 +123,9 @@ class CSB_Publisher {
     private function generate_html_content($content_parts) {
         $html = '';
 
-        echo '<br>';echo '<br>';echo '<br>';
-        print_r($content_parts);
-        echo '<br>';echo '<br>';echo '<br>';
+        // echo '<br>';echo '<br>';echo '<br>';
+        // print_r($content_parts);
+        // echo '<br>';echo '<br>';echo '<br>';
 
 
         if (!empty($content_parts['intro'])) {

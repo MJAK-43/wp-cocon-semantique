@@ -75,29 +75,29 @@ class CSB_Linker {
     /**
      * Ajoute les liens internes séparés avec sections enfants / parent / frères
      */
-    public function generate_structured_links($content, $post_id, $parent_id = 0, $children = []) {
+    public function generate_structured_links($content,$level ,$post_id, $parent_id = 0, $children = []) {
         $sections = [];
 
         $child_links = $this->get_child_links($children, $post_id); 
-        if (!empty($child_links)) {
+        if (!empty($child_links)&$level!=3) {
             $sections[] = "<h3>👶 Articles enfants :</h3><ul><li>" . implode('</li><li>', $child_links) . '</li></ul>';
         }
         else{
-            $content.= "erreur enfant";
+            $content.= "Aucun enfant";
         }
 
         $parent_link = $this->get_parent_link($parent_id);
-        if ($parent_link) {
+        if ($parent_link& $level!=0) {
             $sections[] = "<h3>👆 Article parent :</h3><ul><li>{$parent_link}</li></ul>";
         }else{
-            $content.= "erreur parent";
+            $content.= "Aucun parent";
         }
 
         $sibling_links = $this->get_sibling_links($post_id, $parent_id);
-        if (!empty($sibling_links)) {
+        if (!empty($sibling_links)&&$level!=0) {
             $sections[] = "<h3>👬 Articles liés :</h3><ul><li>" . implode('</li><li>', $sibling_links) . '</li></ul>';
         }else{
-            $content.= "erreur sibling";
+            $content.= "Aucun sibling";
         }
 
         if (!empty($sections)) {
