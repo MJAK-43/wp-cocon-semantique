@@ -119,19 +119,19 @@ class CSB_Admin {
 
     private function process_structure() {
         $generator = new CSB_Generator();
-        echo "<br><br><br>";
-        print_r("////////////////////////////////BEFORE///////////////////////////");
-        echo "<br>";
-        echo '<pre>';
-        print_r($this->last_tree);
-        echo '</pre>';
+        // echo "<br><br><br>";
+        // print_r("////////////////////////////////BEFORE///////////////////////////");
+        // echo "<br>";
+        // echo '<pre>';
+        // print_r($this->last_tree);
+        // echo '</pre>';
         $generator->generate_full_content($this->last_tree);
-        echo "<br><br><br>";
-        print_r("////////////////////////////////AFTER///////////////////////////");
-        echo "<br>";
-        echo '<pre>';
-        print_r($this->last_tree);
-        echo '</pre>';
+        // echo "<br><br><br>";
+        // print_r("////////////////////////////////AFTER///////////////////////////");
+        // echo "<br>";
+        // echo '<pre>';
+        // print_r($this->last_tree);
+        // echo '</pre>';
         $publisher = new CSB_Publisher();
         $publisher->publish_structure($this->last_tree);
     }
