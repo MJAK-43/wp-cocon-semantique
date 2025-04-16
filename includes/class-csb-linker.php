@@ -70,15 +70,22 @@ class CSB_Linker {
         if (!empty($child_links)) {
             $sections[] = "<h3>👶 Articles enfants :</h3><ul><li>" . implode('</li><li>', $child_links) . '</li></ul>';
         }
+        else{
+            $content.= "erreur enfant";
+        }
 
         $parent_link = $this->get_parent_link($parent_id);
         if ($parent_link) {
             $sections[] = "<h3>👆 Article parent :</h3><ul><li>{$parent_link}</li></ul>";
+        }else{
+            $content.= "erreur parent";
         }
 
         $sibling_links = $this->get_sibling_links($post_id, $parent_id);
         if (!empty($sibling_links)) {
             $sections[] = "<h3>👬 Articles liés :</h3><ul><li>" . implode('</li><li>', $sibling_links) . '</li></ul>';
+        }else{
+            $content.= "erreur sibling";
         }
 
         if (!empty($sections)) {
