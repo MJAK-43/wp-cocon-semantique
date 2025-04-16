@@ -18,30 +18,6 @@ class CSB_Generator {
         - $depth sous-thèmes, chacun avec $depth sous-sous-thèmes.
         Pas de commentaires, pas de balises, juste le texte hiérarchique.";
     }
-    private function build_content_prompt(array $tree) {
-        $structure = $this->to_bullet_tree($tree);
-    
-        return "Tu es un rédacteur professionnel en style {$this->style}.\n\n" .
-        "Voici une structure hiérarchique d'articles avec leurs slugs :\n\n{$structure}\n\n" .
-        "Ta mission : rédiger pour chaque titre un article optimisé, en suivant STRICTEMENT ce format :\n\n" .
-        "📝 Chaque article doit faire environ **800 à 1000 mots** (1 page de texte).\n" .
-        "Évite les répétitions et développe les idées avec des exemples concrets et pertinents.\n\n" .
-        "[TITRE: Le titre exact ici]\n" .
-        "INTRO: Introduction générale du sujet.\n" .
-        "CLICK_BAIT: Une phrase incitative qui donne envie de lire l'article (visible chez le parent).\n" .
-        "DEVELOPMENTS:\n" .
-        "- Chaque ligne commence par un vrai sous-titre suivi de : le texte associé (ex : Le Labrador Retriever : un chien idéal pour la famille)\n" .
-        "CONCLUSION: Conclusion synthétique de l’article.\n" .
-        "[IMAGE: description courte de l’image à générer sur Freepik]\n" .
-        "[SLUG: le slug EXACT donné ci-dessus — NE LE MODIFIE JAMAIS]\n\n" .
-        "⚠️ Très important :
-        - Ne mets **aucun emoji** ou mise en forme (gras, italique, astérisques).
-        - Commence chaque bloc exactement par [TITRE: ...], sans ajout.
-        - Aucun saut de ligne inutile ou bloc superflu.
-        - ❌ N’utilise pas les titres génériques comme 'Titre 1', 'Titre 2'. Utilise un **vrai sous-titre parlant**.";
-}
-
-    
     
 
     public function __construct($api_key = null, $freepik_api_key = null) {
@@ -72,6 +48,30 @@ class CSB_Generator {
         return $this->tree_to_slug_map($tree);
 
     }
+
+    private function validate_block_format(string $text): bool {
+        $required_blocks = [
+            '/\[TITRE:\s*.+?\]/',
+            '/INTRO:\s+.+/',
+            '/CLICK_BAIT:\s+.+/',
+            '/DEVELOPMENTS:\s+-\s*.+?:\s*.+/',
+            '/CONCLUSION:\s+.+/',
+            '/\[IMAGE:\s*.+?\]/',
+            '/\[SLUG:\s*.+?\]/',
+        ];
+    
+        foreach ($required_blocks as $pattern) {
+            if (!preg_match($pattern, $text)) {
+                return false;
+            }
+        }
+    
+        return true;
+    }
+    
+    
+
+    
     private function parse_markdown_structure($text) {
         $lines = explode("\n", trim($text));
         $stack = [];
@@ -186,23 +186,45 @@ class CSB_Generator {
             "Contexte : voici la structure hiérarchique dans laquelle s’insère l’article \"$title\". Chaque ligne représente un titre d’article :\n\n" .
             $structure . "\n\n" .
             "Ta mission : rédiger un article optimisé pour le sujet \"$title\".\n\n" .
-            "📝 L'article doit faire environ **400 à 600 mots** (1 page de texte).\n" .
+            //"📝 L'article doit faire environ **800 à 1000 mots** (1 page de texte).\n" .
             "Évite les répétitions et développe les idées avec des exemples concrets et pertinents.\n\n" .
             "Respecte ce format STRICTEMENT (ne rien ajouter ni modifier) :\n\n" .
             "[TITRE: $title]\n" .
             "INTRO: Introduction générale du sujet.\n" .
             "CLICK_BAIT: Une phrase incitative qui donne envie de lire l'article (visible chez le parent).\n" .
             "DEVELOPMENTS:\n" .
-            "- Titre 1: Texte du développement 1\n" .
-            "- Titre 2: Texte du développement 2\n" .
-            "...\n" .
+            "- Chaque ligne commence par un vrai sous-titre suivi de : le texte associé (ex : Le Labrador Retriever : un chien idéal pour la famille)\n" .
             "CONCLUSION: Conclusion synthétique de l’article.\n" .
             "[IMAGE: description courte de l’image à générer sur Freepik]\n\n" .
             "⚠️ Très important :\n" .
             "- Ne mets **aucun emoji** ou mise en forme (gras, italique, astérisques).\n" .
             "- Ne modifie jamais le format ni l'ordre des blocs.\n" .
-            "- Aucun saut de ligne inutile ou bloc superflu.";
+            "- Aucun saut de ligne inutile ou bloc superflu.\n" .
+            "- ❌ N’utilise pas les titres génériques comme 'Titre 1', 'Titre 2'. Utilise un **vrai sous-titre parlant**.";
     }
+
+    private function getPromptArticleValidation($title, $contextTree, $raw): string {
+        $structure = $this->to_bullet_tree($contextTree);
+    
+        return "Tu es un expert en rédaction SEO.\n\n" .
+            "Voici la structure hiérarchique du cocon sémantique (contexte global) :\n" .
+            "{$structure}\n\n" .
+            "Le titre à traiter est : \"$title\"\n\n" .
+            "Voici le texte généré à valider :\n" .
+            "{$raw}\n\n" .
+            "Ta mission :\n" .
+            "- Vérifie que ce texte respecte strictement le format suivant :\n" .
+            "[TITRE: ...]\nINTRO: ...\nCLICK_BAIT: ...\nDEVELOPMENTS:\n- Sous-titre : texte\n...\nCONCLUSION: ...\n[IMAGE: ...]\n[SLUG: ...]\n\n" .
+            "- Si un ou plusieurs blocs sont manquants, mal formatés ou incorrects, corrige-les immédiatement.\n" .
+            "- Ne change pas le contenu correct.\n" .
+            "- Utilise exactement les balises attendues, sans ajout inutile.\n" .
+            "- Rends la version corrigée prête à être parsée automatiquement.\n\n" .
+            "❗ N’utilise pas les titres génériques comme 'Titre 1', mais des sous-titres significatifs.\n" .
+            "❗ Ne mets aucun emoji, aucune mise en forme spéciale.\n\n" .
+            "Corrige uniquement ce qui est nécessaire. Rends un texte propre et valide.";
+    }
+    
+    
 
     private function parse_content_blocks($text) {
         // Correspond à un seul article au format strict
@@ -279,10 +301,51 @@ class CSB_Generator {
         return null;
     }
 
+
+    private function is_valid_format(string $raw): bool {
+        // Vérifie que toutes les balises principales sont présentes
+        $required_blocks = [
+            '\[TITRE:\s*.+?\]',
+            'INTRO:\s*.+',
+            'CLICK_BAIT:\s*.+',
+            'DEVELOPMENTS:\s*(?:- .+?: .+\s*)+',
+            'CONCLUSION:\s*.+',
+            '\[IMAGE:\s*.+?\]',
+            '\[SLUG:\s*.+?\]'
+        ];
+    
+        foreach ($required_blocks as $pattern) {
+            if (!preg_match('/' . $pattern . '/s', $raw)) {
+                return false;
+            }
+        }
+    
+        // Vérifie qu'au moins un développement est bien structuré
+        if (!preg_match('/- .+?: .+/', $raw)) {
+            return false;
+        }
+    
+        return true;
+    }
+
     private function generate_content_for_node(string $slug, array &$node, array $fullTree) {
         $context_tree = $this->extract_subtree_context($slug, $fullTree);
         $prompt = $this->getPromptArticle($node['title'], $context_tree);
         $raw = $this->call_api($prompt);
+        while(!$this->is_valid_format($raw)) {
+            // echo '<br>';
+            // echo '<br>';
+            // echo '<br>';
+            // print_r("format incorect");
+            // echo '<br>';
+            // echo '<br>';
+
+            $validation_prompt = $this->getPromptArticleValidation($node['title'], $context_tree, $raw);
+            $raw = $this->call_api($validation_prompt); // Correction via OpenAI
+        }
+        
+        $parsed = $this->parse_content_blocks($raw);
+
         // echo "<br>";echo "<br>";
         // print_r($raw);
         // echo "<br>";echo "<br>";
@@ -315,11 +378,6 @@ class CSB_Generator {
         }
     }
     
-    
-    private function get_freepik_link($description) {
-        $query = urlencode($description);
-        return "https://www.freepik.com/search?format=search&query=$query";
-    } 
     
     public function get_freepik_image($keywords){
         
