@@ -4,9 +4,9 @@ if (!defined('ABSPATH')) exit;
 class CSB_Publisher {
 
     public function publish_structure(array &$tree, int $parent_id = 0, int $level = 0) {
-        echo "<br";echo "<br";echo "<br";
-        print_r($tree);
-        echo "<br";echo "<br";echo "<br";
+        // echo "<br";echo "<br";echo "<br";
+        // print_r($tree);
+        // echo "<br";echo "<br";echo "<br";
         foreach ($tree as $slug => &$node) {
             // Appel à publish_node_simple avec le bon parent et niveau
             $this->publish_node($node, $slug, $parent_id, $level);
