@@ -10,7 +10,7 @@ class CSB_Generator {
     private $image_description;
 
     private function getPromptStructure($keyword, $depth) {
-        return "Tu es un expert en SEO. Génère une structure hiérarchique de cocon sémantique en texte brut.
+        return "Tu es un expert en SEO abtimiser pour le référencement. Génère une structure hiérarchique de cocon sémantique en texte brut.
         Consignes :
         - Utilise des tirets `-` pour chaque point.
         - Utilise **4 espaces** pour chaque niveau d’imbrication (indentation).
@@ -182,26 +182,46 @@ class CSB_Generator {
     private function getPromptArticle($title, $contextTree) {
         $structure = $this->to_bullet_tree($contextTree);
     
+        // 🧠 Récupère les titres des enfants directs (si présents)
+        $children_titles = [];
+        foreach ($contextTree as $slug => $node) {
+            if (!empty($node['children'])) {
+                foreach ($node['children'] as $child_slug => $child_node) {
+                    $children_titles[] = $child_node['title'];
+                }
+            }
+        }
+    
+        $dev_part = '';
+        if (!empty($children_titles)) {
+            $dev_part .= "Dans la section DEVELOPMENTS, crée une sous-partie pour **chaque enfant** de cet article. Voici les titres des enfants :\n";
+            foreach ($children_titles as $ctitle) {
+                $dev_part .= "- \"$ctitle\"\n";
+            }
+            $dev_part .= "Chaque sous-titre DOIT correspondre exactement à un de ces titres. Tu n’as pas le droit d’inventer un titre supplémentaire.\n\n";
+        }
+    
         return "Tu es un rédacteur professionnel en style {$this->style}.\n\n" .
             "Contexte : voici la structure hiérarchique dans laquelle s’insère l’article \"$title\". Chaque ligne représente un titre d’article :\n\n" .
             $structure . "\n\n" .
             "Ta mission : rédiger un article optimisé pour le sujet \"$title\".\n\n" .
-            //"📝 L'article doit faire environ **800 à 1000 mots** (1 page de texte).\n" .
             "Évite les répétitions et développe les idées avec des exemples concrets et pertinents.\n\n" .
-            "Respecte ce format STRICTEMENT (ne rien ajouter ni modifier) :\n\n" .
+            "Respecte ce format STRICTEMENT :\n\n" .
             "[TITRE: $title]\n" .
             "INTRO: Introduction générale du sujet.\n" .
             "CLICK_BAIT: Une phrase incitative qui donne envie de lire l'article (visible chez le parent).\n" .
             "DEVELOPMENTS:\n" .
-            "- Chaque ligne commence par un vrai sous-titre suivi de : le texte associé (ex : Le Labrador Retriever : un chien idéal pour la famille)\n" .
+            "{$dev_part}" .
+            "- Chaque ligne commence par un vrai sous-titre suivi de : le texte associé.\n" .
             "CONCLUSION: Conclusion synthétique de l’article.\n" .
-            "[IMAGE: description courte de l’image à générer sur Freepik]\n\n" .
+            "[IMAGE: description courte de l’image à générer sur Freepik]\n" .
+            "[SLUG: le slug EXACT donné ci-dessus — NE LE MODIFIE JAMAIS]\n\n" .
             "⚠️ Très important :\n" .
             "- Ne mets **aucun emoji** ou mise en forme (gras, italique, astérisques).\n" .
             "- Ne modifie jamais le format ni l'ordre des blocs.\n" .
-            "- Aucun saut de ligne inutile ou bloc superflu.\n" .
-            "- ❌ N’utilise pas les titres génériques comme 'Titre 1', 'Titre 2'. Utilise un **vrai sous-titre parlant**.";
+            "- ❌ Utilise exactement les titres fournis pour les sous-parties.\n";
     }
+    
 
     private function getPromptArticleValidation($title, $contextTree, $raw): string {
         $structure = $this->to_bullet_tree($contextTree);
