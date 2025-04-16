@@ -132,8 +132,8 @@ class CSB_Admin {
         echo '<pre>';
         print_r($this->last_tree);
         echo '</pre>';
-        // $publisher = new CSB_Publisher();
-        // $publisher->publish_structure($this->last_tree);
+        $publisher = new CSB_Publisher();
+        $publisher->publish_structure($this->last_tree);
     }
 
     private function generate_slug($title) {
