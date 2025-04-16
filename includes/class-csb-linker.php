@@ -42,6 +42,18 @@ class CSB_Linker {
         return null;
     }
 
+
+    public function get_clickbait_link(array $child): string {
+        if (empty($child['post_id'])) return '';
+        $url = get_permalink($child['post_id']);
+        $click_bait = $child['click_bait'] ?? $child['title'] ?? '';
+    
+        if (!$url || !$click_bait) return '';
+    
+        return '<p style="margin-top:0.5em;"><a href="' . esc_url($url) . '"><em>' . esc_html($click_bait) . '</em></a></p>';
+    }
+    
+
     /**
      * Retourne un tableau de liens vers les frères et sœurs avec leur click_bait
      */

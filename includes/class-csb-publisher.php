@@ -133,9 +133,20 @@ class CSB_Publisher {
         }
 
         if (!empty($content_parts['developments'])) {
+            $linker = new CSB_Linker(); // ajouter en début de fonction si nécessaire
+
             foreach ($content_parts['developments'] as $dev) {
                 $html .= '<h3>' . esc_html($dev['title']) . '</h3>';
                 $html .= '<p>' . esc_html($dev['text']) . '</p>';
+
+                if (!empty($node['children'])) {
+                    foreach ($node['children'] as $child) {
+                        if ($child['title'] === $dev['title']) {
+                            $html .= $linker->get_clickbait_link($child);
+                            break;
+                        }
+                    }
+                }
             }
         }
 
