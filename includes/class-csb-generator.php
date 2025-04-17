@@ -82,7 +82,7 @@ class CSB_Generator {
     }
 
     
-    private function is_valid_format(string $text): bool {
+    private function is_valid_format(string $raw): bool {
         $required_blocks = [
             '/\[TITRE:\s*.+?\]/',
             '/INTRO:\s+.+/',
@@ -94,7 +94,7 @@ class CSB_Generator {
         ];
 
         foreach ($required_blocks as $pattern) {
-            if (!preg_match($pattern, $text)) {
+            if (!preg_match($pattern, $raw)) {
                 return false;
             }
         }
