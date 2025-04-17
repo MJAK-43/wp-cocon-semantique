@@ -49,6 +49,38 @@ class CSB_Generator {
 
     }
 
+    private function parse_markdown_structure($text) {
+        $lines = explode("\n", trim($text));
+        $stack = [];
+        $root = [];
+    
+        foreach ($lines as $line) {
+            if (trim($line) === '') continue;
+    
+            // Match le titre avec indentation (espaces) et tiret
+            if (preg_match('/^(\s*)-\s*(.+)$/', $line, $matches)) {
+                $indent = strlen($matches[1]); // nombre d'espaces
+                $title = trim($matches[2]);
+    
+                $level = intval($indent / 4); // 4 espaces = 1 niveau
+    
+                $node = ['title' => $title, 'children' => []];
+    
+                if ($level === 0) {
+                    $root[] = $node;
+                    $stack = [&$root[array_key_last($root)]];
+                } else {
+                    // Trouve le bon parent selon le niveau
+                    $parent = &$stack[$level - 1]['children'];
+                    $parent[] = $node;
+                    $stack[$level] = &$parent[array_key_last($parent)];
+                }
+            }
+        }
+    
+        return $root;
+    }
+
     
     private function is_valid_format(string $raw): bool {
         $required_blocks = [
@@ -111,7 +143,7 @@ class CSB_Generator {
         }
         return [];
     }
-    
+
     private function tree_to_slug_map(array $tree) {
         $map = [];
     
