@@ -3,6 +3,26 @@ if (!defined('ABSPATH')) exit;
 
 class CSB_Linker {
 
+
+    /**
+     * Ajoute un champ 'link' à chaque nœud du cocon sémantique.
+     *
+     * @param array $tree La structure arborescente (par référence)
+     * @param string $base_url L’URL de base pour générer les liens
+    */
+    public function add_links_to_structure(array &$tree, string $base_url = '') {
+        foreach ($tree as $slug => &$node) {
+            $url = trailingslashit($base_url) . $slug;
+            $node['link'] = $url;
+
+            if (!empty($node['children']) && is_array($node['children'])) {
+                $this->add_links_to_structure($node['children'], $base_url);
+            }
+        }
+    }
+
+    
+
     /**
      * Retourne un tableau de liens vers les enfants avec leur click_bait
      */
@@ -79,7 +99,7 @@ class CSB_Linker {
         $sections = [];
 
         $child_links = $this->get_child_links($children, $post_id); 
-        if (!empty($child_links)&$level!=3) {
+        if (!empty($child_links)&&$level!=3) {
             $sections[] = "<h3>👶 Articles enfants :</h3><ul><li>" . implode('</li><li>', $child_links) . '</li></ul>';
         }
         else{
@@ -87,7 +107,7 @@ class CSB_Linker {
         }
 
         $parent_link = $this->get_parent_link($parent_id);
-        if ($parent_link& $level!=0) {
+        if ($parent_link&& $level!=0) {
             $sections[] = "<h3>👆 Article parent :</h3><ul><li>{$parent_link}</li></ul>";
         }else{
             $content.= "Aucun parent";

@@ -34,7 +34,7 @@ class CSB_Admin {
         if (isset($_POST['structure'])) {
             $this->last_tree = $_POST['structure'];
             $this->handle_structure_actions($this->last_tree); 
-    
+            
             if (isset($_POST['csb_validate_publish'])) {
                 $this->process_structure();
                 // echo "<br>";echo "<br>";echo "<br>";
@@ -118,6 +118,12 @@ class CSB_Admin {
     
 
     private function process_structure() {
+
+
+        // 🔗 Injecter les liens dans chaque nœud de contenu
+        $linker = new CSB_Linker();
+        $linker->add_links_to_structure($this->last_tree);
+        
         $generator = new CSB_Generator();
         // echo "<br><br><br>";
         // print_r("////////////////////////////////BEFORE///////////////////////////");

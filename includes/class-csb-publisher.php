@@ -118,6 +118,9 @@ class CSB_Publisher {
         update_post_meta($post_id, '_csb_click_bait', $click_bait);
     }
 
+
+    
+
     
 
     private function generate_html_content($content_parts) {
