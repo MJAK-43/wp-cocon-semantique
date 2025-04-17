@@ -138,12 +138,7 @@ class CSB_Admin {
         // // print_r($this->last_tree);
         // // echo '</pre>';
         // $generator->generate_full_content($this->last_tree);
-        // // echo "<br><br><br>";
-        // // print_r("////////////////////////////////AFTER///////////////////////////");
-        // // echo "<br>";
-        // // echo '<pre>';
-        // // print_r($this->last_tree);
-        // // echo '</pre>';
+
     
         // // Étape 4 : Injecter le contenu et publier les articles
         // $publisher->fill_and_publish_content($this->last_tree);
@@ -155,6 +150,13 @@ class CSB_Admin {
         $linker->add_permalink_links($this->last_tree); // Ajoute les vrais liens
         $generator = new CSB_Generator();
         $generator->generate_full_content($this->last_tree); // Génère avec les bons liens
+
+        echo "<br><br><br>";
+        print_r("////////////////////////////////AFTER///////////////////////////");
+        echo "<br>";
+        echo '<pre>';
+        print_r($this->last_tree);
+        echo '</pre>';
         $publisher->fill_and_publish_content($this->last_tree); // Injecte le contenu
 
     }
