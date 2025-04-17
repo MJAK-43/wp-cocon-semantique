@@ -117,13 +117,19 @@ class CSB_Admin {
     
     
 
+    
+
     private function process_structure() {
-
-
-        // 🔗 Injecter les liens dans chaque nœud de contenu
+        $publisher = new CSB_Publisher();
+    
+        // Étape 1 : Créer tous les articles (pour avoir les post_id)
+        $publisher->register_all_posts($this->last_tree);
+    
+        // Étape 2 : Ajouter les liens réels WordPress (basés sur les post_id)
         $linker = new CSB_Linker();
-        $linker->add_permalink_links($this->last_tree);
-        
+        $linker->add_permalink_links($this->last_tree); // ✅ Les champs 'link' sont disponibles
+    
+        // Étape 3 : Générer les contenus avec OpenAI en tenant compte des liens
         $generator = new CSB_Generator();
         // echo "<br><br><br>";
         // print_r("////////////////////////////////BEFORE///////////////////////////");
@@ -132,15 +138,17 @@ class CSB_Admin {
         // print_r($this->last_tree);
         // echo '</pre>';
         $generator->generate_full_content($this->last_tree);
-        echo "<br><br><br>";
-        print_r("////////////////////////////////AFTER///////////////////////////");
-        echo "<br>";
-        echo '<pre>';
-        print_r($this->last_tree);
-        echo '</pre>';
-        $publisher = new CSB_Publisher();
-        $publisher->publish_structure($this->last_tree);
+        // echo "<br><br><br>";
+        // print_r("////////////////////////////////AFTER///////////////////////////");
+        // echo "<br>";
+        // echo '<pre>';
+        // print_r($this->last_tree);
+        // echo '</pre>';
+    
+        // Étape 4 : Injecter le contenu et publier les articles
+        $publisher->fill_and_publish_content($this->last_tree);
     }
+    
 
     private function generate_slug($title) {
         $slug = strtolower($title);

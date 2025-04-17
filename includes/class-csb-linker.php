@@ -7,18 +7,68 @@ class CSB_Linker {
      * Ajoute les vrais permaliens WordPress aux nœuds une fois qu’ils ont un post_id.
      * @param array $tree
      */
-    public function add_permalink_links(array &$tree) {
+    // public function add_permalink_links(array &$tree) {
+    //     foreach ($tree as &$node) {
+    //         if (!empty($node['post_id'])) {
+    //             $node['link'] = get_permalink($node['post_id']);
+    //             print_r($node['post_id']);
+    //         }
+    
+    //         if (!empty($node['children'])) {
+    //             $this->add_permalink_links($node['children']);
+    //         }
+    //     }
+    // }
+
+    public function add_permalink_links(array &$tree, array &$title_count = []) {
         foreach ($tree as &$node) {
             if (!empty($node['post_id'])) {
-                $node['link'] = get_permalink($node['post_id']);
-                print_r($node['post_id']);
+                $title = $node['title'];
+    
+                // Compter les occurrences du titre
+                if (!isset($title_count[$title])) {
+                    $title_count[$title] = 1;
+                } else {
+                    $title_count[$title]++;
+                }
+    
+                // Créer un slug unique basé sur le titre + compteur
+                $suffix = $title_count[$title] > 1 ? '-' . $title_count[$title] : '';
+                $slug = sanitize_title($title . $suffix);
+    
+                // Générer le lien à partir du slug (en local ou base_url configurable)
+                $base_url = home_url('/');
+                $url = trailingslashit($base_url) . $slug;
+    
+                $node['link'] = $url;
             }
     
             if (!empty($node['children'])) {
-                $this->add_permalink_links($node['children']);
+                $this->add_permalink_links($node['children'], $title_count);
             }
         }
     }
+    
+
+    public function count_articles_by_exact_title($target_title) {
+        $query = new WP_Query([
+            'post_type'      => 'post',
+            'posts_per_page' => -1,
+            's'              => $target_title,
+            'post_status'    => 'publish',
+        ]);
+    
+        $count = 0;
+    
+        foreach ($query->posts as $post) {
+            if (strcasecmp($post->post_title, $target_title) === 0) {
+                $count++;
+            }
+        }
+    
+        return $count;
+    }
+    
     
 
     /**
