@@ -122,7 +122,7 @@ class CSB_Admin {
 
         // 🔗 Injecter les liens dans chaque nœud de contenu
         $linker = new CSB_Linker();
-        $linker->add_links_to_structure($this->last_tree,'index.php/');
+        $linker->add_permalink_links($this->last_tree);
         
         $generator = new CSB_Generator();
         // echo "<br><br><br>";
