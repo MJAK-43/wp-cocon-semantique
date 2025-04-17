@@ -58,14 +58,14 @@ class CSB_Linker {
         $sections = [];
 
         $parent_link = $this->get_parent_link($parent_id);
-        if ($parent_link && $level != 0) {
+        if ($parent_link && $level != 1) {
             $sections[] = "<h3>👆 Article parent :</h3><ul><li>{$parent_link}</li></ul>";
         } else {
             $content .= "Aucun parent";
         }
 
         $sibling_links = $this->get_sibling_links($post_id, $parent_id);
-        if (!empty($sibling_links) && $level != 0) {
+        if (!empty($sibling_links) && $level != 1) {
             $sections[] = "<h3>👬 Articles liés :</h3><ul><li>" . implode('</li><li>', $sibling_links) . '</li></ul>';
         } else {
             $content .= "Aucun sibling";
