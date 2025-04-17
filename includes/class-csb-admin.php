@@ -134,10 +134,20 @@ class CSB_Admin {
     
 
     private function generate_slug($title) {
-        $slug = strtolower($title);
-        $slug = remove_accents($slug);
-        $slug = preg_replace('/[^a-z0-9]+/', '-', $slug);
-        return trim($slug, '-');
+        global $wpdb;
+        $base_slug = sanitize_title($title);
+        $slug = $base_slug;
+        $i = 1;
+
+        while ($wpdb->get_var($wpdb->prepare(
+            "SELECT ID FROM $wpdb->posts WHERE post_name = %s AND post_type = 'post'",
+            $slug
+        ))) {
+            $slug = $base_slug . '-' . $i;
+            $i++;
+        }
+
+        return $slug;
     }
     private function &get_node_by_path(&$tree, $path_array) {
         $ref = &$tree;

@@ -19,7 +19,23 @@ class CSB_Linker {
     //         }
     //     }
     // }
-
+    public function generate_unique_slug(string $title): string {
+        global $wpdb;
+        $base_slug = sanitize_title($title);
+        $slug = $base_slug;
+        $i = 1;
+    
+        while ($wpdb->get_var($wpdb->prepare(
+            "SELECT ID FROM $wpdb->posts WHERE post_name = %s AND post_type = 'post'",
+            $slug
+        ))) {
+            $slug = $base_slug . '-' . $i;
+            $i++;
+        }
+    
+        return $slug;
+    }
+    
     public function add_permalink_links(array &$tree) {
         foreach ($tree as &$node) {
             if (!empty($node['title'])) {
