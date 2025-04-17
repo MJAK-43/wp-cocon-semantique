@@ -132,12 +132,12 @@ class CSB_Admin {
         // print_r($this->last_tree);
         // echo '</pre>';
         $generator->generate_full_content($this->last_tree);
-        // echo "<br><br><br>";
-        // print_r("////////////////////////////////AFTER///////////////////////////");
-        // echo "<br>";
-        // echo '<pre>';
-        // print_r($this->last_tree);
-        // echo '</pre>';
+        echo "<br><br><br>";
+        print_r("////////////////////////////////AFTER///////////////////////////");
+        echo "<br>";
+        echo '<pre>';
+        print_r($this->last_tree);
+        echo '</pre>';
         $publisher = new CSB_Publisher();
         $publisher->publish_structure($this->last_tree);
     }
