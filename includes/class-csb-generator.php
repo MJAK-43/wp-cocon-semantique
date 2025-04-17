@@ -222,27 +222,35 @@ class CSB_Generator {
     private function getPromptArticle($title, $contextTree) {
         $structure = $this->to_bullet_tree($contextTree);
     
-        // 🧠 Récupère les titres des enfants directs
-        $children_titles = [];
+        // 🧠 Génération des liens HTML des enfants
+        $children_links = [];
         foreach ($contextTree as $slug => $node) {
             if (!empty($node['children'])) {
                 foreach ($node['children'] as $child_slug => $child_node) {
-                    $children_titles[] = $child_node['title'];
+                    if (!empty($child_node['title']) && !empty($child_node['link']) && !empty($child_node['click_bait'])) {
+                        $children_links[] = [
+                            'title' => $child_node['title'],
+                            'link' => '<a href="' . esc_url($child_node['link']) . '">' . esc_html($child_node['click_bait']) . '</a>',
+                        ];
+                    }
                 }
             }
         }
     
+        // 🔧 Partie DEVELOPMENT avec liens intégrés
         $dev_part = '';
-        if (!empty($children_titles)) {
-            $dev_part .= "Dans la section DEVELOPMENTS, crée une entrée pour chaque enfant direct de cet article. Utilise cette structure précise :\n";
-            $dev_part .= "- title: Le sous-titre exact\n  text: Le texte de développement\n  link: Le lien HTML vers l’article enfant\n";
-            $dev_part .= "Voici les titres à traiter :\n";
-            foreach ($children_titles as $ctitle) {
-                $dev_part .= "- \"$ctitle\"\n";
+        if (!empty($children_links)) {
+            $dev_part .= "Dans la section DEVELOPMENTS, crée une entrée pour chaque enfant direct de cet article. Voici la structure à respecter :\n";
+            $dev_part .= "- title: Le sous-titre exact\n  text: Le texte de développement\n  link: Le lien HTML fourni (ne le modifie pas)\n\n";
+            $dev_part .= "Voici les données à utiliser :\n";
+            foreach ($children_links as $child) {
+                $dev_part .= "- title: {$child['title']}\n";
+                $dev_part .= "  link: {$child['link']}\n";
             }
-            $dev_part .= "Utilise exactement ces titres, sans en ajouter ni modifier.\n\n";
+            $dev_part .= "\nUtilise exactement ces liens. Ne modifie pas les URL ni les textes des liens.\n\n";
         }
     
+        // 📝 Prompt complet
         return "Tu es un rédacteur professionnel en style {$this->style}.\n\n" .
             "Contexte : voici la structure hiérarchique dans laquelle s’insère l’article \"$title\". Chaque ligne représente un titre d’article :\n\n" .
             "$structure\n\n" .
@@ -264,6 +272,7 @@ class CSB_Generator {
     }
     
     
+    
 
     private function getPromptArticleValidation($title, $contextTree, $raw): string {
         $structure = $this->to_bullet_tree($contextTree);
@@ -277,59 +286,15 @@ class CSB_Generator {
             "Ta mission :\n" .
             "- Vérifie que ce texte respecte strictement le format suivant :\n" .
             "[TITRE: ...]\nINTRO: ...\nCLICK_BAIT: ...\nDEVELOPMENTS:\n- title: ...\n  text: ...\n  link: <a href='...'>...</a>\n...\nCONCLUSION: ...\n[IMAGE: ...]\n[SLUG: ...]\n\n" .
-            "- Si un ou plusieurs blocs sont manquants, mal formatés ou incorrects, corrige-les immédiatement.\n" .
-            "- Ne change pas le contenu correct.\n" .
-            "- Utilise exactement les balises attendues, sans ajout inutile.\n" .
-            "- Rends la version corrigée prête à être parsée automatiquement.\n\n" .
-            "❗ N’utilise pas les titres génériques comme 'Titre 1', mais des sous-titres significatifs.\n" .
-            "❗ Ne mets aucun emoji, aucune mise en forme spéciale.\n\n" .
-            "Corrige uniquement ce qui est nécessaire. Rends un texte propre et valide.";
+            "- Chaque bloc doit être présent et bien structuré.\n" .
+            "- Le lien doit être un lien HTML complet (balise <a>) donné dans le prompt initial.\n" .
+            "- Ne change pas le contenu des liens ni le format des balises.\n\n" .
+            "Corrige uniquement ce qui est nécessaire pour que le texte soit correctement parsé automatiquement.";
     }
     
     
+    
 
-    /*private function parse_content_blocks($text) {
-        // Correspond à un seul article au format strict
-        if (preg_match('/\[TITRE:\s*(.*?)\]\s*INTRO:\s*(.*?)\s*CLICK_BAIT:\s*(.*?)\s*DEVELOPMENTS:\s*((?:-.*?:.*?\n?)+?)CONCLUSION:\s*(.*?)\s*\[IMAGE:\s*(.*?)\]/s', $text, $m)) {
-            $title = trim($m[1], " \t\n\r\0\x0B\"");
-            $intro = trim($m[2]);
-            $click_bait = trim($m[3]);
-            $dev_block = trim($m[4]);
-            $conclusion = trim($m[5]);
-            $image = trim($m[6]);
-    
-            $slug = self::generate_slug($title);
-    
-            // Extraire les développements
-            $developments = [];
-            preg_match_all('/-\s*(.*?):\s*(.*?)(?=(?:-\s.*?:|$))/s', $dev_block, $dev_matches, PREG_SET_ORDER);
-            foreach ($dev_matches as $dev) {
-                $developments[] = [
-                    'title' => trim($dev[1]),
-                    'text' => trim($dev[2])
-                ];
-            }
-    
-            return [
-                $slug => [
-                    'content' => [
-                        'intro' => $intro,
-                        'developments' => $developments,
-                        'conclusion' => $conclusion,
-                        'image' => $image
-                    ],
-                    'click_bait' => $click_bait,
-                    'slug' => $slug,
-                    'title' => $title
-                ]
-            ];
-        }
-        // echo '<br>';echo '<br>';
-        // print_r($text);
-        // echo '<br>';echo '<br>';
-        return []; // rien trouvé
-    }*/
-    
 
     
     private function clean_generated_structure($text) {
@@ -364,48 +329,17 @@ class CSB_Generator {
     }
 
 
-    // private function is_valid_format(string $raw): bool {
-    //     // Vérifie que toutes les balises principales sont présentes
-    //     $required_blocks = [
-    //         '\[TITRE:\s*.+?\]',
-    //         'INTRO:\s*.+',
-    //         'CLICK_BAIT:\s*.+',
-    //         'DEVELOPMENTS:\s*(?:- .+?: .+\s*)+',
-    //         'CONCLUSION:\s*.+',
-    //         '\[IMAGE:\s*.+?\]',
-    //         '\[SLUG:\s*.+?\]'
-    //     ];
-    
-    //     foreach ($required_blocks as $pattern) {
-    //         if (!preg_match('/' . $pattern . '/s', $raw)) {
-    //             return false;
-    //         }
-    //     }
-    
-    //     // Vérifie qu'au moins un développement est bien structuré
-    //     if (!preg_match('/- .+?: .+/', $raw)) {
-    //         return false;
-    //     }
-    
-    //     return true;
-    // }
 
     private function generate_content_for_node(string $slug, array &$node, array $fullTree) {
         $context_tree = $this->extract_subtree_context($slug, $fullTree);
         $prompt = $this->getPromptArticle($node['title'], $context_tree);
         $raw = $this->call_api($prompt);
         while(!$this->is_valid_format($raw)) {
-            echo '<br>';
-            echo '<br>';
-            echo '<br>';
-            print_r("format incorect");
-            echo '<br>';echo '<br>';
-            echo '<br>';
-            echo '<br>';
-            print_r("format incorect");
-            echo '<br>';
-            echo '<br>';
-            echo '<br>';
+            // echo '<br>';
+            // echo '<br>';
+            // print_r("format incorect");
+            // echo '<br>';
+            // echo '<br>';
 
 
             $validation_prompt = $this->getPromptArticleValidation($node['title'], $context_tree, $raw);

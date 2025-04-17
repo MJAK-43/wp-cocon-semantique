@@ -12,12 +12,13 @@ class CSB_Linker {
             if (!empty($node['post_id'])) {
                 $node['link'] = get_permalink($node['post_id']);
             }
-
-            if (!empty($node['children']) && is_array($node['children'])) {
+    
+            if (!empty($node['children'])) {
                 $this->add_permalink_links($node['children']);
             }
         }
     }
+    
 
     /**
      * Retourne un lien vers le parent avec son click_bait
