@@ -56,6 +56,8 @@ class CSB_Publisher {
         update_post_meta($post_id, '_csb_parent_id', $parent_id);
         update_post_meta($post_id, '_csb_slug', $slug);
         update_post_meta($post_id, '_csb_click_bait', $click_bait);
+        update_post_meta($post_id, '_csb_link', get_permalink($post_id));
+
     }
 
     private function generate_html_content($content_parts,$level) {
@@ -68,7 +70,7 @@ class CSB_Publisher {
         if (!empty($content_parts['developments'])) {
             foreach ($content_parts['developments'] as $dev) {
                 $html .= '<h3>' . esc_html($dev['title']) . '</h3>';
-                $html .= '<p>' . esc_html($dev['text']) . '</p>';
+                $html .= '<p>' . wp_kses_post($dev['text']) . '</p>';
                 if (!empty($dev['link'])&&$level!=3) {
                     $html .= '<p>' . $dev['link'] . '</p>';
                 }
