@@ -24,31 +24,31 @@ class CSB_Linker {
         foreach ($tree as &$node) {
             if (!empty($node['post_id'])) {
                 $title = $node['title'];
-    
+
                 // Compter les occurrences du titre
                 if (!isset($title_count[$title])) {
                     $title_count[$title] = 1;
                 } else {
                     $title_count[$title]++;
                 }
-    
+
                 // Créer un slug unique basé sur le titre + compteur
                 $suffix = $title_count[$title] > 1 ? '-' . $title_count[$title] : '';
                 $slug = sanitize_title($title . $suffix);
-    
+
                 // Générer le lien à partir du slug (en local ou base_url configurable)
                 $base_url = home_url('/');
                 $url = trailingslashit($base_url) . $slug;
-    
+
                 $node['link'] = $url;
             }
-    
+
             if (!empty($node['children'])) {
                 $this->add_permalink_links($node['children'], $title_count);
             }
         }
     }
-    
+
 
     public function count_articles_by_exact_title($target_title) {
         $query = new WP_Query([
