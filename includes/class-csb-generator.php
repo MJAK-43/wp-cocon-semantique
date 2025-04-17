@@ -49,61 +49,69 @@ class CSB_Generator {
 
     }
 
-    private function validate_block_format(string $text): bool {
+    
+    private function is_valid_format(string $raw): bool {
         $required_blocks = [
             '/\[TITRE:\s*.+?\]/',
             '/INTRO:\s+.+/',
             '/CLICK_BAIT:\s+.+/',
-            '/DEVELOPMENTS:\s+-\s*.+?:\s*.+/',
+            '/DEVELOPMENTS:\s+-\s*title:\s*.+\s+text:\s*.+\s+link:\s*<a.+?>.+?<\/a>/',
             '/CONCLUSION:\s+.+/',
             '/\[IMAGE:\s*.+?\]/',
             '/\[SLUG:\s*.+?\]/',
         ];
-    
+
         foreach ($required_blocks as $pattern) {
             if (!preg_match($pattern, $text)) {
                 return false;
             }
         }
-    
+
         return true;
     }
-    
+        
     
 
     
-    private function parse_markdown_structure($text) {
-        $lines = explode("\n", trim($text));
-        $stack = [];
-        $root = [];
+    private function parse_content_blocks($text) {
+        if (preg_match('/\[TITRE:\s*(.*?)\]\s*INTRO:\s*(.*?)\s*CLICK_BAIT:\s*(.*?)\s*DEVELOPMENTS:\s*((?:-\s*title:\s*.*?\s+text:\s*.*?\s+link:\s*<a.*?>.*?<\/a>\s*)+)CONCLUSION:\s*(.*?)\s*\[IMAGE:\s*(.*?)\]\s*\[SLUG:\s*(.*?)\]/s', $text, $m)) {
+            $title = trim($m[1]);
+            $intro = trim($m[2]);
+            $click_bait = trim($m[3]);
+            $dev_block = trim($m[4]);
+            $conclusion = trim($m[5]);
+            $image = trim($m[6]);
+            $slug = trim($m[7]);
     
-        foreach ($lines as $line) {
-            if (trim($line) === '' || preg_match('/^```/', trim($line))) {
-                continue;
+            // Parse DEVELOPMENTS
+            preg_match_all('/-\s*title:\s*(.*?)\s+text:\s*(.*?)\s+link:\s*(<a.*?>.*?<\/a>)/s', $dev_block, $matches, PREG_SET_ORDER);
+    
+            $developments = [];
+            foreach ($matches as $match) {
+                $developments[] = [
+                    'title' => trim($match[1]),
+                    'text' => trim($match[2]),
+                    'link' => trim($match[3])
+                ];
             }
     
-            // Match indentation + tiret + titre
-            if (preg_match('/^(\s*)-\s*(.+)$/', $line, $matches)) {
-                $indent = strlen($matches[1]);
-                $title = trim($matches[2]);
-                $level = intval($indent / 4); // chaque niveau = 4 espaces
-    
-                $node = ['title' => $title, 'children' => []];
-    
-                if ($level === 0) {
-                    $root[] = $node;
-                    $stack = [&$root[array_key_last($root)]];
-                } else {
-                    $parent = &$stack[$level - 1]['children'];
-                    $parent[] = $node;
-                    $stack[$level] = &$parent[array_key_last($parent)];
-                }
-            }
+            return [
+                self::generate_slug($title) => [
+                    'content' => [
+                        'intro' => $intro,
+                        'developments' => $developments,
+                        'conclusion' => $conclusion,
+                        'image' => $image
+                    ],
+                    'click_bait' => $click_bait,
+                    'slug' => $slug,
+                    'title' => $title
+                ]
+            ];
         }
-    
-        return $root;
+        return [];
     }
-
+    
     private function tree_to_slug_map(array $tree) {
         $map = [];
     
@@ -182,7 +190,7 @@ class CSB_Generator {
     private function getPromptArticle($title, $contextTree) {
         $structure = $this->to_bullet_tree($contextTree);
     
-        // 🧠 Récupère les titres des enfants directs (si présents)
+        // 🧠 Récupère les titres des enfants directs
         $children_titles = [];
         foreach ($contextTree as $slug => $node) {
             if (!empty($node['children'])) {
@@ -194,16 +202,18 @@ class CSB_Generator {
     
         $dev_part = '';
         if (!empty($children_titles)) {
-            $dev_part .= "Dans la section DEVELOPMENTS, crée une sous-partie pour **chaque enfant** de cet article. Voici les titres des enfants :\n";
+            $dev_part .= "Dans la section DEVELOPMENTS, crée une entrée pour chaque enfant direct de cet article. Utilise cette structure précise :\n";
+            $dev_part .= "- title: Le sous-titre exact\n  text: Le texte de développement\n  link: Le lien HTML vers l’article enfant\n";
+            $dev_part .= "Voici les titres à traiter :\n";
             foreach ($children_titles as $ctitle) {
                 $dev_part .= "- \"$ctitle\"\n";
             }
-            $dev_part .= "Chaque sous-titre DOIT correspondre exactement à un de ces titres. Tu n’as pas le droit d’inventer un titre supplémentaire.\n\n";
+            $dev_part .= "Utilise exactement ces titres, sans en ajouter ni modifier.\n\n";
         }
     
         return "Tu es un rédacteur professionnel en style {$this->style}.\n\n" .
             "Contexte : voici la structure hiérarchique dans laquelle s’insère l’article \"$title\". Chaque ligne représente un titre d’article :\n\n" .
-            $structure . "\n\n" .
+            "$structure\n\n" .
             "Ta mission : rédiger un article optimisé pour le sujet \"$title\".\n\n" .
             "Évite les répétitions et développe les idées avec des exemples concrets et pertinents.\n\n" .
             "Respecte ce format STRICTEMENT :\n\n" .
@@ -211,16 +221,16 @@ class CSB_Generator {
             "INTRO: Introduction générale du sujet.\n" .
             "CLICK_BAIT: Une phrase incitative qui donne envie de lire l'article (visible chez le parent).\n" .
             "DEVELOPMENTS:\n" .
-            "{$dev_part}" .
-            "- Chaque ligne commence par un vrai sous-titre suivi de : le texte associé.\n" .
+            "$dev_part" .
             "CONCLUSION: Conclusion synthétique de l’article.\n" .
             "[IMAGE: description courte de l’image à générer sur Freepik]\n" .
             "[SLUG: le slug EXACT donné ci-dessus — NE LE MODIFIE JAMAIS]\n\n" .
             "⚠️ Très important :\n" .
-            "- Ne mets **aucun emoji** ou mise en forme (gras, italique, astérisques).\n" .
-            "- Ne modifie jamais le format ni l'ordre des blocs.\n" .
-            "- ❌ Utilise exactement les titres fournis pour les sous-parties.\n";
+            "- Ne mets aucun emoji ou mise en forme.\n" .
+            "- Ne change pas les titres fournis.\n" .
+            "- Chaque développement doit inclure les champs : title, text, link.";
     }
+    
     
 
     private function getPromptArticleValidation($title, $contextTree, $raw): string {
@@ -229,12 +239,12 @@ class CSB_Generator {
         return "Tu es un expert en rédaction SEO.\n\n" .
             "Voici la structure hiérarchique du cocon sémantique (contexte global) :\n" .
             "{$structure}\n\n" .
-            "Le titre à traiter est : \"$title\"\n\n" .
+            "Le titre à traiter est : \"{$title}\"\n\n" .
             "Voici le texte généré à valider :\n" .
             "{$raw}\n\n" .
             "Ta mission :\n" .
             "- Vérifie que ce texte respecte strictement le format suivant :\n" .
-            "[TITRE: ...]\nINTRO: ...\nCLICK_BAIT: ...\nDEVELOPMENTS:\n- Sous-titre : texte\n...\nCONCLUSION: ...\n[IMAGE: ...]\n[SLUG: ...]\n\n" .
+            "[TITRE: ...]\nINTRO: ...\nCLICK_BAIT: ...\nDEVELOPMENTS:\n- title: ...\n  text: ...\n  link: <a href='...'>...</a>\n...\nCONCLUSION: ...\n[IMAGE: ...]\n[SLUG: ...]\n\n" .
             "- Si un ou plusieurs blocs sont manquants, mal formatés ou incorrects, corrige-les immédiatement.\n" .
             "- Ne change pas le contenu correct.\n" .
             "- Utilise exactement les balises attendues, sans ajout inutile.\n" .
@@ -246,7 +256,7 @@ class CSB_Generator {
     
     
 
-    private function parse_content_blocks($text) {
+    /*private function parse_content_blocks($text) {
         // Correspond à un seul article au format strict
         if (preg_match('/\[TITRE:\s*(.*?)\]\s*INTRO:\s*(.*?)\s*CLICK_BAIT:\s*(.*?)\s*DEVELOPMENTS:\s*((?:-.*?:.*?\n?)+?)CONCLUSION:\s*(.*?)\s*\[IMAGE:\s*(.*?)\]/s', $text, $m)) {
             $title = trim($m[1], " \t\n\r\0\x0B\"");
@@ -286,7 +296,7 @@ class CSB_Generator {
         // print_r($text);
         // echo '<br>';echo '<br>';
         return []; // rien trouvé
-    }
+    }*/
     
 
     
@@ -322,31 +332,31 @@ class CSB_Generator {
     }
 
 
-    private function is_valid_format(string $raw): bool {
-        // Vérifie que toutes les balises principales sont présentes
-        $required_blocks = [
-            '\[TITRE:\s*.+?\]',
-            'INTRO:\s*.+',
-            'CLICK_BAIT:\s*.+',
-            'DEVELOPMENTS:\s*(?:- .+?: .+\s*)+',
-            'CONCLUSION:\s*.+',
-            '\[IMAGE:\s*.+?\]',
-            '\[SLUG:\s*.+?\]'
-        ];
+    // private function is_valid_format(string $raw): bool {
+    //     // Vérifie que toutes les balises principales sont présentes
+    //     $required_blocks = [
+    //         '\[TITRE:\s*.+?\]',
+    //         'INTRO:\s*.+',
+    //         'CLICK_BAIT:\s*.+',
+    //         'DEVELOPMENTS:\s*(?:- .+?: .+\s*)+',
+    //         'CONCLUSION:\s*.+',
+    //         '\[IMAGE:\s*.+?\]',
+    //         '\[SLUG:\s*.+?\]'
+    //     ];
     
-        foreach ($required_blocks as $pattern) {
-            if (!preg_match('/' . $pattern . '/s', $raw)) {
-                return false;
-            }
-        }
+    //     foreach ($required_blocks as $pattern) {
+    //         if (!preg_match('/' . $pattern . '/s', $raw)) {
+    //             return false;
+    //         }
+    //     }
     
-        // Vérifie qu'au moins un développement est bien structuré
-        if (!preg_match('/- .+?: .+/', $raw)) {
-            return false;
-        }
+    //     // Vérifie qu'au moins un développement est bien structuré
+    //     if (!preg_match('/- .+?: .+/', $raw)) {
+    //         return false;
+    //     }
     
-        return true;
-    }
+    //     return true;
+    // }
 
     private function generate_content_for_node(string $slug, array &$node, array $fullTree) {
         $context_tree = $this->extract_subtree_context($slug, $fullTree);
