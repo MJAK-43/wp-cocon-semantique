@@ -8,8 +8,8 @@ class CSB_Publisher {
         $this->register_all_posts($tree, $parent_id, $level);
 
         // Étape 2 : injecter les contenus maintenant que tous les liens existent
-        $linker = new CSB_Linker();
-        $linker->add_permalink_links($tree);
+        // $linker = new CSB_Linker();
+        // $linker->add_permalink_links($tree);
 
         $this->fill_and_publish_content($tree);
     }
