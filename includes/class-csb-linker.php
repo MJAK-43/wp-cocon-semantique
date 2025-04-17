@@ -3,28 +3,21 @@ if (!defined('ABSPATH')) exit;
 
 class CSB_Linker {
 
-
     /**
-     * Ajoute un champ 'link' à chaque nœud du cocon sémantique.
-     *
-     * @param array $tree La structure arborescente (par référence)
-     * @param string $base_url L’URL de base pour générer les liens
-    */
-    public function add_links_to_structure(array &$tree, string $base_url = '') {
-        foreach ($tree as $slug => &$node) {
-            $url = trailingslashit($base_url) . $slug;
-            $node['link'] = $url;
+     * Ajoute les vrais permaliens WordPress aux nœuds une fois qu’ils ont un post_id.
+     * @param array $tree
+     */
+    public function add_permalink_links(array &$tree) {
+        foreach ($tree as &$node) {
+            if (!empty($node['post_id'])) {
+                $node['link'] = get_permalink($node['post_id']);
+            }
 
             if (!empty($node['children']) && is_array($node['children'])) {
-                $this->add_links_to_structure($node['children'], $base_url);
+                $this->add_permalink_links($node['children']);
             }
         }
     }
-
-    
-
-    
-    
 
     /**
      * Retourne un lien vers le parent avec son click_bait
@@ -39,10 +32,6 @@ class CSB_Linker {
         }
         return null;
     }
-
-
-    
-    
 
     /**
      * Retourne un tableau de liens vers les frères et sœurs avec leur click_bait
@@ -65,38 +54,27 @@ class CSB_Linker {
     /**
      * Ajoute les liens internes séparés avec sections enfants / parent / frères
      */
-    public function generate_structured_links($content,$level ,$post_id, $parent_id = 0, $children = []) {
+    public function generate_structured_links($content, $level, $post_id, $parent_id = 0, $children = []) {
         $sections = [];
 
-        // $child_links = $this->get_child_links($children, $post_id); 
-        // if (!empty($child_links)&&$level!=3) {
-        //     $sections[] = "<h3>👶 Articles enfants :</h3><ul><li>" . implode('</li><li>', $child_links) . '</li></ul>';
-        // }
-        // else{
-        //     $content.= "Aucun enfant";
-        // }
-
         $parent_link = $this->get_parent_link($parent_id);
-        if ($parent_link&& $level!=0) {
+        if ($parent_link && $level != 0) {
             $sections[] = "<h3>👆 Article parent :</h3><ul><li>{$parent_link}</li></ul>";
-        }else{
-            $content.= "Aucun parent";
+        } else {
+            $content .= "Aucun parent";
         }
 
         $sibling_links = $this->get_sibling_links($post_id, $parent_id);
-        if (!empty($sibling_links)&&$level!=0) {
+        if (!empty($sibling_links) && $level != 0) {
             $sections[] = "<h3>👬 Articles liés :</h3><ul><li>" . implode('</li><li>', $sibling_links) . '</li></ul>';
-        }else{
-            $content.= "Aucun sibling";
+        } else {
+            $content .= "Aucun sibling";
         }
 
         if (!empty($sections)) {
             $content .= "\n\n" . implode("\n\n", $sections);
         }
-        
-        return $content;
-    
-    }
 
- 
+        return $content;
+    }
 }
