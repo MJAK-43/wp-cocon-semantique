@@ -122,7 +122,7 @@ class CSB_Admin {
 
         // 🔗 Injecter les liens dans chaque nœud de contenu
         $linker = new CSB_Linker();
-        $linker->add_links_to_structure($this->last_tree);
+        $linker->add_links_to_structure($this->last_tree,'index.php/');
         
         $generator = new CSB_Generator();
         // echo "<br><br><br>";
@@ -132,12 +132,12 @@ class CSB_Admin {
         // print_r($this->last_tree);
         // echo '</pre>';
         $generator->generate_full_content($this->last_tree);
-        echo "<br><br><br>";
-        print_r("////////////////////////////////AFTER///////////////////////////");
-        echo "<br>";
-        echo '<pre>';
-        print_r($this->last_tree);
-        echo '</pre>';
+        // echo "<br><br><br>";
+        // print_r("////////////////////////////////AFTER///////////////////////////");
+        // echo "<br>";
+        // echo '<pre>';
+        // print_r($this->last_tree);
+        // echo '</pre>';
         $publisher = new CSB_Publisher();
         $publisher->publish_structure($this->last_tree);
     }

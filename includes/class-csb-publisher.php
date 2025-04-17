@@ -21,7 +21,7 @@ class CSB_Publisher {
 
             $this->store_meta($post_id, $level, $parent_id, $slug, $node['click_bait'] ?? '');
 
-            $html = $this->generate_html_content($content_parts);
+            $html = $this->generate_html_content($content_parts,$level);
 
             $final_content = $this->append_freepik_image(
                 $linker->generate_structured_links($html, $level, $post_id, $parent_id, $node['children'] ?? []),
@@ -58,7 +58,7 @@ class CSB_Publisher {
         update_post_meta($post_id, '_csb_click_bait', $click_bait);
     }
 
-    private function generate_html_content($content_parts) {
+    private function generate_html_content($content_parts,$level) {
         $html = '';
 
         if (!empty($content_parts['intro'])) {
@@ -69,7 +69,7 @@ class CSB_Publisher {
             foreach ($content_parts['developments'] as $dev) {
                 $html .= '<h3>' . esc_html($dev['title']) . '</h3>';
                 $html .= '<p>' . esc_html($dev['text']) . '</p>';
-                if (!empty($dev['link'])) {
+                if (!empty($dev['link'])&&$level!=2) {
                     $html .= '<p>' . $dev['link'] . '</p>';
                 }
             }
