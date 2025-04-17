@@ -82,7 +82,7 @@ class CSB_Generator {
     }
 
     
-    private function is_valid_format(string $raw): bool {
+    private function is_valid_format(string $text): bool {
         $required_blocks = [
             '/\[TITRE:\s*.+?\]/',
             '/INTRO:\s+.+/',
@@ -395,17 +395,17 @@ class CSB_Generator {
         $prompt = $this->getPromptArticle($node['title'], $context_tree);
         $raw = $this->call_api($prompt);
         while(!$this->is_valid_format($raw)) {
-            // echo '<br>';
-            // echo '<br>';
-            // echo '<br>';
-            // print_r("format incorect");
-            // echo '<br>';echo '<br>';
-            // echo '<br>';
-            // echo '<br>';
-            // print_r("format incorect");
-            // echo '<br>';
-            // echo '<br>';
-            // echo '<br>';
+            echo '<br>';
+            echo '<br>';
+            echo '<br>';
+            print_r("format incorect");
+            echo '<br>';echo '<br>';
+            echo '<br>';
+            echo '<br>';
+            print_r("format incorect");
+            echo '<br>';
+            echo '<br>';
+            echo '<br>';
 
 
             $validation_prompt = $this->getPromptArticleValidation($node['title'], $context_tree, $raw);
