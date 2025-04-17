@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) exit;
 
 class CSB_Publisher {
 
-    public function publish_structure(array &$tree, int $parent_id = 0, int $level = 0) {
+    public function publish_structure(array &$tree, int $parent_id = 0, int $level = 1) {
         foreach ($tree as $slug => &$node) {
             $this->publish_node($node, $slug, $parent_id, $level);
         }
