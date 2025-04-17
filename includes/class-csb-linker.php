@@ -20,34 +20,47 @@ class CSB_Linker {
     //     }
     // }
 
-    public function add_permalink_links(array &$tree, array &$title_count = []) {
+    public function add_permalink_links(array &$tree) {
         foreach ($tree as &$node) {
-            if (!empty($node['post_id'])) {
+            if (!empty($node['title'])) {
                 $title = $node['title'];
-
-                // Compter les occurrences du titre
-                if (!isset($title_count[$title])) {
-                    $title_count[$title] = 1;
-                } else {
-                    $title_count[$title]++;
-                }
-
-                // Créer un slug unique basé sur le titre + compteur
-                $suffix = $title_count[$title] > 1 ? '-' . $title_count[$title] : '';
+    
+                // Compter les articles publiés ayant déjà exactement ce titre
+                $existing_count = $this->count_existing_articles_by_title($title);
+    
+                // Générer un suffixe pour éviter les doublons
+                $suffix = $existing_count > 0 ? '-' . ($existing_count + 1) : '';
                 $slug = sanitize_title($title . $suffix);
-
-                // Générer le lien à partir du slug (en local ou base_url configurable)
-                $base_url = home_url('/');
-                $url = trailingslashit($base_url) . $slug;
-
+    
+                // Construire l'URL
+                $url = home_url('/') . $slug . '/';
                 $node['link'] = $url;
             }
-
+    
             if (!empty($node['children'])) {
-                $this->add_permalink_links($node['children'], $title_count);
+                $this->add_permalink_links($node['children']);
             }
         }
     }
+    
+
+    public function count_existing_articles_by_title(string $title): int {
+        global $wpdb;
+    
+        $count = $wpdb->get_var($wpdb->prepare(
+            "
+            SELECT COUNT(*) 
+            FROM $wpdb->posts 
+            WHERE post_type = 'post'
+            AND post_status = 'publish'
+            AND post_title = %s
+            ",
+            $title
+        ));
+    
+        return (int) $count;
+    }
+    
 
 
     public function count_articles_by_exact_title($target_title) {

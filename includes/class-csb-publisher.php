@@ -4,18 +4,26 @@ if (!defined('ABSPATH')) exit;
 class CSB_Publisher {
 
     public function publish_structure(array &$tree, int $parent_id = 0, int $level = 1) {
+        // Étape 1 : enregistrer tous les articles sans contenu
         $this->register_all_posts($tree, $parent_id, $level);
+
+        // Étape 2 : injecter les contenus maintenant que tous les liens existent
+        // $linker = new CSB_Linker();
+        // $linker->add_permalink_links($tree);
+
         $this->fill_and_publish_content($tree);
     }
 
     public function prepare_and_link_structure(array &$tree): void {
         $this->register_all_posts($tree, 0, 1);
-
+    
+        // Ajouter les permaliens basés sur post_id
         $linker = new CSB_Linker();
         $linker->add_permalink_links($tree);
     }
+    
 
-    public function register_all_posts(array &$tree, int $parent_id = 0, int $level = 1) {
+    private function register_all_posts(array &$tree, int $parent_id, int $level) {
         foreach ($tree as $slug => &$node) {
             $title = $node['title'];
             $post_id = $this->create_post($title, $slug, $parent_id);
@@ -31,7 +39,7 @@ class CSB_Publisher {
         }
     }
 
-    public function fill_and_publish_content(array &$tree) {
+    private function fill_and_publish_content(array &$tree) {
         foreach ($tree as $slug => &$node) {
             $post_id = $node['post_id'] ?? 0;
             if (!$post_id) continue;
@@ -107,4 +115,4 @@ class CSB_Publisher {
         $img_html = '<div style="margin-top:2em;"><img src="' . esc_url($image_url) . '" alt="' . esc_attr($alt) . '" style="max-width:100%; height:auto;" /></div>';
         return $content . "\n\n" . $img_html;
     }
-}
+} 

@@ -37,9 +37,9 @@ class CSB_Admin {
             
             if (isset($_POST['csb_validate_publish'])) {
                 $this->process_structure();
-                // echo "<br>";echo "<br>";echo "<br>";
-                // print_r($this->last_tree);
-                // echo "<br>";echo "<br>";echo "<br>";
+                echo "<br>";echo "<br>";echo "<br>";
+                print_r($this->last_tree);
+                echo "<br>";echo "<br>";echo "<br>";
                 echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
             }
         }
@@ -117,49 +117,20 @@ class CSB_Admin {
     
     
 
-    
-
     private function process_structure() {
-        // $publisher = new CSB_Publisher();
-    
-        // // Étape 1 : Créer tous les articles (pour avoir les post_id)
-        // $publisher->register_all_posts($this->last_tree);
-    
-        // // Étape 2 : Ajouter les liens réels WordPress (basés sur les post_id)
-        // $linker = new CSB_Linker();
-        // $linker->add_permalink_links($this->last_tree); // ✅ Les champs 'link' sont disponibles
-    
-        // // Étape 3 : Générer les contenus avec OpenAI en tenant compte des liens
-        // $generator = new CSB_Generator();
-        // // echo "<br><br><br>";
-        // // print_r("////////////////////////////////BEFORE///////////////////////////");
-        // // echo "<br>";
-        // // echo '<pre>';
-        // // print_r($this->last_tree);
-        // // echo '</pre>';
-        // $generator->generate_full_content($this->last_tree);
-
-    
-        // // Étape 4 : Injecter le contenu et publier les articles
-        // $publisher->fill_and_publish_content($this->last_tree);
 
 
-        $publisher = new CSB_Publisher();
-        $publisher->register_all_posts($this->last_tree); // Enregistre les articles
+        // 🔗 Injecter les liens dans chaque nœud de contenu
         $linker = new CSB_Linker();
-        $linker->add_permalink_links($this->last_tree); // Ajoute les vrais liens
+        $linker->add_permalink_links($this->last_tree);
+        
         $generator = new CSB_Generator();
-        $generator->generate_full_content($this->last_tree); // Génère avec les bons liens
-
-        echo "<br><br><br>";
-        print_r("////////////////////////////////AFTER///////////////////////////");
-        echo "<br>";
-        echo '<pre>';
-        print_r($this->last_tree);
-        echo '</pre>';
-        $publisher->fill_and_publish_content($this->last_tree); // Injecte le contenu
-
+        
+        $publisher = new CSB_Publisher();
+        $publisher->publish_structure($this->last_tree);
     }
+
+
     
 
     private function generate_slug($title) {
