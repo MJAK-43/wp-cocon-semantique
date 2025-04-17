@@ -11,6 +11,7 @@ class CSB_Linker {
         foreach ($tree as &$node) {
             if (!empty($node['post_id'])) {
                 $node['link'] = get_permalink($node['post_id']);
+                print_r($node['post_id']);
             }
     
             if (!empty($node['children'])) {
