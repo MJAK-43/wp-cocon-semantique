@@ -23,29 +23,7 @@ class CSB_Linker {
 
     
 
-    /**
-     * Retourne un tableau de liens vers les enfants avec leur click_bait
-     */
-    private function get_child_links(array $children, int $parent_id): array {
-        $links = [];
     
-        foreach ($children as $child) {
-            if (!isset($child['post_id'])) continue;
-    
-            // Vérifie que ce sont bien des enfants directs (sécurité supplémentaire)
-            $child_parent = (int) get_post_field('post_parent', $child['post_id']);
-            if ($child_parent !== $parent_id) continue;
-    
-            $url = get_permalink($child['post_id']);
-            $label = $child['click_bait'] ?? $child['title'] ?? '';
-    
-            if ($url && $label) {
-                $links[] = '<a href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
-            }
-        }
-    
-        return $links;
-    }
     
 
     /**
@@ -63,15 +41,7 @@ class CSB_Linker {
     }
 
 
-    public function get_clickbait_link(array $child): string {
-        if (empty($child['post_id'])) return '';
-        $url = get_permalink($child['post_id']);
-        $click_bait = $child['click_bait'] ?? $child['title'] ?? '';
     
-        if (!$url || !$click_bait) return '';
-    
-        return '<p style="margin-top:0.5em;"><a href="' . esc_url($url) . '"><em>' . esc_html($click_bait) . '</em></a></p>';
-    }
     
 
     /**
@@ -98,13 +68,13 @@ class CSB_Linker {
     public function generate_structured_links($content,$level ,$post_id, $parent_id = 0, $children = []) {
         $sections = [];
 
-        $child_links = $this->get_child_links($children, $post_id); 
-        if (!empty($child_links)&&$level!=3) {
-            $sections[] = "<h3>👶 Articles enfants :</h3><ul><li>" . implode('</li><li>', $child_links) . '</li></ul>';
-        }
-        else{
-            $content.= "Aucun enfant";
-        }
+        // $child_links = $this->get_child_links($children, $post_id); 
+        // if (!empty($child_links)&&$level!=3) {
+        //     $sections[] = "<h3>👶 Articles enfants :</h3><ul><li>" . implode('</li><li>', $child_links) . '</li></ul>';
+        // }
+        // else{
+        //     $content.= "Aucun enfant";
+        // }
 
         $parent_link = $this->get_parent_link($parent_id);
         if ($parent_link&& $level!=0) {
