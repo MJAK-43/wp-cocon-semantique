@@ -153,6 +153,7 @@ class CSB_Admin {
         $publisher->register_all_posts($this->last_tree); // Enregistre les articles
         $linker = new CSB_Linker();
         $linker->add_permalink_links($this->last_tree); // Ajoute les vrais liens
+        $generator = new CSB_Generator();
         $generator->generate_full_content($this->last_tree); // Génère avec les bons liens
         $publisher->fill_and_publish_content($this->last_tree); // Injecte le contenu
 
