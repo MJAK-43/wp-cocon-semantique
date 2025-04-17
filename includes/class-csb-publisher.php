@@ -69,7 +69,7 @@ class CSB_Publisher {
             foreach ($content_parts['developments'] as $dev) {
                 $html .= '<h3>' . esc_html($dev['title']) . '</h3>';
                 $html .= '<p>' . esc_html($dev['text']) . '</p>';
-                if (!empty($dev['link'])&&$level>=3) {
+                if (!empty($dev['link'])&&$level!=3) {
                     $html .= '<p>' . $dev['link'] . '</p>';
                 }
             }
