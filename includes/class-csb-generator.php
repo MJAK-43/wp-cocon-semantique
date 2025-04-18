@@ -219,24 +219,23 @@ class CSB_Generator {
 
     }
 
-    private function getPromptArticle($title, $contextTree, $number) {
+    private function getPromptArticle($title, $contextTree, $number, $slug) {
         $structure = $this->to_bullet_tree($contextTree);
     
-        // 🧠 Génération des liens HTML des enfants
+        // 🧠 Génération des liens HTML à partir du vrai fullTree
         $children_links = [];
-        foreach ($contextTree as $slug => $node) {
-            if (!empty($node['children'])) {
-                foreach ($node['children'] as $child_slug => $child_node) {
-                    if (!empty($child_node['title']) && !empty($child_node['link']) && !empty($child_node['click_bait'])) {
-                        $children_links[] = [
-                            'title' => $child_node['title'],
-                            'link' => '<a href="' . esc_url($child_node['link']) . '">' . esc_html($child_node['click_bait']) . '</a>',
-                        ];
-                    }
+        if (isset($contextTree[$slug]['children'])) {
+            foreach ($contextTree[$slug]['children'] as $child_slug => $child_node) {
+                if (!empty($child_node['title']) && !empty($child_node['link']) && !empty($child_node['click_bait'])) {
+                    $children_links[] = [
+                        'title' => $child_node['title'],
+                        'link' => '<a href="' . esc_url($child_node['link']) . '">' . esc_html($child_node['click_bait']) . '</a>',
+                    ];
                 }
             }
         }
-    
+
+
         // 🔧 Partie DEVELOPMENT avec ou sans enfants
         $dev_part = '';
         if (!empty($children_links)) {
@@ -337,7 +336,7 @@ class CSB_Generator {
 
     private function generate_content_for_node(string $slug, array &$node, array $fullTree, int $number) {
         $context_tree = $this->extract_subtree_context($slug, $fullTree);
-        $prompt = $this->getPromptArticle($node['title'], $context_tree,$number);
+        $prompt = $this->getPromptArticle($node['title'], $context_tree,$number,$slug);
         $raw = $this->call_api($prompt);
         while(!$this->is_valid_format($raw)) {
             // echo '<br>';
@@ -345,8 +344,6 @@ class CSB_Generator {
             // print_r("format incorect");
             // echo '<br>';
             // echo '<br>';
-
-
             $validation_prompt = $this->getPromptArticleValidation($node['title'], $context_tree, $raw);
             $raw = $this->call_api($validation_prompt); // Correction via OpenAI
         }
@@ -385,6 +382,11 @@ class CSB_Generator {
         }
     }
     
+
+    /***
+     * 
+     * Récupération Image
+     */
     
     public function get_freepik_image($keywords){
         

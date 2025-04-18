@@ -147,8 +147,6 @@ class CSB_Admin {
         }
     }
     
-    
-    
 
     private function process_structure() {
         $publisher = new CSB_Publisher();
@@ -196,6 +194,8 @@ class CSB_Admin {
         echo "<br><br><br>";
     
     }
+
+    
 
     public static function debug_display_links(array $tree, $indent = 0) {
         foreach ($tree as $slug => $node) {
