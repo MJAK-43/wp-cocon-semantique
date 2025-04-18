@@ -2,6 +2,22 @@
 if (!defined('ABSPATH')) exit;
 
 class CSB_Publisher {
+    public function register_all_posts(array &$tree, int $parent_id, int $level) {
+        foreach ($tree as $slug => &$node) {
+            $title = $node['title'];
+            $post_id = $this->create_post($title, $parent_id);
+
+            if (!is_wp_error($post_id)) {
+                $node['post_id'] = $post_id;
+                $node['link'] = get_permalink($post_id);
+                $this->store_meta($post_id, $level, $parent_id, $slug, $node['click_bait'] ?? '');
+            }
+
+            if (!empty($node['children'])) {
+                $this->register_all_posts($node['children'], $node['post_id'], $level + 1);
+            }
+        }
+    }
     
 
     public function fill_and_publish_content(array &$tree,array $full_tree) {
