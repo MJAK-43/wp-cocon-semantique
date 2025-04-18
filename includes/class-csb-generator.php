@@ -254,7 +254,7 @@ class CSB_Generator {
         return "Tu es un rédacteur professionnel en style {$this->style}.\n\n" .
             "Contexte : voici la structure hiérarchique dans laquelle s’insère l’article \"$title\". Chaque ligne représente un titre d’article :\n\n" .
             "$structure\n\n" .
-            "Ta mission : rédiger un article optimisé pour le sujet \"$title\".\n\n" .
+            "Ta mission : rédiger un article optimisé pour le sujet de 800 à 1000 mot \"$title\".\n\n" .
             "Évite les répétitions et développe les idées avec des exemples concrets et pertinents.\n\n" .
             "Respecte ce format STRICTEMENT :\n\n" .
             "[TITRE: $title]\n" .
