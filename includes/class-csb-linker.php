@@ -95,4 +95,74 @@ class CSB_Linker {
         return null;
     }
 
+    public function generate_structured_links($content, int $level, string $slug, array $tree) {
+        $sections = [];
+
+        $parent = $this->get_parent_from_tree($slug, $tree);
+        $siblings = $this->get_siblings_from_tree($slug, $tree);
+        $root = $this->get_root_from_tree($slug, $tree);
+
+        // Niveau 1 : aucun lien à afficher
+        if ($level === 1) {
+            return $content;
+        }
+
+        // Niveau 2 : afficher parent et racine
+        if ($level === 2 && $parent !== null) {
+            $parent_link = isset($parent['link'], $parent['click_bait'])
+                ? '<a href="' . esc_url($parent['link']) . '">' . esc_html($parent['click_bait']) . '</a>'
+                : null;
+
+            $root_link = isset($root['link'], $root['click_bait'])
+                ? '<a href="' . esc_url($root['link']) . '">' . esc_html($root['click_bait']) . '</a>'
+                : null;
+
+            if ($parent_link) {
+                $sections[] = "<h3>👆 Article parent :</h3><ul><li>{$parent_link}</li></ul>";
+            }
+            if ($root_link) {
+                $sections[] = "<h3>📌 Article racine :</h3><ul><li>{$root_link}</li></ul>";
+            }
+        }
+
+        // Niveau 3 : afficher parent, racine et frères/sœurs
+        if ($level >= 3) {
+            if (!empty($parent)) {
+                $parent_link = isset($parent['link'], $parent['click_bait'])
+                    ? '<a href="' . esc_url($parent['link']) . '">' . esc_html($parent['click_bait']) . '</a>'
+                    : null;
+                if ($parent_link) {
+                    $sections[] = "<h3>👆 Article parent :</h3><ul><li>{$parent_link}</li></ul>";
+                }
+            }
+
+            if (!empty($siblings)) {
+                $sibling_links = [];
+                foreach ($siblings as $sibling) {
+                    if (isset($sibling['link'], $sibling['click_bait'])) {
+                        $sibling_links[] = '<a href="' . esc_url($sibling['link']) . '">' . esc_html($sibling['click_bait']) . '</a>';
+                    }
+                }
+                if (!empty($sibling_links)) {
+                    $sections[] = "<h3>👬 Articles liés :</h3><ul><li>" . implode('</li><li>', $sibling_links) . "</li></ul>";
+                }
+            }
+
+            if (!empty($root)) {
+                $root_link = isset($root['link'], $root['click_bait'])
+                    ? '<a href="' . esc_url($root['link']) . '">' . esc_html($root['click_bait']) . '</a>'
+                    : null;
+                if ($root_link) {
+                    $sections[] = "<h3>📌 Article racine :</h3><ul><li>{$root_link}</li></ul>";
+                }
+            }
+        }
+
+        if (!empty($sections)) {
+            $content .= "\n\n" . implode("\n\n", $sections);
+        }
+
+        return $content;
+    }
+
 } // fin classe

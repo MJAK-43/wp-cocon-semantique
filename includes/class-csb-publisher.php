@@ -29,7 +29,7 @@ class CSB_Publisher {
 
     public function fill_and_publish_content(array &$tree) {
         $linker = new CSB_Linker();
-        $linker->update_development_links($tree); // 🔁 Met à jour les liens internes des développements
+        //linker->update_development_links($tree); // 🔁 Met à jour les liens internes des développements
 
         foreach ($tree as $slug => &$node) {
             $post_id = $node['post_id'] ?? 0;
