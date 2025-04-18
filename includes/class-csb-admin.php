@@ -40,9 +40,9 @@ class CSB_Admin {
             
             if (isset($_POST['csb_validate_publish'])) {
                 $this->process_structure();
-                // echo "<br>";echo "<br>";echo "<br>";
-                // print_r($this->last_tree);
-                // echo "<br>";echo "<br>";echo "<br>";
+                echo "<br>";echo "<br>";echo "<br>";
+                print_r($this->last_tree);
+                echo "<br>";echo "<br>";echo "<br>";
                 echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
             }
         }

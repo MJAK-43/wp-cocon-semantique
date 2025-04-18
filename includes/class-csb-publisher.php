@@ -69,11 +69,11 @@ class CSB_Publisher {
     }
 
     private function create_post($title, $parent_id) {
-        $slug = $this->generate_unique_slug($title);
+        /*$slug = $this->generate_unique_slug($title);*/
     
         return wp_insert_post([
             'post_title'   => $title,
-            'post_name'    => $slug,
+            /*'post_name'    => $slug,*/
             'post_content' => '',
             'post_status'  => 'publish',
             'post_type'    => 'post',
