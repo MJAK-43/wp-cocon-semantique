@@ -88,7 +88,7 @@ class CSB_Publisher {
                 $html .= '<p>' . wp_kses_post($dev['text']) . '</p>';
                 if (!empty($dev['link']) && $level != 3) {
                     $html .= '<p>' . $dev['link'] . '</p>';
-                    //print_r($dev['link']);
+                    print_r($dev['link']);
                 }
             }
         }
