@@ -134,17 +134,41 @@ class CSB_Admin {
         $linker->add_permalink_links($this->last_tree); // ajoute les 'link'
         echo "<br><br><br>";
         echo "///////////////////////////////////////////BEFORE///////////////////////////////////////////<br>";
-        print_r($this->last_tree);
+        self::debug_display_links($this->last_tree);
         echo "<br><br><br>";
 
 
         // Étape 3 : Générer le contenu via OpenAI (avec les liens disponibles)
         $generator->generate_full_content($this->last_tree);
+
+        echo "<br><br><br>";
+        echo "///////////////////////////////////////////AFTER///////////////////////////////////////////<br>";
+        self::debug_display_links($this->last_tree);
+        echo "<br><br><br>";
     
         
     
         // Étape 4 : Mettre à jour les articles avec le contenu final
         $publisher->fill_and_publish_content($this->last_tree);
+
+
+        echo "<br><br><br>";
+        echo "///////////////////////////////////////////AFTER__PUBLICATION///////////////////////////////////////////<br>";
+        self::debug_display_links($this->last_tree);
+        echo "<br><br><br>";
+    
+    }
+
+    public static function debug_display_links(array $tree, $indent = 0) {
+        foreach ($tree as $slug => $node) {
+            $title = $node['title'] ?? $slug;
+            $link = $node['link'] ?? '❌ Aucun lien';
+            echo str_repeat('—', $indent) . " <strong>{$title}</strong> → <a href='{$link}' target='_blank'>{$link}</a><br>";
+    
+            if (!empty($node['children'])) {
+                self::debug_display_links($node['children'], $indent + 1);
+            }
+        }
     }
     
 

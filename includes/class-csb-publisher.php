@@ -3,16 +3,16 @@ if (!defined('ABSPATH')) exit;
 
 class CSB_Publisher {
 
-    public function publish_structure(array &$tree, int $parent_id = 0, int $level = 1) {
-        // Étape 1 : enregistrer tous les articles sans contenu
-        $this->register_all_posts($tree, $parent_id, $level);
+    // public function publish_structure(array &$tree, int $parent_id = 0, int $level = 1) {
+    //     // Étape 1 : enregistrer tous les articles sans contenu
+    //     $this->register_all_posts($tree, $parent_id, $level);
 
-        // Étape 2 : injecter les contenus maintenant que tous les liens existent
-        // $linker = new CSB_Linker();
-        // $linker->add_permalink_links($tree);
+    //     // Étape 2 : injecter les contenus maintenant que tous les liens existent
+    //     // $linker = new CSB_Linker();
+    //     // $linker->add_permalink_links($tree);
 
-        $this->fill_and_publish_content($tree);
-    }
+    //     $this->fill_and_publish_content($tree);
+    // }
 
     public function prepare_and_link_structure(array &$tree): void {
         $this->register_all_posts($tree, 0, 1);
