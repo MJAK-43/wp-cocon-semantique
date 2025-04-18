@@ -39,7 +39,7 @@ class CSB_Publisher {
         }
     }
 
-    private function fill_and_publish_content(array &$tree) {
+    public function fill_and_publish_content(array &$tree) {
         foreach ($tree as $slug => &$node) {
             $post_id = $node['post_id'] ?? 0;
             if (!$post_id) continue;
