@@ -52,16 +52,16 @@ class CSB_Publisher {
 
             $html = $this->generate_html_content($content_parts, $level);
 
-            $linker = new CSB_Linker();
-            $final_content = $this->append_freepik_image(
-                $linker->generate_structured_links($html, $level, $post_id, $parent_id, $node['children'] ?? []),
-                $content_parts['image_url'] ?? '',
-                $content_parts['image'] ?? ''
-            );
+            // $linker = new CSB_Linker();
+            // $final_content = $this->append_freepik_image(
+            //     $linker->generate_structured_links($html, $level, $post_id, $parent_id, $node['children'] ?? []),
+            //     $content_parts['image_url'] ?? '',
+            //     $content_parts['image'] ?? ''
+            // );
 
             wp_update_post([
                 'ID' => $post_id,
-                'post_content' => $final_content,
+                'post_content' => $html,
             ]);
 
             if (!empty($node['children'])) {
@@ -109,6 +109,7 @@ class CSB_Publisher {
                 $html .= '<p>' . wp_kses_post($dev['text']) . '</p>';
                 if (!empty($dev['link']) && $level != 3) {
                     $html .= '<p>' . $dev['link'] . '</p>';
+                    print_r($dev['link']);
                 }
             }
         }
