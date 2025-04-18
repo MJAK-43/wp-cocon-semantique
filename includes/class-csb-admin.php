@@ -163,7 +163,7 @@ class CSB_Admin {
 
 
         // Étape 3 : Générer le contenu via OpenAI (avec les liens disponibles)
-        $generator->generate_full_content($this->last_tree);
+        $generator->generate_full_content($this->last_tree,$this->nb);
         $this->synchronize_development_links($this->last_tree);
         // echo "<br><br><br>";
         // echo "///////////////////////////////////////////AFTER///////////////////////////////////////////<br>";
