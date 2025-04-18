@@ -237,26 +237,31 @@ class CSB_Generator {
             }
         }
     
-        // 🔧 Partie DEVELOPMENT avec liens intégrés
+        // 🔧 Partie DEVELOPMENTS
         $dev_part = '';
         if (!empty($children_links)) {
-            $dev_part .= "Dans la section DEVELOPMENTS, crée une entrée pour chaque enfant direct de cet article. Voici la structure à respecter :\n";
-            $dev_part .= "- title: Le sous-titre exact\n  text: Le texte de développement\n  link: Le lien HTML fourni (ne le modifie pas)\n\n";
-            $dev_part .= "Voici les données à utiliser :\n";
+            $dev_part .= "Dans la section DEVELOPMENTS, tu dois créer **une entrée PAR enfant direct** (et **uniquement** ceux-ci). Tu **n’as PAS le droit** d’en inventer d’autres.\n";
+            $dev_part .= "Utilise cette structure obligatoire :\n";
+            $dev_part .= "- title: Le sous-titre (doit correspondre EXACTEMENT)\n  text: Le texte de développement\n  link: Le lien HTML fourni\n\n";
+            $dev_part .= "Voici les données à respecter à la lettre :\n";
             foreach ($children_links as $child) {
                 $dev_part .= "- title: {$child['title']}\n";
                 $dev_part .= "  link: {$child['link']}\n";
             }
-            $dev_part .= "\nUtilise exactement ces liens. Ne modifie pas les URL ni les textes des liens.\n\n";
+            $dev_part .= "\n❌ Tu ne dois **ni inventer** de sous-titres, **ni en ignorer**.\n\n";
+        } else {
+            $dev_part .= "Il n’y a **aucun enfant** dans cet article. Tu dois donc créer **3 sous-parties pertinentes** pour structurer le développement.\n";
+            $dev_part .= "Utilise ce format :\n";
+            $dev_part .= "- title: Un vrai sous-titre\n  text: Le texte correspondant\n  link: Laisse vide (`link:` seulement)\n\n";
+            $dev_part .= "⚠️ Ne dépasse pas 3 sous-parties. Ne mets **aucun lien HTML**.\n\n";
         }
     
-        // 📝 Prompt complet
         return "Tu es un rédacteur professionnel en style {$this->style}.\n\n" .
             "Contexte : voici la structure hiérarchique dans laquelle s’insère l’article \"$title\". Chaque ligne représente un titre d’article :\n\n" .
             "$structure\n\n" .
-            "Ta mission : rédiger un article optimisé pour le sujet de 800 à 1000 mot \"$title\".\n\n" .
-            "Évite les répétitions et développe les idées avec des exemples concrets et pertinents.\n\n" .
-            "Respecte ce format STRICTEMENT :\n\n" .
+            "Ta mission : rédiger un article optimisé pour le sujet \"$title\" (entre 800 et 1000 mots).\n\n" .
+            "Évite les répétitions, structure bien les idées, et développe-les avec des exemples concrets et utiles.\n\n" .
+            "Respecte ce format **strictement** :\n\n" .
             "[TITRE: $title]\n" .
             "INTRO: Introduction générale du sujet.\n" .
             "CLICK_BAIT: Une phrase incitative qui donne envie de lire l'article (visible chez le parent).\n" .
@@ -266,10 +271,11 @@ class CSB_Generator {
             "[IMAGE: description courte de l’image à générer sur Freepik]\n" .
             "[SLUG: le slug EXACT donné ci-dessus — NE LE MODIFIE JAMAIS]\n\n" .
             "⚠️ Très important :\n" .
-            "- Ne mets aucun emoji ou mise en forme.\n" .
-            "- Ne change pas les titres fournis.\n" .
-            "- Chaque développement doit inclure les champs : title, text, link.";
+            "- Ne mets aucun emoji ni mise en forme.\n" .
+            "- Ne change jamais les titres fournis.\n" .
+            "- Chaque sous-partie doit contenir les champs : title, text, link.";
     }
+    
     
     
     

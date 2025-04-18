@@ -29,6 +29,9 @@ class CSB_Admin {
         if (!empty($keyword) && !empty($nd) && isset($_POST['submit'])) {
             $generator = new CSB_Generator();
             $this->last_tree = $generator->generate_structure_array($keyword, $nd);
+            // echo "<br>";echo "<br>";echo "<br>";
+                // print_r($this->last_tree);
+                // echo "<br>";echo "<br>";echo "<br>";
         }
     
         if (isset($_POST['structure'])) {
