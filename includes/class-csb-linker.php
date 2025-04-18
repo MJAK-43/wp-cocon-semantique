@@ -4,6 +4,21 @@ if (!defined('ABSPATH')) exit;
 class CSB_Linker {
 
     /**
+     * Ajoute les permaliens WordPress aux nœuds ayant un post_id.
+     */
+    public function add_permalink_links(array &$tree): void {
+        foreach ($tree as &$node) {
+            if (!empty($node['post_id'])) {
+                $node['link'] = get_permalink($node['post_id']);
+            }
+
+            if (!empty($node['children'])) {
+                $this->add_permalink_links($node['children']);
+            }
+        }
+    }
+
+    /**
      * Récupère le parent direct d'un noeud à partir de la structure complète.
      */
     public function get_parent_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$found_parent_slug = null) {
@@ -80,4 +95,4 @@ class CSB_Linker {
         return null;
     }
 
-}
+} // fin classe
