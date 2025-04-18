@@ -3,117 +3,81 @@ if (!defined('ABSPATH')) exit;
 
 class CSB_Linker {
 
-    
-    
-    public function add_permalink_links(array &$tree) {
-        foreach ($tree as &$node) {
-            if (!empty($node['post_id'])) {
-                $node['link'] = get_permalink($node['post_id']);
-            }
-    
-            if (!empty($node['children'])) {
-                $this->add_permalink_links($node['children']);
-            }
-        }
-    }
-    
-
-    public function count_existing_articles_by_title(string $title): int {
-        global $wpdb;
-    
-        $count = $wpdb->get_var($wpdb->prepare(
-            "
-            SELECT COUNT(*) 
-            FROM $wpdb->posts 
-            WHERE post_type = 'post'
-            AND post_status = 'publish'
-            AND post_title = %s
-            ",
-            $title
-        ));
-    
-        return (int) $count;
-    }
-    
-
-
-    public function count_articles_by_exact_title($target_title) {
-        $query = new WP_Query([
-            'post_type'      => 'post',
-            'posts_per_page' => -1,
-            's'              => $target_title,
-            'post_status'    => 'publish',
-        ]);
-    
-        $count = 0;
-    
-        foreach ($query->posts as $post) {
-            if (strcasecmp($post->post_title, $target_title) === 0) {
-                $count++;
-            }
-        }
-    
-        return $count;
-    }
-    
-    
-
     /**
-     * Retourne un lien vers le parent avec son click_bait
+     * Récupère le parent direct d'un noeud à partir de la structure complète.
      */
-    private function get_parent_link(int $parent_id): ?string {
-        if ($parent_id) {
-            $parent_url = get_permalink($parent_id);
-            $parent_click_bait = get_post_meta($parent_id, '_csb_click_bait', true);
-            if ($parent_url && $parent_click_bait) {
-                return '<a href="' . esc_url($parent_url) . '">' . esc_html($parent_click_bait) . '</a>';
+    public function get_parent_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$found_parent_slug = null) {
+        foreach ($tree as $slug => $node) {
+            if ($slug === $target_slug) {
+                if ($found_parent_slug !== null && isset($parents[$found_parent_slug])) {
+                    return $parents[$found_parent_slug];
+                }
+                return null;
+            }
+
+            if (!empty($node['children'])) {
+                $parents[$slug] = $node;
+                $result = $this->get_parent_from_tree($target_slug, $node['children'], $parents, $slug);
+                if ($result !== null) {
+                    return $result;
+                }
             }
         }
+
         return null;
     }
 
     /**
-     * Retourne un tableau de liens vers les frères et sœurs avec leur click_bait
+     * Récupère les frères et soeurs d'un noeud à partir de la structure complète.
      */
-    private function get_sibling_links(int $post_id, int $parent_id): array {
-        $links = [];
-        $siblings = get_children(['post_parent' => $parent_id, 'post_type' => 'post']);
-        foreach ($siblings as $sibling) {
-            if ((int)$sibling->ID !== (int)$post_id) {
-                $url = get_permalink($sibling->ID);
-                $label = get_post_meta($sibling->ID, '_csb_click_bait', true);
-                if ($url && $label) {
-                    $links[] = '<a href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
+    public function get_siblings_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$found_parent_slug = null): array {
+        foreach ($tree as $slug => $node) {
+            if ($slug === $target_slug) {
+                if ($found_parent_slug !== null && isset($parents[$found_parent_slug]['children'])) {
+                    $siblings = [];
+                    foreach ($parents[$found_parent_slug]['children'] as $sibling_slug => $sibling_node) {
+                        if ($sibling_slug !== $target_slug) {
+                            $siblings[$sibling_slug] = $sibling_node;
+                        }
+                    }
+                    return $siblings;
+                }
+                return [];
+            }
+
+            if (!empty($node['children'])) {
+                $parents[$slug] = $node;
+                $result = $this->get_siblings_from_tree($target_slug, $node['children'], $parents, $slug);
+                if (!empty($result)) {
+                    return $result;
                 }
             }
         }
-        return $links;
+
+        return [];
     }
 
     /**
-     * Ajoute les liens internes séparés avec sections enfants / parent / frères
+     * Récupère le noeud racine d'un noeud donné en retrouvant l'origine dans l'arbre.
      */
-    public function generate_structured_links($content, $level, $post_id, $parent_id = 0, $children = []) {
-        $sections = [];
+    public function get_root_from_tree(string $target_slug, array $tree, array $path = []): ?array {
+        foreach ($tree as $slug => $node) {
+            $new_path = $path;
+            $new_path[] = $node;
 
-        $parent_link = $this->get_parent_link($parent_id);
-        if ($parent_link && $level != 1) {
-            $sections[] = "<h3>👆 Article parent :</h3><ul><li>{$parent_link}</li></ul>";
-        } else {
-            $content .= "Aucun parent";
+            if ($slug === $target_slug) {
+                return $path[0] ?? $node; // soit premier parent, soit lui-même s'il est racine
+            }
+
+            if (!empty($node['children'])) {
+                $result = $this->get_root_from_tree($target_slug, $node['children'], $new_path);
+                if ($result !== null) {
+                    return $result;
+                }
+            }
         }
 
-        $sibling_links = $this->get_sibling_links($post_id, $parent_id);
-        if (!empty($sibling_links) && $level != 1) {
-            $sections[] = "<h3>👬 Articles liés :</h3><ul><li>" . implode('</li><li>', $sibling_links) . '</li></ul>';
-        } else {
-            $content .= "Aucun sibling";
-        }
-
-        if (!empty($sections)) {
-            $content .= "\n\n" . implode("\n\n", $sections);
-        }
-
-        return $content;
+        return null;
     }
+
 }

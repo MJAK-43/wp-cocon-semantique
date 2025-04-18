@@ -3,35 +3,21 @@ if (!defined('ABSPATH')) exit;
 
 class CSB_Publisher {
 
-    // public function publish_structure(array &$tree, int $parent_id = 0, int $level = 1) {
-    //     // Étape 1 : enregistrer tous les articles sans contenu
-    //     $this->register_all_posts($tree, $parent_id, $level);
-
-    //     // Étape 2 : injecter les contenus maintenant que tous les liens existent
-    //     // $linker = new CSB_Linker();
-    //     // $linker->add_permalink_links($tree);
-
-    //     $this->fill_and_publish_content($tree);
-    // }
-
     public function prepare_and_link_structure(array &$tree): void {
         $this->register_all_posts($tree, 0, 1);
-    
-        // Ajouter les permaliens basés sur post_id
+
         $linker = new CSB_Linker();
         $linker->add_permalink_links($tree);
     }
-    
 
     public function register_all_posts(array &$tree, int $parent_id, int $level) {
         foreach ($tree as $slug => &$node) {
             $title = $node['title'];
-            $post_id = $this->create_post($title,$parent_id);
+            $post_id = $this->create_post($title, $parent_id);
 
             if (!is_wp_error($post_id)) {
-                //echo "<br>Create Post Success $post_id <br>";
                 $node['post_id'] = $post_id;
-                $node['link'] = get_permalink($post_id); 
+                $node['link'] = get_permalink($post_id);
                 $this->store_meta($post_id, $level, $parent_id, $slug, $node['click_bait'] ?? '');
             }
 
@@ -42,6 +28,9 @@ class CSB_Publisher {
     }
 
     public function fill_and_publish_content(array &$tree) {
+        $linker = new CSB_Linker();
+        $linker->update_development_links($tree); // 🔁 Met à jour les liens internes des développements
+
         foreach ($tree as $slug => &$node) {
             $post_id = $node['post_id'] ?? 0;
             if (!$post_id) continue;
@@ -52,7 +41,6 @@ class CSB_Publisher {
 
             $html = $this->generate_html_content($content_parts, $level);
 
-            $linker = new CSB_Linker();
             $final_content = $this->append_freepik_image(
                 $linker->generate_structured_links($html, $level, $post_id, $parent_id, $node['children'] ?? []),
                 $content_parts['image_url'] ?? '',
@@ -71,23 +59,14 @@ class CSB_Publisher {
     }
 
     private function create_post($title, $parent_id) {
-        /*$slug = $this->generate_unique_slug($title);*/
-        $post= wp_insert_post([
+        return wp_insert_post([
             'post_title'   => $title,
-            /*'post_name'    => $slug,*/
             'post_content' => '',
             'post_status'  => 'publish',
             'post_type'    => 'post',
             'post_parent'  => $parent_id,
         ]);
-
-        // echo '<br>';echo '<br>';
-        // print_r($post);
-        // echo '<br>';echo '<br>';
-        return $post;
     }
-
-    
 
     private function store_meta($post_id, $level, $parent_id, $slug, $click_bait) {
         update_post_meta($post_id, '_csb_level', $level);
@@ -109,7 +88,6 @@ class CSB_Publisher {
                 $html .= '<p>' . wp_kses_post($dev['text']) . '</p>';
                 if (!empty($dev['link']) && $level != 3) {
                     $html .= '<p>' . $dev['link'] . '</p>';
-                    //print_r($dev['link']);
                 }
             }
         }
@@ -126,4 +104,4 @@ class CSB_Publisher {
         $img_html = '<div style="margin-top:2em;"><img src="' . esc_url($image_url) . '" alt="' . esc_attr($alt) . '" style="max-width:100%; height:auto;" /></div>';
         return $content . "\n\n" . $img_html;
     }
-} 
+}
