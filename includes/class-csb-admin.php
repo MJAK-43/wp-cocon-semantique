@@ -126,7 +126,7 @@ class CSB_Admin {
         $generator = new CSB_Generator();
 
         // Étape 1 : Créer tous les articles vides (titre, slug, parent)
-        $publisher->register_all_posts($this->last_tree, 0, 1);
+        $publisher->register_all_posts($this->last_tree,1);
 
 
         // Étape 2 : Générer le contenu via OpenAI (avec les liens disponibles)

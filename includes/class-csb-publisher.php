@@ -70,8 +70,7 @@ class CSB_Publisher {
 
     private function create_post($title, $parent_id) {
         /*$slug = $this->generate_unique_slug($title);*/
-    
-        return wp_insert_post([
+        $post= wp_insert_post([
             'post_title'   => $title,
             /*'post_name'    => $slug,*/
             'post_content' => '',
@@ -79,6 +78,11 @@ class CSB_Publisher {
             'post_type'    => 'post',
             'post_parent'  => $parent_id,
         ]);
+
+        echo '<br>';echo '<br>';
+        print_r($post);
+        echo '<br>';echo '<br>';
+        return $post;
     }
 
     private function generate_unique_slug($title) {
