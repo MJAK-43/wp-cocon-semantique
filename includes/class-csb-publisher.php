@@ -29,7 +29,7 @@ class CSB_Publisher {
             $post_id = $this->create_post($title,$parent_id);
 
             if (!is_wp_error($post_id)) {
-                echo "<br>Create Post Success $post_id <br>";
+                //echo "<br>Create Post Success $post_id <br>";
                 $node['post_id'] = $post_id;
                 $node['link'] = get_permalink($post_id); 
                 $this->store_meta($post_id, $level, $parent_id, $slug, $node['click_bait'] ?? '');

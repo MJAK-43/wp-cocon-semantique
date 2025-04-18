@@ -40,9 +40,9 @@ class CSB_Admin {
             
             if (isset($_POST['csb_validate_publish'])) {
                 $this->process_structure();
-                echo "<br>";echo "<br>";echo "<br>";
-                print_r($this->last_tree);
-                echo "<br>";echo "<br>";echo "<br>";
+                // echo "<br>";echo "<br>";echo "<br>";
+                // print_r($this->last_tree);
+                // echo "<br>";echo "<br>";echo "<br>";
                 echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
             }
         }
@@ -50,7 +50,7 @@ class CSB_Admin {
         echo '<div class="wrap">';
         echo '<h1>Générateur de Cocon Sémantique</h1>';
         $this->render_keyword_form($keyword, $nd);
-        $this->render_structure_form($this->last_tree); // ✅ toujours affiché, même après publication
+        $this->render_structure_form($this->last_tree); 
         echo '</div>';
     
         echo '<div style="margin: 1em 0; padding: 1em; border-left: 4px solid #0073aa; background: #f1f1f1;">';
@@ -128,12 +128,14 @@ class CSB_Admin {
         // Étape 1 : Créer tous les articles vides (titre, slug, parent)
         $publisher->register_all_posts($this->last_tree,0,1);
 
+        // Étape 2 : Ajouter les liens WordPress dans la structure
+        $linker->add_permalink_links($this->last_tree); // ajoute les 'link'
 
-        // Étape 2 : Générer le contenu via OpenAI (avec les liens disponibles)
+
+        // Étape 3 : Générer le contenu via OpenAI (avec les liens disponibles)
         $generator->generate_full_content($this->last_tree);
     
-        // Étape 3 : Ajouter les liens WordPress dans la structure
-        $linker->add_permalink_links($this->last_tree); // ajoute les 'link'
+        
     
         // Étape 4 : Mettre à jour les articles avec le contenu final
         $publisher->fill_and_publish_content($this->last_tree);
