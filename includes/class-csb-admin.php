@@ -281,7 +281,7 @@ class CSB_Admin {
     private function render_links_to_articles($tree){
         foreach ($tree as $slug => $node) {
             if (!empty($node['post_id'])) {
-                echo $node['post_id'];
+                //echo $node['post_id'];
                 $url = get_permalink($node['post_id']);
                 $title = esc_html($node['title']);
                 echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a></li>";
