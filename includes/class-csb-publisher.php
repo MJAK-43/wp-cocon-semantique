@@ -29,7 +29,9 @@ class CSB_Publisher {
             $post_id = $this->create_post($title,$parent_id);
 
             if (!is_wp_error($post_id)) {
+                echo "<br>Create Post Success $post_id <br>";
                 $node['post_id'] = $post_id;
+                $node['link'] = get_permalink($post_id); 
                 $this->store_meta($post_id, $level, $parent_id, $slug, $node['click_bait'] ?? '');
             }
 
@@ -79,28 +81,12 @@ class CSB_Publisher {
             'post_parent'  => $parent_id,
         ]);
 
-        echo '<br>';echo '<br>';
-        print_r($post);
-        echo '<br>';echo '<br>';
+        // echo '<br>';echo '<br>';
+        // print_r($post);
+        // echo '<br>';echo '<br>';
         return $post;
     }
 
-    private function generate_unique_slug($title) {
-        global $wpdb;
-        $base_slug = sanitize_title($title);
-        $slug = $base_slug;
-        $i = 1;
-    
-        while ($wpdb->get_var($wpdb->prepare(
-            "SELECT ID FROM $wpdb->posts WHERE post_name = %s AND post_type = 'post'",
-            $slug
-        ))) {
-            $slug = $base_slug . '-' . $i;
-            $i++;
-        }
-    
-        return $slug;
-    }
     
 
     private function store_meta($post_id, $level, $parent_id, $slug, $click_bait) {
