@@ -3,44 +3,6 @@ if (!defined('ABSPATH')) exit;
 
 class CSB_Publisher {
 
-    // public function publish_structure(array &$tree, int $parent_id = 0, int $level = 1) {
-    //     // Étape 1 : enregistrer tous les articles sans contenu
-    //     $this->register_all_posts($tree, $parent_id, $level);
-
-    //     // Étape 2 : injecter les contenus maintenant que tous les liens existent
-    //     // $linker = new CSB_Linker();
-    //     // $linker->add_permalink_links($tree);
-
-    //     $this->fill_and_publish_content($tree);
-    // }
-
-    public function prepare_and_link_structure(array &$tree): void {
-        $this->register_all_posts($tree, 0, 1);
-    
-        // Ajouter les permaliens basés sur post_id
-        $linker = new CSB_Linker();
-        $linker->add_permalink_links($tree);
-    }
-    
-
-    public function register_all_posts(array &$tree, int $parent_id, int $level) {
-        foreach ($tree as $slug => &$node) {
-            $title = $node['title'];
-            $post_id = $this->create_post($title,$parent_id);
-
-            if (!is_wp_error($post_id)) {
-                //echo "<br>Create Post Success $post_id <br>";
-                $node['post_id'] = $post_id;
-                $node['link'] = get_permalink($post_id); 
-                $this->store_meta($post_id, $level, $parent_id, $slug, $node['click_bait'] ?? '');
-            }
-
-            if (!empty($node['children'])) {
-                $this->register_all_posts($node['children'], $node['post_id'], $level + 1);
-            }
-        }
-    }
-
     public function fill_and_publish_content(array &$tree) {
         foreach ($tree as $slug => &$node) {
             $post_id = $node['post_id'] ?? 0;
