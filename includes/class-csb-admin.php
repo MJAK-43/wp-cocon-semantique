@@ -118,6 +118,28 @@ class CSB_Admin {
         echo '</ul>';
     }
     
+    private function synchronize_development_links(array &$tree) {
+        foreach ($tree as &$node) {
+            if (!empty($node['content']['developments']) && !empty($node['children'])) {
+                foreach ($node['content']['developments'] as &$dev) {
+                    foreach ($node['children'] as $child) {
+                        if (
+                            isset($child['title'], $child['link'], $child['click_bait']) &&
+                            trim($child['title']) === trim($dev['title'])
+                        ) {
+                            $dev['link'] = '<a href="' . esc_url($child['link']) . '">' . esc_html($child['click_bait']) . '</a>';
+                            break;
+                        }
+                    }
+                }
+            }
+    
+            // 🔁 Recurse
+            if (!empty($node['children'])) {
+                $this->synchronize_development_links($node['children']);
+            }
+        }
+    }
     
 
     private function process_structure() {
@@ -140,7 +162,7 @@ class CSB_Admin {
 
         // Étape 3 : Générer le contenu via OpenAI (avec les liens disponibles)
         $generator->generate_full_content($this->last_tree);
-
+        $this->synchronize_development_links($this->last_tree);
         echo "<br><br><br>";
         echo "///////////////////////////////////////////AFTER///////////////////////////////////////////<br>";
         self::debug_display_links($this->last_tree);
