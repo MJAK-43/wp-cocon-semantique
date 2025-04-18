@@ -32,15 +32,15 @@ class CSB_Publisher {
             $html = $this->generate_html_content($content_parts, $level);
 
             $linker = new CSB_Linker();
-            $final_content = $this->append_freepik_image(
-                $final_content = $linker->generate_structured_links($slug, $html, $level, $full_tree),
-                $content_parts['image_url'] ?? '',
-                $content_parts['image'] ?? ''
-            );
+            // $final_content = $this->append_freepik_image(
+            //     $final_content = $linker->generate_structured_links($slug, $html, $level, $full_tree),
+            //     $content_parts['image_url'] ?? '',
+            //     $content_parts['image'] ?? ''
+            // );
 
             wp_update_post([
                 'ID' => $post_id,
-                'post_content' => $final_content,
+                'post_content' => $html,
             ]);
 
             if (!empty($node['children'])) {

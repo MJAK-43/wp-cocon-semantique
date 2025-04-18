@@ -165,10 +165,10 @@ class CSB_Admin {
         // Étape 3 : Générer le contenu via OpenAI (avec les liens disponibles)
         $generator->generate_full_content($this->last_tree,$this->nb);
         $this->synchronize_development_links($this->last_tree);
-        // echo "<br><br><br>";
-        // echo "///////////////////////////////////////////AFTER///////////////////////////////////////////<br>";
-        // self::debug_display_links($this->last_tree);
-        // echo "<br><br><br>";
+        echo "<br><br><br>";
+        echo "///////////////////////////////////////////AFTER///////////////////////////////////////////<br>";
+        self::debug_display_links($this->last_tree);
+        echo "<br><br><br>";
     
         
     
@@ -176,10 +176,10 @@ class CSB_Admin {
         $publisher->fill_and_publish_content($this->last_tree,$this->last_tree);
 
 
-        // echo "<br><br><br>";
-        // echo "///////////////////////////////////////////AFTER__PUBLICATION///////////////////////////////////////////<br>";
-        // self::debug_display_links($this->last_tree);
-        // echo "<br><br><br>";
+        echo "<br><br><br>";
+        echo "///////////////////////////////////////////AFTER__PUBLICATION///////////////////////////////////////////<br>";
+        self::debug_display_links($this->last_tree);
+        echo "<br><br><br>";
     
     }
 

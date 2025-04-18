@@ -170,7 +170,7 @@ class CSB_Linker {
     // }
 
 
-        /**
+    /**
      * Récupère le parent d’un nœud donné dans l’arbre.
      */
     public function get_parent_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$found_parent_slug = null) {
