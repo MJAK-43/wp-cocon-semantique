@@ -37,9 +37,9 @@ class CSB_Admin {
             
             if (isset($_POST['csb_validate_publish'])) {
                 $this->process_structure();
-                echo "<br>";echo "<br>";echo "<br>";
-                print_r($this->last_tree);
-                echo "<br>";echo "<br>";echo "<br>";
+                // echo "<br>";echo "<br>";echo "<br>";
+                // print_r($this->last_tree);
+                // echo "<br>";echo "<br>";echo "<br>";
                 echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
             }
         }
@@ -131,8 +131,6 @@ class CSB_Admin {
     
         // Étape 3 : Ajouter les liens WordPress dans la structure
         $linker->add_permalink_links($this->last_tree); // ajoute les 'link'
-    
-        
     
         // Étape 4 : Mettre à jour les articles avec le contenu final
         $publisher->fill_and_publish_content($this->last_tree);
