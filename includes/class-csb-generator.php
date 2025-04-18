@@ -380,7 +380,7 @@ class CSB_Generator {
         // Appel récursif sur les enfants
         if (!empty($node['children'])) {
             foreach ($node['children'] as $child_slug => &$child) {
-                $this->generate_content_for_node($child_slug, $child, $fullTree);
+                $this->generate_content_for_node($child_slug, $child, $fullTree,$number);
             }
         }
     }
