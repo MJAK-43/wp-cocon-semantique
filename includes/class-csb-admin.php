@@ -127,6 +127,8 @@ class CSB_Admin {
 
         // Étape 1 : Créer tous les articles vides (titre, slug, parent)
         $publisher->register_all_posts($this->last_tree,0,1);
+        flush_rewrite_rules();
+
 
         // Étape 2 : Ajouter les liens WordPress dans la structure
         $linker->add_permalink_links($this->last_tree); // ajoute les 'link'
@@ -229,6 +231,7 @@ class CSB_Admin {
     private function render_links_to_articles($tree){
         foreach ($tree as $slug => $node) {
             if (!empty($node['post_id'])) {
+                echo $node['post_id'];
                 $url = get_permalink($node['post_id']);
                 $title = esc_html($node['title']);
                 echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a></li>";
