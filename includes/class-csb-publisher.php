@@ -26,7 +26,7 @@ class CSB_Publisher {
     public function register_all_posts(array &$tree, int $parent_id, int $level) {
         foreach ($tree as $slug => &$node) {
             $title = $node['title'];
-            $post_id = $this->create_post($title, $slug, $parent_id);
+            $post_id = $this->create_post($title,$parent_id);
 
             if (!is_wp_error($post_id)) {
                 $node['post_id'] = $post_id;
@@ -68,7 +68,9 @@ class CSB_Publisher {
         }
     }
 
-    private function create_post($title, $slug, $parent_id) {
+    private function create_post($title, $parent_id) {
+        $slug = $this->generate_unique_slug($title);
+    
         return wp_insert_post([
             'post_title'   => $title,
             'post_name'    => $slug,
@@ -78,6 +80,24 @@ class CSB_Publisher {
             'post_parent'  => $parent_id,
         ]);
     }
+
+    private function generate_unique_slug($title) {
+        global $wpdb;
+        $base_slug = sanitize_title($title);
+        $slug = $base_slug;
+        $i = 1;
+    
+        while ($wpdb->get_var($wpdb->prepare(
+            "SELECT ID FROM $wpdb->posts WHERE post_name = %s AND post_type = 'post'",
+            $slug
+        ))) {
+            $slug = $base_slug . '-' . $i;
+            $i++;
+        }
+    
+        return $slug;
+    }
+    
 
     private function store_meta($post_id, $level, $parent_id, $slug, $click_bait) {
         update_post_meta($post_id, '_csb_level', $level);
