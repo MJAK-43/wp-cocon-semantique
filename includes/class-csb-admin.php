@@ -130,18 +130,17 @@ class CSB_Admin {
                             trim($child['title']) === trim($dev['title'])
                         ) {
                             $dev['link'] = '<a href="' . esc_url($child['link']) . '">' . esc_html($child['click_bait']) . '</a>';
-                            break;
                         }
                     }
                 }
             }
     
-            // 🔁 Recurse
             if (!empty($node['children'])) {
                 $this->synchronize_development_links($node['children']);
             }
         }
     }
+    
     
 
     private function process_structure() {
@@ -174,11 +173,9 @@ class CSB_Admin {
 
         $linker->add_permalink_links($this->last_tree);
 
-        // 👇 Ajout ici : synchroniser les liens dans les `developments` à partir des enfants
-        $this->synchronize_development_links($this->last_tree);
-
         // Maintenant que les liens sont bons, on peut générer le contenu
         $generator->generate_full_content($this->last_tree, $this->nb);
+        $this->synchronize_development_links($this->last_tree);
 
         
     
