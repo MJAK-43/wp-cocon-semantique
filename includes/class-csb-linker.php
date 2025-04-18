@@ -17,26 +17,26 @@ class CSB_Linker {
         }
     }
 
-    public function get_parent_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$found_parent_slug = null) {
-        foreach ($tree as $slug => $node) {
-            if ($slug === $target_slug) {
-                if ($found_parent_slug !== null && isset($parents[$found_parent_slug])) {
-                    return $parents[$found_parent_slug];
-                }
-                return null;
-            }
+    // public function get_parent_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$found_parent_slug = null) {
+    //     foreach ($tree as $slug => $node) {
+    //         if ($slug === $target_slug) {
+    //             if ($found_parent_slug !== null && isset($parents[$found_parent_slug])) {
+    //                 return $parents[$found_parent_slug];
+    //             }
+    //             return null;
+    //         }
 
-            if (!empty($node['children'])) {
-                $parents[$slug] = $node;
-                $result = $this->get_parent_from_tree($target_slug, $node['children'], $parents, $slug);
-                if ($result !== null) {
-                    return $result;
-                }
-            }
-        }
+    //         if (!empty($node['children'])) {
+    //             $parents[$slug] = $node;
+    //             $result = $this->get_parent_from_tree($target_slug, $node['children'], $parents, $slug);
+    //             if ($result !== null) {
+    //                 return $result;
+    //             }
+    //         }
+    //     }
 
-        return null;
-    }
+    //     return null;
+    // }
     
 
    
@@ -130,43 +130,122 @@ class CSB_Linker {
         return $content;
     }
 
-    public function get_parent_and_siblings_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$parent_slug = null): array {
+    // public function get_parent_and_siblings_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$parent_slug = null): array {
+    //     foreach ($tree as $slug => $node) {
+    //         if ($slug === $target_slug) {
+    //             // On a trouvé le nœud cible
+    //             $siblings = [];
+    //             if ($parent_slug !== null && isset($parents[$parent_slug]['children'])) {
+    //                 foreach ($parents[$parent_slug]['children'] as $sibling_slug => $sibling_node) {
+    //                     if ($sibling_slug !== $target_slug && isset($sibling_node['link'], $sibling_node['click_bait'])) {
+    //                         $siblings[] = '<a href="' . esc_url($sibling_node['link']) . '">' . esc_html($sibling_node['click_bait']) . '</a>';
+    //                     }
+    //                 }
+    //             }
+    
+    //             $parent_link = null;
+    //             if ($parent_slug !== null && isset($parents[$parent_slug])) {
+    //                 $p = $parents[$parent_slug];
+    //                 if (isset($p['link'], $p['click_bait'])) {
+    //                     $parent_link = '<a href="' . esc_url($p['link']) . '">' . esc_html($p['click_bait']) . '</a>';
+    //                 }
+    //             }
+    
+    //             return [
+    //                 'parent' => $parent_link,
+    //                 'siblings' => $siblings
+    //             ];
+    //         }
+    
+    //         if (!empty($node['children'])) {
+    //             $parents[$slug] = $node;
+    //             $result = $this->get_parent_and_siblings_from_tree($target_slug, $node['children'], $parents, $slug);
+    //             if ($result) {
+    //                 return $result;
+    //             }
+    //         }
+    //     }
+    
+    //     return ['parent' => null, 'siblings' => []]; // Si non trouvé
+    // }
+
+
+        /**
+     * Récupère le parent d’un nœud donné dans l’arbre.
+     */
+    public function get_parent_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$found_parent_slug = null) {
         foreach ($tree as $slug => $node) {
             if ($slug === $target_slug) {
-                // On a trouvé le nœud cible
-                $siblings = [];
-                if ($parent_slug !== null && isset($parents[$parent_slug]['children'])) {
-                    foreach ($parents[$parent_slug]['children'] as $sibling_slug => $sibling_node) {
-                        if ($sibling_slug !== $target_slug && isset($sibling_node['link'], $sibling_node['click_bait'])) {
-                            $siblings[] = '<a href="' . esc_url($sibling_node['link']) . '">' . esc_html($sibling_node['click_bait']) . '</a>';
-                        }
-                    }
+                if ($found_parent_slug !== null && isset($parents[$found_parent_slug])) {
+                    return $parents[$found_parent_slug];
                 }
-    
-                $parent_link = null;
-                if ($parent_slug !== null && isset($parents[$parent_slug])) {
-                    $p = $parents[$parent_slug];
-                    if (isset($p['link'], $p['click_bait'])) {
-                        $parent_link = '<a href="' . esc_url($p['link']) . '">' . esc_html($p['click_bait']) . '</a>';
-                    }
-                }
-    
-                return [
-                    'parent' => $parent_link,
-                    'siblings' => $siblings
-                ];
+                return null;
             }
-    
+
             if (!empty($node['children'])) {
                 $parents[$slug] = $node;
-                $result = $this->get_parent_and_siblings_from_tree($target_slug, $node['children'], $parents, $slug);
-                if ($result) {
+                $result = $this->get_parent_from_tree($target_slug, $node['children'], $parents, $slug);
+                if ($result !== null) {
                     return $result;
                 }
             }
         }
-    
-        return ['parent' => null, 'siblings' => []]; // Si non trouvé
+
+        return null;
     }
+
+    /**
+     * Récupère les frères et sœurs du nœud dans l’arbre.
+     */
+    public function get_siblings_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$found_parent_slug = null): array {
+        foreach ($tree as $slug => $node) {
+            if ($slug === $target_slug) {
+                if ($found_parent_slug !== null && isset($parents[$found_parent_slug]['children'])) {
+                    $siblings = [];
+                    foreach ($parents[$found_parent_slug]['children'] as $sibling_slug => $sibling_node) {
+                        if ($sibling_slug !== $target_slug) {
+                            $siblings[$sibling_slug] = $sibling_node;
+                        }
+                    }
+                    return $siblings;
+                }
+                return [];
+            }
+
+            if (!empty($node['children'])) {
+                $parents[$slug] = $node;
+                $result = $this->get_siblings_from_tree($target_slug, $node['children'], $parents, $slug);
+                if (!empty($result)) {
+                    return $result;
+                }
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Récupère le nœud racine à partir du slug dans l’arbre.
+     */
+    public function get_root_from_tree(string $target_slug, array $tree, array $path = []): ?array {
+        foreach ($tree as $slug => $node) {
+            $new_path = $path;
+            $new_path[] = $node;
+
+            if ($slug === $target_slug) {
+                return $path[0] ?? $node; // racine ou lui-même
+            }
+
+            if (!empty($node['children'])) {
+                $result = $this->get_root_from_tree($target_slug, $node['children'], $new_path);
+                if ($result !== null) {
+                    return $result;
+                }
+            }
+        }
+
+        return null;
+    }
+
     
 }
