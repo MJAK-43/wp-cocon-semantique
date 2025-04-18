@@ -149,27 +149,37 @@ class CSB_Admin {
         $linker = new CSB_Linker();
         $generator = new CSB_Generator();
 
-        // Étape 1 : Créer tous les articles vides (titre, slug, parent)
-        $publisher->register_all_posts($this->last_tree,0,1);
-        flush_rewrite_rules();
+        // // Étape 1 : Créer tous les articles vides (titre, slug, parent)
+        // $publisher->register_all_posts($this->last_tree,0,1);
+        // flush_rewrite_rules();
 
 
-        // Étape 2 : Ajouter les liens WordPress dans la structure
-        $linker->add_permalink_links($this->last_tree); // ajoute les 'link'
+        // // Étape 2 : Ajouter les liens WordPress dans la structure
+        // $linker->add_permalink_links($this->last_tree); // ajoute les 'link'
+        // // echo "<br><br><br>";
+        // // echo "///////////////////////////////////////////BEFORE///////////////////////////////////////////<br>";
+        // // self::debug_display_links($this->last_tree);
+        // // echo "<br><br><br>";
+
+
+        // // Étape 3 : Générer le contenu via OpenAI (avec les liens disponibles)
+        // $generator->generate_full_content($this->last_tree,$this->nb);
+        // $this->synchronize_development_links($this->last_tree);
         // echo "<br><br><br>";
-        // echo "///////////////////////////////////////////BEFORE///////////////////////////////////////////<br>";
+        // echo "///////////////////////////////////////////AFTER///////////////////////////////////////////<br>";
         // self::debug_display_links($this->last_tree);
         // echo "<br><br><br>";
+        $publisher->register_all_posts($this->last_tree, 0, 1);
+        flush_rewrite_rules();
 
+        $linker->add_permalink_links($this->last_tree);
 
-        // Étape 3 : Générer le contenu via OpenAI (avec les liens disponibles)
-        $generator->generate_full_content($this->last_tree,$this->nb);
+        // 👇 Ajout ici : synchroniser les liens dans les `developments` à partir des enfants
         $this->synchronize_development_links($this->last_tree);
-        echo "<br><br><br>";
-        echo "///////////////////////////////////////////AFTER///////////////////////////////////////////<br>";
-        self::debug_display_links($this->last_tree);
-        echo "<br><br><br>";
-    
+
+        // Maintenant que les liens sont bons, on peut générer le contenu
+        $generator->generate_full_content($this->last_tree, $this->nb);
+
         
     
         // Étape 4 : Mettre à jour les articles avec le contenu final
