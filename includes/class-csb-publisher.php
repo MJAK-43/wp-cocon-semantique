@@ -42,10 +42,11 @@ class CSB_Publisher {
             $html = $this->generate_html_content($content_parts, $level);
 
             $final_content = $this->append_freepik_image(
-                $linker->generate_structured_links($html, $level, $post_id, $parent_id, $node['children'] ?? []),
+                $linker->generate_structured_links($html, $level, $slug, $tree),
                 $content_parts['image_url'] ?? '',
                 $content_parts['image'] ?? ''
             );
+            
 
             wp_update_post([
                 'ID' => $post_id,

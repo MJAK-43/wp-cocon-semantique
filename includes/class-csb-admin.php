@@ -176,10 +176,10 @@ class CSB_Admin {
         $publisher->fill_and_publish_content($this->last_tree);
 
 
-        // echo "<br><br><br>";
-        // echo "///////////////////////////////////////////AFTER__PUBLICATION///////////////////////////////////////////<br>";
-        // self::debug_display_links($this->last_tree);
-        // echo "<br><br><br>";
+        echo "<br><br><br>";
+        echo "///////////////////////////////////////////AFTER__PUBLICATION///////////////////////////////////////////<br>";
+        self::debug_display_links($this->last_tree);
+        echo "<br><br><br>";
     
     }
 
