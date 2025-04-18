@@ -23,31 +23,21 @@ class CSB_Publisher {
     }
     
 
-    private function register_all_posts(array &$tree, int $parent_id, int $level) {
-        $linker = new CSB_Linker();
-    
+    public function register_all_posts(array &$tree, int $parent_id, int $level) {
         foreach ($tree as $slug => &$node) {
             $title = $node['title'];
-    
-            // Générer un slug unique basé sur les slugs déjà utilisés
-            $unique_slug = $linker->generate_unique_slug($title);
-    
-            // Créer le post avec ce slug
-            $post_id = $this->create_post($title, $unique_slug, $parent_id);
-    
+            $post_id = $this->create_post($title, $slug, $parent_id);
+
             if (!is_wp_error($post_id)) {
                 $node['post_id'] = $post_id;
-                $node['slug'] = $unique_slug;
-                $node['link'] = get_permalink($post_id); // ✅ URL réelle
-                $this->store_meta($post_id, $level, $parent_id, $unique_slug, $node['click_bait'] ?? '');
+                $this->store_meta($post_id, $level, $parent_id, $slug, $node['click_bait'] ?? '');
             }
-    
+
             if (!empty($node['children'])) {
-                $this->register_all_posts($node['children'], $post_id, $level + 1);
+                $this->register_all_posts($node['children'], $node['post_id'], $level + 1);
             }
         }
     }
-    
 
     private function fill_and_publish_content(array &$tree) {
         foreach ($tree as $slug => &$node) {

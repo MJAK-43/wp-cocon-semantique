@@ -118,17 +118,23 @@ class CSB_Admin {
     
 
     private function process_structure() {
-
-
-        // 🔗 Injecter les liens dans chaque nœud de contenu
-        $linker = new CSB_Linker();
-        $linker->add_permalink_links($this->last_tree);
-        
-        $generator = new CSB_Generator();
-        
         $publisher = new CSB_Publisher();
-        $publisher->publish_structure($this->last_tree);
+    
+        // Étape 1 : Créer tous les articles vides (titre, slug, parent)
+        $publisher->register_all_posts($this->last_tree, 0, 1);
+    
+        // Étape 2 : Ajouter les liens WordPress dans la structure
+        $linker = new CSB_Linker();
+        $linker->add_permalink_links($this->last_tree); // ajoute les 'link'
+    
+        // Étape 3 : Générer le contenu via OpenAI (avec les liens disponibles)
+        $generator = new CSB_Generator();
+        $generator->generate_full_content($this->last_tree);
+    
+        // Étape 4 : Mettre à jour les articles avec le contenu final
+        $publisher->fill_and_publish_content($this->last_tree);
     }
+    
 
 
     

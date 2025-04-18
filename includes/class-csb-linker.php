@@ -3,54 +3,12 @@ if (!defined('ABSPATH')) exit;
 
 class CSB_Linker {
 
-    /**
-     * Ajoute les vrais permaliens WordPress aux nœuds une fois qu’ils ont un post_id.
-     * @param array $tree
-     */
-    // public function add_permalink_links(array &$tree) {
-    //     foreach ($tree as &$node) {
-    //         if (!empty($node['post_id'])) {
-    //             $node['link'] = get_permalink($node['post_id']);
-    //             print_r($node['post_id']);
-    //         }
     
-    //         if (!empty($node['children'])) {
-    //             $this->add_permalink_links($node['children']);
-    //         }
-    //     }
-    // }
-    public function generate_unique_slug(string $title): string {
-        global $wpdb;
-        $base_slug = sanitize_title($title);
-        $slug = $base_slug;
-        $i = 1;
-    
-        while ($wpdb->get_var($wpdb->prepare(
-            "SELECT ID FROM $wpdb->posts WHERE post_name = %s AND post_type = 'post'",
-            $slug
-        ))) {
-            $slug = $base_slug . '-' . $i;
-            $i++;
-        }
-    
-        return $slug;
-    }
     
     public function add_permalink_links(array &$tree) {
         foreach ($tree as &$node) {
-            if (!empty($node['title'])) {
-                $title = $node['title'];
-    
-                // Compter les articles publiés ayant déjà exactement ce titre
-                $existing_count = $this->count_existing_articles_by_title($title);
-    
-                // Générer un suffixe pour éviter les doublons
-                $suffix = $existing_count > 0 ? '-' . ($existing_count + 1) : '';
-                $slug = sanitize_title($title . $suffix);
-    
-                // Construire l'URL
-                $url = home_url('/') . $slug . '/';
-                $node['link'] = $url;
+            if (!empty($node['post_id'])) {
+                $node['link'] = get_permalink($node['post_id']);
             }
     
             if (!empty($node['children'])) {
