@@ -180,7 +180,7 @@ class CSB_Admin {
 
         // Maintenant que les liens sont bons, on peut générer le contenu
         $generator->generate_full_content($this->last_tree, $this->nb);
-        $this->synchronize_development_links($this->last_tree);
+        //$this->synchronize_development_links($this->last_tree);
 
         
     
