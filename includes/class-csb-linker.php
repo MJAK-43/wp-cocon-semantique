@@ -16,6 +16,27 @@ class CSB_Linker {
             }
         }
     }
+
+    public function get_parent_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$found_parent_slug = null) {
+        foreach ($tree as $slug => $node) {
+            if ($slug === $target_slug) {
+                if ($found_parent_slug !== null && isset($parents[$found_parent_slug])) {
+                    return $parents[$found_parent_slug];
+                }
+                return null;
+            }
+
+            if (!empty($node['children'])) {
+                $parents[$slug] = $node;
+                $result = $this->get_parent_from_tree($target_slug, $node['children'], $parents, $slug);
+                if ($result !== null) {
+                    return $result;
+                }
+            }
+        }
+
+        return null;
+    }
     
 
    
