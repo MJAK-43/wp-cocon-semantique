@@ -219,7 +219,7 @@ class CSB_Generator {
 
     }
 
-    private function getPromptArticle($title, $contextTree) {
+    private function getPromptArticle($title, $contextTree, $number) {
         $structure = $this->to_bullet_tree($contextTree);
     
         // 🧠 Génération des liens HTML des enfants
@@ -237,7 +237,7 @@ class CSB_Generator {
             }
         }
     
-        // 🔧 Partie DEVELOPMENT avec liens intégrés
+        // 🔧 Partie DEVELOPMENT avec ou sans enfants
         $dev_part = '';
         if (!empty($children_links)) {
             $dev_part .= "Dans la section DEVELOPMENTS, crée une entrée pour chaque enfant direct de cet article. Voici la structure à respecter :\n";
@@ -248,13 +248,18 @@ class CSB_Generator {
                 $dev_part .= "  link: {$child['link']}\n";
             }
             $dev_part .= "\nUtilise exactement ces liens. Ne modifie pas les URL ni les textes des liens.\n\n";
+        } else {
+            $dev_part .= "Il n’y a **aucun enfant** dans cet article. Tu dois donc créer **exactement $number sous-parties**.\n";
+            $dev_part .= "Chaque sous-partie doit respecter ce format :\n";
+            $dev_part .= "- title: Un sous-titre pertinent\n  text: Le développement\n  link: (laisse vide, écris juste `link:`)\n\n";
+            $dev_part .= "⚠️ Ne dépasse pas $number sous-parties. Ne mets **aucun lien HTML**.\n\n";
         }
     
         // 📝 Prompt complet
         return "Tu es un rédacteur professionnel en style {$this->style}.\n\n" .
             "Contexte : voici la structure hiérarchique dans laquelle s’insère l’article \"$title\". Chaque ligne représente un titre d’article :\n\n" .
             "$structure\n\n" .
-            "Ta mission : rédiger un article optimisé pour le sujet de à peut prés 800 \"$title\".\n\n" .
+            "Ta mission : rédiger un article optimisé pour le sujet \"$title\" (environ 800 mots).\n\n" .
             "Évite les répétitions et développe les idées avec des exemples concrets et pertinents.\n\n" .
             "Respecte ce format STRICTEMENT :\n\n" .
             "[TITRE: $title]\n" .
@@ -270,6 +275,7 @@ class CSB_Generator {
             "- Ne change pas les titres fournis.\n" .
             "- Chaque développement doit inclure les champs : title, text, link.";
     }
+    
     
     
 
@@ -301,12 +307,12 @@ class CSB_Generator {
     }
     
 
-    public function generate_full_content(array &$tree) {
+    public function generate_full_content(array &$tree,int $number) {
         // echo "<br>";echo "<br>";
         // print_r($tree);
         // echo "<br>";echo "<br>";
         foreach ($tree as $slug => &$node) {
-            $this->generate_content_for_node($slug, $node, $tree);
+            $this->generate_content_for_node($slug, $node, $tree,$number);
         }
         // echo "<br>";echo "<br>";
         // print_r($tree);
@@ -329,9 +335,9 @@ class CSB_Generator {
 
 
 
-    private function generate_content_for_node(string $slug, array &$node, array $fullTree) {
+    private function generate_content_for_node(string $slug, array &$node, array $fullTree, int $number) {
         $context_tree = $this->extract_subtree_context($slug, $fullTree);
-        $prompt = $this->getPromptArticle($node['title'], $context_tree);
+        $prompt = $this->getPromptArticle($node['title'], $context_tree,$number);
         $raw = $this->call_api($prompt);
         while(!$this->is_valid_format($raw)) {
             // echo '<br>';

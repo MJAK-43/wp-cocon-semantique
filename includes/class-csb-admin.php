@@ -3,6 +3,7 @@ if (!defined('ABSPATH')) exit;
 
 class CSB_Admin {
     private $last_tree = [];
+    private int $nb;
 
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
@@ -24,11 +25,12 @@ class CSB_Admin {
 
     public function render_admin_page() {
         $keyword = isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '';
-        $nd = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : '';
+        $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
+
     
-        if (!empty($keyword) && !empty($nd) && isset($_POST['submit'])) {
+        if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
             $generator = new CSB_Generator();
-            $this->last_tree = $generator->generate_structure_array($keyword, $nd);
+            $this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
             // echo "<br>";echo "<br>";echo "<br>";
                 // print_r($this->last_tree);
                 // echo "<br>";echo "<br>";echo "<br>";
@@ -49,7 +51,7 @@ class CSB_Admin {
     
         echo '<div class="wrap">';
         echo '<h1>Générateur de Cocon Sémantique</h1>';
-        $this->render_keyword_form($keyword, $nd);
+        $this->render_keyword_form($keyword, $this->nb);
         $this->render_structure_form($this->last_tree); 
         echo '</div>';
     
@@ -65,13 +67,13 @@ class CSB_Admin {
     }
     
 
-    private function render_keyword_form($keyword, $nd) {
+    private function render_keyword_form($keyword, $nb) {
         echo '<form method="post">';
         echo '<table class="form-table">';
         echo '<tr><th><label for="csb_keyword">Mot-clé principal</label></th>';
         echo '<td><input type="text" name="csb_keyword" value="' . esc_attr($keyword) . '" class="regular-text" required></td></tr>';
         echo '<tr><th><label for="csb_nb_nodes">Nombre de sous-niveaux</label></th>';
-        echo '<td><input type="number" name="csb_nb_nodes" value="' . esc_attr($nd) . '" class="regular-text" required></td></tr>';
+        echo '<td><input type="number" name="csb_nb_nodes" value="' . esc_attr($nb) . '" class="regular-text" required></td></tr>';
         echo '</table>';
         submit_button('Générer la structure', 'primary', 'submit');
         echo '</form>';
