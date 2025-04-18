@@ -132,6 +132,10 @@ class CSB_Admin {
 
         // Étape 2 : Ajouter les liens WordPress dans la structure
         $linker->add_permalink_links($this->last_tree); // ajoute les 'link'
+        echo "<br><br><br>";
+        echo "///////////////////////////////////////////BEFORE///////////////////////////////////////////<br>";
+        print_r($this->last_tree);
+        echo "<br><br><br>";
 
 
         // Étape 3 : Générer le contenu via OpenAI (avec les liens disponibles)
