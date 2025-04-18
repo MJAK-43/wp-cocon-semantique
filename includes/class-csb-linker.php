@@ -56,21 +56,50 @@ class CSB_Linker {
     /**
      * Ajoute les liens internes séparés avec sections enfants / parent / frères
      */
-    public function generate_structured_links($content, $level, $post_id, $parent_id = 0, $children = []) {
+    /**
+     * Génère les sections de liens internes selon le niveau de l'article.
+     */
+    public function generate_structured_links(string $slug, string $content, int $level, array $tree): string {
         $sections = [];
 
-        $parent_link = $this->get_parent_link($parent_id);
-        if ($parent_link && $level != 1) {
-            $sections[] = "<h3>👆 Article parent :</h3><ul><li>{$parent_link}</li></ul>";
-        } else {
-            $content .= "Aucun parent";
+        $parent = $this->get_parent_from_tree($slug, $tree);
+        $siblings = $this->get_siblings_from_tree($slug, $tree);
+        $root = $this->get_root_from_tree($slug, $tree);
+
+        // Niveau 1 : aucun lien
+        if ($level === 1) return $content;
+
+        // Niveau 2 : parent + racine
+        if ($level === 2) {
+            if ($parent && isset($parent['link'], $parent['click_bait'])) {
+                $sections[] = "<h3>👆 Article parent :</h3><ul><li><a href='{$parent['link']}'>" . esc_html($parent['click_bait']) . "</a></li></ul>";
+            }
+            if ($root && isset($root['link'], $root['click_bait'])) {
+                $sections[] = "<h3>📌 Article racine :</h3><ul><li><a href='{$root['link']}'>" . esc_html($root['click_bait']) . "</a></li></ul>";
+            }
         }
 
-        $sibling_links = $this->get_sibling_links($post_id, $parent_id);
-        if (!empty($sibling_links) && $level != 1) {
-            $sections[] = "<h3>👬 Articles liés :</h3><ul><li>" . implode('</li><li>', $sibling_links) . '</li></ul>';
-        } else {
-            $content .= "Aucun sibling";
+        // Niveau 3 : parent + racine + siblings
+        if ($level >= 3) {
+            if ($parent && isset($parent['link'], $parent['click_bait'])) {
+                $sections[] = "<h3>👆 Article parent :</h3><ul><li><a href='{$parent['link']}'>" . esc_html($parent['click_bait']) . "</a></li></ul>";
+            }
+
+            if (!empty($siblings)) {
+                $sibling_links = [];
+                foreach ($siblings as $sibling) {
+                    if (isset($sibling['link'], $sibling['click_bait'])) {
+                        $sibling_links[] = '<a href="' . esc_url($sibling['link']) . '">' . esc_html($sibling['click_bait']) . '</a>';
+                    }
+                }
+                if (!empty($sibling_links)) {
+                    $sections[] = "<h3>👬 Articles liés :</h3><ul><li>" . implode('</li><li>', $sibling_links) . "</li></ul>";
+                }
+            }
+
+            if ($root && isset($root['link'], $root['click_bait'])) {
+                $sections[] = "<h3>📌 Article racine :</h3><ul><li><a href='{$root['link']}'>" . esc_html($root['click_bait']) . "</a></li></ul>";
+            }
         }
 
         if (!empty($sections)) {

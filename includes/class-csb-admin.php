@@ -173,7 +173,7 @@ class CSB_Admin {
         
     
         // Étape 4 : Mettre à jour les articles avec le contenu final
-        $publisher->fill_and_publish_content($this->last_tree);
+        $publisher->fill_and_publish_content($this->last_tree,$this->last_tree);
 
 
         echo "<br><br><br>";
