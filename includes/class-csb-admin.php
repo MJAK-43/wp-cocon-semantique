@@ -122,14 +122,20 @@ class CSB_Admin {
     
     private function synchronize_development_links(array &$tree) {
         foreach ($tree as &$node) {
+            // On synchronise les liens dans les developpements du parent
             if (!empty($node['content']['developments']) && !empty($node['children'])) {
                 foreach ($node['content']['developments'] as &$dev) {
-                    foreach ($node['children'] as $child) {
+                    foreach ($node['children'] as &$child) {
                         if (
                             isset($child['title'], $child['link'], $child['click_bait']) &&
                             trim($child['title']) === trim($dev['title'])
                         ) {
+                            // ⚠️ on stocke aussi le lien dans l'enfant si jamais pas encore fait
+                            $child['link'] = $child['link'] ?? get_permalink($child['post_id']);
+    
+                            // On réutilise le lien de l'enfant dans le développement du parent
                             $dev['link'] = '<a href="' . esc_url($child['link']) . '">' . esc_html($child['click_bait']) . '</a>';
+                            break;
                         }
                     }
                 }
@@ -140,6 +146,7 @@ class CSB_Admin {
             }
         }
     }
+    
     
     
 
