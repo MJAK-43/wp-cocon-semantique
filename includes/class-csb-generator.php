@@ -350,7 +350,10 @@ class CSB_Generator {
         $context_tree = $this->extract_subtree_context($slug, $fullTree);
         $prompt = $this->getPromptArticle($node['title'], $context_tree,$number,$slug);
         $raw = $this->call_api($prompt);
-        while(!$this->is_valid_format($raw)) {
+        $itiration =0;
+        while(!$this->is_valid_format($raw)&&$itiration<3) {
+            $itiration+=1;
+
             // echo '<br>';
             // echo '<br>';
             // print_r("format incorect");
