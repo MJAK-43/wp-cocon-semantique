@@ -149,36 +149,35 @@ class CSB_Linker {
     /**
      * Récupère le parent d’un nœud donné dans l’arbre.
      */
-    public function get_parent_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$found_parent_slug = null) {
+    public function get_parent_from_tree(string $target_slug, array $tree, array $parents = []): ?array {
         foreach ($tree as $slug => $node) {
             if ($slug === $target_slug) {
-                if ($found_parent_slug !== null && isset($parents[$found_parent_slug])) {
-                    return $parents[$found_parent_slug];
-                }
-                return null;
+                return end($parents) ?: null;
             }
-
+    
             if (!empty($node['children'])) {
                 $parents[$slug] = $node;
-                $result = $this->get_parent_from_tree($target_slug, $node['children'], $parents, $slug);
+                $result = $this->get_parent_from_tree($target_slug, $node['children'], $parents);
                 if ($result !== null) {
                     return $result;
                 }
             }
         }
-
+    
         return null;
     }
+    
 
     /**
      * Récupère les frères et sœurs du nœud dans l’arbre.
      */
-    public function get_siblings_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$found_parent_slug = null): array {
+    public function get_siblings_from_tree(string $target_slug, array $tree, array $parents = []): array {
         foreach ($tree as $slug => $node) {
             if ($slug === $target_slug) {
-                if ($found_parent_slug !== null && isset($parents[$found_parent_slug]['children'])) {
+                $last_parent = end($parents);
+                if (!empty($last_parent['children'])) {
                     $siblings = [];
-                    foreach ($parents[$found_parent_slug]['children'] as $sibling_slug => $sibling_node) {
+                    foreach ($last_parent['children'] as $sibling_slug => $sibling_node) {
                         if ($sibling_slug !== $target_slug) {
                             $siblings[$sibling_slug] = $sibling_node;
                         }
@@ -187,18 +186,19 @@ class CSB_Linker {
                 }
                 return [];
             }
-
+    
             if (!empty($node['children'])) {
                 $parents[$slug] = $node;
-                $result = $this->get_siblings_from_tree($target_slug, $node['children'], $parents, $slug);
+                $result = $this->get_siblings_from_tree($target_slug, $node['children'], $parents);
                 if (!empty($result)) {
                     return $result;
                 }
             }
         }
-
+    
         return [];
     }
+    
 
     /**
      * Récupère le nœud racine à partir du slug dans l’arbre.
@@ -207,11 +207,11 @@ class CSB_Linker {
         foreach ($tree as $slug => $node) {
             $new_path = $path;
             $new_path[] = $node;
-
+    
             if ($slug === $target_slug) {
-                return $path[0] ?? $node; // racine ou lui-même
+                return $path[0] ?? $node;
             }
-
+    
             if (!empty($node['children'])) {
                 $result = $this->get_root_from_tree($target_slug, $node['children'], $new_path);
                 if ($result !== null) {
@@ -219,9 +219,10 @@ class CSB_Linker {
                 }
             }
         }
-
+    
         return null;
     }
+    
 
     
 }
