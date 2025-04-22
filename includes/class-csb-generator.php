@@ -39,7 +39,9 @@ class CSB_Generator {
          return $this->clean_generated_structure($raw);
     }
 
-    public function generate_structure_array($keyword, $depth = 1) {
+    public function generate_structure_array($keyword, $depth = 1, bool $use_fake = false) {
+        if($use_fake)
+            return $this->generate_fake_structure_array();
         $markdown = $this->generate_structure($keyword, $depth);
         $tree = $this->parse_markdown_structure($markdown);
         //var_dump($tree);
@@ -353,11 +355,11 @@ class CSB_Generator {
         $itiration =0;
         while(!$this->is_valid_format($raw)&&$itiration<3) {
             $itiration+=1;
-            echo '<br>';
-            echo '<br>';
-            print_r("format incorect");
-            echo '<br>';
-            echo '<br>';
+            // echo '<br>';
+            // echo '<br>';
+            // print_r("format incorect");
+            // echo '<br>';
+            // echo '<br>';
             $validation_prompt = $this->getPromptArticleValidation($node['title'], $context_tree, $raw);
             $raw = $this->call_api($validation_prompt); // Correction via OpenAI
         }
@@ -458,7 +460,7 @@ class CSB_Generator {
     }
 
 
-    public function generate_fake_structure_array($keyword, $depth = 2) {
+    private function generate_fake_structure_array() {
         return [
             'chat' => [
                 'title' => 'Chat',
