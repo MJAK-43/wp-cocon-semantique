@@ -100,7 +100,7 @@ class CSB_Linker {
 
         // Niveau 1 : aucun lien
         if ($level === 1){
-            print_r($slug);
+            //print_r($slug);
             return $content;
         }
 
