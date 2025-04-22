@@ -298,25 +298,42 @@ class CSB_Generator {
     
     
     
-
-
     
+
+
     private function clean_generated_structure($text) {
         return preg_replace('/^```.*$\n?|```$/m', '', $text);
     }
+
+
+   
+    
     
 
-    public function generate_full_content(array &$tree,int $number) {
-        // echo "<br>";echo "<br>";
-        // print_r($tree);
-        // echo "<br>";echo "<br>";
+    public function generate_full_content(array &$tree, int $number, bool $use_fake = false) {
         foreach ($tree as $slug => &$node) {
-            $this->generate_content_for_node($slug, $node, $tree,$number);
+            
+            if ($use_fake) {
+                // 🔹 Mode TEST (sans API)
+                $fake_content = $this->generate_fake_content_for_slug($slug);
+                if (isset($fake_content[$slug])) {
+                    $data = $fake_content[$slug];
+                    $node['content'] = $data['content'];
+                    $node['click_bait'] = $data['click_bait'];
+                }
+    
+            } else {
+                // 🔸 Mode normal (API OpenAI)
+                $this->generate_content_for_node($slug, $node, $tree, $number);
+            }
+    
+            // Récursif sur les enfants
+            if (!empty($node['children'])) {
+                $this->generate_full_content($node['children'], $number, $use_fake);
+            }
         }
-        // echo "<br>";echo "<br>";
-        // print_r($tree);
-        // echo "<br>";echo "<br>";
     }
+    
 
     private function extract_subtree_context($slug, $tree) {
         foreach ($tree as $key => $node) {
@@ -442,6 +459,83 @@ class CSB_Generator {
             }
         }
         return $out;
+    }
+
+
+    public function generate_fake_structure_array($keyword, $depth = 2) {
+        return [
+            'chat' => [
+                'title' => 'Chat',
+                'slug' => 'chat',
+                'children' => [
+                    'alimentation-chat' => [
+                        'title' => 'Alimentation du chat',
+                        'slug' => 'alimentation-chat',
+                        'children' => [
+                            'croquettes' => [
+                                'title' => 'Croquettes pour chat',
+                                'slug' => 'croquettes',
+                                'children' => []
+                            ],
+                            'patee' => [
+                                'title' => 'Pâtée pour chat',
+                                'slug' => 'patee',
+                                'children' => []
+                            ],
+                        ]
+                    ],
+                    'sante-chat' => [
+                        'title' => 'Santé du chat',
+                        'slug' => 'sante-chat',
+                        'children' => [
+                            'vaccins' => [
+                                'title' => 'Vaccins pour chat',
+                                'slug' => 'vaccins',
+                                'children' => []
+                            ],
+                            'vermifuge' => [
+                                'title' => 'Vermifuge pour chat',
+                                'slug' => 'vermifuge',
+                                'children' => []
+                            ],
+                        ]
+                    ]
+                ]
+            ]
+        ];
+    }
+
+    public function generate_fake_content_for_slug($slug) {
+        return [
+            $slug => [
+                'click_bait' => "Découvrez tout sur $slug !",
+                'slug' => $slug,
+                'title' => ucfirst(str_replace('-', ' ', $slug)),
+                'content' => [
+                    'intro' => "Voici une introduction pour l'article $slug.",
+                    'developments' => [
+                        [
+                            'title' => "Aspect 1 de $slug",
+                            'text' => "Explication détaillée de l'aspect 1...",
+                            'link' => ''
+                        ],
+                        [
+                            'title' => "Aspect 2 de $slug",
+                            'text' => "Explication détaillée de l'aspect 2...",
+                            'link' => ''
+                        ],
+                        [
+                            'title' => "Aspect 3 de $slug",
+                            'text' => "Explication détaillée de l'aspect 3...",
+                            'link' => ''
+                        ]
+                    ],
+                    'conclusion' => "Conclusion de l'article $slug.",
+                    'image' => "chat mignon",
+                    'image_url' => "https://placekitten.com/800/400"
+                ]
+            ]
+        ];
     }
     
     
