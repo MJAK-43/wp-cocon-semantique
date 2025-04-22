@@ -353,11 +353,11 @@ class CSB_Generator {
         $itiration =0;
         while(!$this->is_valid_format($raw)&&$itiration<3) {
             $itiration+=1;
-            // echo '<br>';
-            // echo '<br>';
-            // print_r("format incorect");
-            // echo '<br>';
-            // echo '<br>';
+            echo '<br>';
+            echo '<br>';
+            print_r("format incorect");
+            echo '<br>';
+            echo '<br>';
             $validation_prompt = $this->getPromptArticleValidation($node['title'], $context_tree, $raw);
             $raw = $this->call_api($validation_prompt); // Correction via OpenAI
         }
