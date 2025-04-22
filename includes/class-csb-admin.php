@@ -31,7 +31,7 @@ class CSB_Admin {
         if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
             $generator = new CSB_Generator();
             //$this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
-            $this->last_tree = $generator->generate_fake_structure_array($keyword, $this->nb);
+            $this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
             
             // echo "<br>";echo "<br>";echo "<br>";
                 // print_r($this->last_tree);
@@ -181,7 +181,7 @@ class CSB_Admin {
         $linker->add_permalink_links($this->last_tree);
 
         // Maintenant que les liens sont bons, on peut générer le contenu
-        $generator->generate_full_content($this->last_tree, $this->nb,true);
+        $generator->generate_full_content($this->last_tree, $this->nb);
         $linker->add_links_to_developments($this->last_tree);
         
 
