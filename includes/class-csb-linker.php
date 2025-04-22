@@ -27,7 +27,7 @@ class CSB_Linker {
                             trim($child['title']) === trim($dev['title'])
                         ) {
                             // 💡 Ajoute le lien dans le développement
-                            $dev['link'] = '<a href="' . esc_url($child['link']) . '">' . esc_html($child['click_bait']) . '</a>';
+                            $dev['link'] = '<a href="' . esc_url($child['link']) . '">' . esc_html($child['title']) . '</a>';
                             break;
                         }
                         else{
@@ -47,110 +47,51 @@ class CSB_Linker {
     }
     
     
+
     
-    
-
-   
-    
-
-    /**
-     * Retourne un lien vers le parent avec son click_bait
-     */
-    private function get_parent_link(int $parent_id): ?string {
-        if ($parent_id) {
-            $parent_url = get_permalink($parent_id);
-            $parent_click_bait = get_post_meta($parent_id, '_csb_click_bait', true);
-            if ($parent_url && $parent_click_bait) {
-                return '<a href="' . esc_url($parent_url) . '">' . esc_html($parent_click_bait) . '</a>';
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Retourne un tableau de liens vers les frères et sœurs avec leur click_bait
-     */
-    private function get_sibling_links(int $post_id, int $parent_id): array {
-        $links = [];
-        $siblings = get_children(['post_parent' => $parent_id, 'post_type' => 'post']);
-        foreach ($siblings as $sibling) {
-            if ((int)$sibling->ID !== (int)$post_id) {
-                $url = get_permalink($sibling->ID);
-                $label = get_post_meta($sibling->ID, '_csb_click_bait', true);
-                if ($url && $label) {
-                    $links[] = '<a href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
-                }
-            }
-        }
-        return $links;
-    }
-
-    /**
-     * Ajoute les liens internes séparés avec sections enfants / parent / frères
-     */
     /**
      * Génère les sections de liens internes selon le niveau de l'article.
      */
     public function generate_structured_links(string $slug, string $content, int $level, array $tree): string {
         $sections = [];
-
+    
         $parent = $this->get_parent_from_tree($slug, $tree);
         $siblings = $this->get_siblings_from_tree($slug, $tree);
         $root = $this->get_root_from_tree($slug, $tree);
-
-        // Niveau 1 : aucun lien
-        if ($level === 1){
-            print_r($slug);
+    
+        
+        
+        // Niveau 2 ou plus : parent + frères + racine
+        if ($level >=2 ) {
+            if (!empty($siblings)) {
+                $sibling_links = [];
+                foreach ($siblings as $sibling) {
+                    if (isset($sibling['link'], $sibling['click_bait'], $sibling['title'])) {
+                        $text = esc_html($sibling['click_bait']) . " (<a href='" . esc_url($sibling['link']) . "'>" . esc_html($sibling['title']) . "</a>)";
+                        $sibling_links[] = $text;
+                    }
+                }
+                if (!empty($sibling_links)) {
+                    $sections[] = "<h3>👬 Articles liés :</h3><ul><li>" . implode('</li><li>', $sibling_links) . "</li></ul>";
+                }
+            }
+    
+            if ($root && isset($root['link'], $root['click_bait'], $root['title'])) {
+                $text = esc_html($root['click_bait']) . " (<a href='" . esc_url($root['link']) . "'>" . esc_html($root['title']) . "</a>)";
+                $sections[] = "<h3>📌 Article racine :</h3><ul><li>$text</li></ul>";
+            }
+        }
+        else // Niveau 1 : aucun lien
             return $content;
-        }
-
-        // Niveau 2 : parent + racine
-        if ($level === 2) {
-            if ($parent && isset($parent['link'], $parent['click_bait'])) {
-                $sections[] = "<h3>👆 Article parent :</h3><ul><li><a href='{$parent['link']}'>" . esc_html($parent['click_bait']) . "</a></li></ul>";
-            }
-            if (!empty($siblings)) {
-                $sibling_links = [];
-                foreach ($siblings as $sibling) {
-                    if (isset($sibling['link'], $sibling['click_bait'])) {
-                        $sibling_links[] = '<a href="' . esc_url($sibling['link']) . '">' . esc_html($sibling['click_bait']) . '</a>';
-                    }
-                }
-                if (!empty($sibling_links)) {
-                    $sections[] = "<h3>👬 Articles liés :</h3><ul><li>" . implode('</li><li>', $sibling_links) . "</li></ul>";
-                }
-            }
-        }
-
-        // Niveau 3 : parent + racine + siblings
-        if ($level >= 3) {
-            if ($parent && isset($parent['link'], $parent['click_bait'])) {
-                $sections[] = "<h3>👆 Article parent :</h3><ul><li><a href='{$parent['link']}'>" . esc_html($parent['click_bait']) . "</a></li></ul>";
-            }
-
-            if (!empty($siblings)) {
-                $sibling_links = [];
-                foreach ($siblings as $sibling) {
-                    if (isset($sibling['link'], $sibling['click_bait'])) {
-                        $sibling_links[] = '<a href="' . esc_url($sibling['link']) . '">' . esc_html($sibling['click_bait']) . '</a>';
-                    }
-                }
-                if (!empty($sibling_links)) {
-                    $sections[] = "<h3>👬 Articles liés :</h3><ul><li>" . implode('</li><li>', $sibling_links) . "</li></ul>";
-                }
-            }
-
-            if ($root && isset($root['link'], $root['click_bait'])) {
-                $sections[] = "<h3>📌 Article racine :</h3><ul><li><a href='{$root['link']}'>" . esc_html($root['click_bait']) . "</a></li></ul>";
-            }
-        }
-
+    
         if (!empty($sections)) {
             $content .= "\n\n" . implode("\n\n", $sections);
         }
-
+    
         return $content;
     }
+    
+    
 
 
 
@@ -179,25 +120,18 @@ class CSB_Linker {
     /**
      * Récupère les frères et sœurs du nœud dans l’arbre.
      */
-    public function get_siblings_from_tree(string $target_slug, array $tree, array $parents = []): array {
+    public function get_siblings_from_tree(string $target_slug, array $tree): array {
         foreach ($tree as $slug => $node) {
-            if ($slug === $target_slug) {
-                $last_parent = end($parents);
-                if (!empty($last_parent['children'])) {
-                    $siblings = [];
-                    foreach ($last_parent['children'] as $sibling_slug => $sibling_node) {
-                        if ($sibling_slug !== $target_slug) {
-                            $siblings[$sibling_slug] = $sibling_node;
-                        }
-                    }
+            if (!empty($node['children']) && is_array($node['children'])) {
+                // On vérifie si l'un des enfants est le nœud cible
+                if (array_key_exists($target_slug, $node['children'])) {
+                    $siblings = $node['children'];
+                    unset($siblings[$target_slug]); // on enlève le nœud lui-même
                     return $siblings;
                 }
-                return [];
-            }
     
-            if (!empty($node['children'])) {
-                $parents[$slug] = $node;
-                $result = $this->get_siblings_from_tree($target_slug, $node['children'], $parents);
+                // Sinon on continue la recherche récursive
+                $result = $this->get_siblings_from_tree($target_slug, $node['children']);
                 if (!empty($result)) {
                     return $result;
                 }
@@ -206,6 +140,8 @@ class CSB_Linker {
     
         return [];
     }
+    
+    
     
 
     /**
