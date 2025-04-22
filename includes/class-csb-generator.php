@@ -229,7 +229,7 @@ class CSB_Generator {
                 if (!empty($child_node['title']) && !empty($child_node['link']) && !empty($child_node['click_bait'])) {
                     $children_links[] = [
                         'title' => $child_node['title'],
-                        'link' => '<a href="' . esc_url($child_node['link']) . '">' . esc_html($child_node['click_bait']) . '</a>',
+                        //'link' => '<a href="' . esc_url($child_node['link']) . '">' . esc_html($child_node['click_bait']) . '</a>',
                     ];
                 }
             }
@@ -238,21 +238,23 @@ class CSB_Generator {
 
         // 🔧 Partie DEVELOPMENT avec ou sans enfants
         $dev_part = '';
+
         if (!empty($children_links)) {
-            $dev_part .= "Dans la section DEVELOPMENTS, crée une entrée pour chaque enfant direct de cet article. Voici la structure à respecter :\n";
-            $dev_part .= "- title: Le sous-titre exact\n  text: Le texte de développement\n  link: Le lien HTML fourni (ne le modifie pas)\n\n";
-            $dev_part .= "Voici les données à utiliser :\n";
+            $dev_part .= "Dans la section DEVELOPMENTS, crée une entrée pour chaque enfant direct de cet article.\n";
+            $dev_part .= "Chaque développement doit suivre ce format :\n";
+            $dev_part .= "- title: Le titre exact de l’enfant\n  text: Le texte du développement\n  link: (laisse vide, écris juste `link:`)\n\n";
+            $dev_part .= "Voici les titres à utiliser :\n";
             foreach ($children_links as $child) {
                 $dev_part .= "- title: {$child['title']}\n";
-                $dev_part .= "  link: {$child['link']}\n";
             }
-            $dev_part .= "\nUtilise exactement ces liens. Ne modifie pas les URL ni les textes des liens.\n\n";
+            $dev_part .= "\n⚠️ Ne mets pas de lien HTML. Juste `link:` vide.\n";
         } else {
             $dev_part .= "Il n’y a **aucun enfant** dans cet article. Tu dois donc créer **exactement $number sous-parties**.\n";
-            $dev_part .= "Chaque sous-partie doit respecter ce format :\n";
-            $dev_part .= "- title: Un sous-titre pertinent\n  text: Le développement\n  link: (laisse vide, écris juste `link:`)\n\n";
-            $dev_part .= "⚠️ Ne dépasse pas $number sous-parties. Ne mets **aucun lien HTML**.\n\n";
+            $dev_part .= "Chaque sous-partie doit suivre ce format :\n";
+            $dev_part .= "- title: Un sous-titre pertinent\n  text: Le développement\n  link:\n\n";
+            $dev_part .= "⚠️ Ne dépasse pas $number sous-parties. Ne mets **aucun lien HTML**.\n";
         }
+
     
         // 📝 Prompt complet
         return "Tu es un rédacteur professionnel en style {$this->style}.\n\n" .
@@ -272,7 +274,7 @@ class CSB_Generator {
             "⚠️ Très important :\n" .
             "- Ne mets aucun emoji ou mise en forme.\n" .
             "- Ne change pas les titres fournis.\n" .
-            "- Chaque développement doit inclure les champs : title, text, link.";
+            "- Chaque développement doit inclure les champs : title, text";
     }
     
     
@@ -297,25 +299,18 @@ class CSB_Generator {
     }
     
     
-    
-    
-
 
     private function clean_generated_structure($text) {
         return preg_replace('/^```.*$\n?|```$/m', '', $text);
     }
 
 
-   
-    
-    
-
     public function generate_full_content(array &$tree, int $number, bool $use_fake = false) {
         foreach ($tree as $slug => &$node) {
-            
+
             if ($use_fake) {
                 // 🔹 Mode TEST (sans API)
-                $fake_content = $this->generate_fake_content_for_slug($slug);
+                $fake_content = $this->generate_fake_content_for_slug($slug,$tree);
                 if (isset($fake_content[$slug])) {
                     $data = $fake_content[$slug];
                     $node['content'] = $data['content'];
@@ -365,7 +360,7 @@ class CSB_Generator {
             $raw = $this->call_api($validation_prompt); // Correction via OpenAI
         }
         
-        $parsed = $this->parse_content_blocks($raw);
+        //$parsed = $this->parse_content_blocks($raw);
 
         // echo "<br>";echo "<br>";
         // print_r($raw);
@@ -399,7 +394,6 @@ class CSB_Generator {
         }
     }
     
-
     /***
      * 
      * Récupération Image
@@ -505,38 +499,48 @@ class CSB_Generator {
         ];
     }
 
-    public function generate_fake_content_for_slug($slug) {
+    public function generate_fake_content_for_slug($slug, array $tree = []): array {
+        // Recherche des enfants correspondants dans l'arbre
+        $children = $tree[$slug]['children'] ?? [];
+    
+        $developments = [];
+    
+        // S'il y a des enfants : un développement par enfant
+        if (!empty($children)) {
+            foreach ($children as $child_slug => $child_node) {
+                $developments[] = [
+                    'title' => $child_node['title'],
+                    'text'  => "Contenu détaillé sur le sujet \"" . $child_node['title'] . "\".",
+                    'link'  => '' // le lien sera inséré plus tard par add_links_to_developments()
+                ];
+            }
+        } else {
+            // Sinon, on génère 3 développements fictifs
+            for ($i = 1; $i <= 3; $i++) {
+                $developments[] = [
+                    'title' => "Aspect $i de $slug",
+                    'text'  => "Explication détaillée de l'aspect $i...",
+                    'link'  => ''
+                ];
+            }
+        }
+    
         return [
             $slug => [
                 'click_bait' => "Découvrez tout sur $slug !",
-                'slug' => $slug,
-                'title' => ucfirst(str_replace('-', ' ', $slug)),
-                'content' => [
-                    'intro' => "Voici une introduction pour l'article $slug.",
-                    'developments' => [
-                        [
-                            'title' => "Aspect 1 de $slug",
-                            'text' => "Explication détaillée de l'aspect 1...",
-                            'link' => ''
-                        ],
-                        [
-                            'title' => "Aspect 2 de $slug",
-                            'text' => "Explication détaillée de l'aspect 2...",
-                            'link' => ''
-                        ],
-                        [
-                            'title' => "Aspect 3 de $slug",
-                            'text' => "Explication détaillée de l'aspect 3...",
-                            'link' => ''
-                        ]
-                    ],
+                'slug'       => $slug,
+                'title'      => ucfirst(str_replace('-', ' ', $slug)),
+                'content'    => [
+                    'intro'      => "Voici une introduction pour l'article $slug.",
+                    'developments' => $developments,
                     'conclusion' => "Conclusion de l'article $slug.",
-                    'image' => "chat mignon",
-                    'image_url' => "https://placekitten.com/800/400"
+                    'image'      => "chat mignon",
+                    'image_url'  => "https://placekitten.com/800/400"
                 ]
             ]
         ];
     }
+    
     
     
 

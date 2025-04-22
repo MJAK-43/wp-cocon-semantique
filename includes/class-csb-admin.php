@@ -176,13 +176,14 @@ class CSB_Admin {
         // self::debug_display_links($this->last_tree);
         // echo "<br><br><br>";
         $publisher->register_all_posts($this->last_tree, 0, 1);
-        flush_rewrite_rules();
+        //flush_rewrite_rules();
 
         $linker->add_permalink_links($this->last_tree);
 
         // Maintenant que les liens sont bons, on peut générer le contenu
         $generator->generate_full_content($this->last_tree, $this->nb,true);
-        //$this->synchronize_development_links($this->last_tree);
+        $linker->add_links_to_developments($this->last_tree);
+        
 
         
     
@@ -190,10 +191,10 @@ class CSB_Admin {
         $publisher->fill_and_publish_content($this->last_tree,$this->last_tree);
 
 
-        echo "<br><br><br>";
-        echo "///////////////////////////////////////////AFTER__PUBLICATION///////////////////////////////////////////<br>";
-        self::debug_display_links($this->last_tree);
-        echo "<br><br><br>";
+        // echo "<br><br><br>";
+        // echo "///////////////////////////////////////////AFTER__PUBLICATION///////////////////////////////////////////<br>";
+        // print_r($this->last_tree);
+        // echo "<br><br><br>";
     
     }
 

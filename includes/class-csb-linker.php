@@ -17,26 +17,37 @@ class CSB_Linker {
         }
     }
 
-    // public function get_parent_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$found_parent_slug = null) {
-    //     foreach ($tree as $slug => $node) {
-    //         if ($slug === $target_slug) {
-    //             if ($found_parent_slug !== null && isset($parents[$found_parent_slug])) {
-    //                 return $parents[$found_parent_slug];
-    //             }
-    //             return null;
-    //         }
-
-    //         if (!empty($node['children'])) {
-    //             $parents[$slug] = $node;
-    //             $result = $this->get_parent_from_tree($target_slug, $node['children'], $parents, $slug);
-    //             if ($result !== null) {
-    //                 return $result;
-    //             }
-    //         }
-    //     }
-
-    //     return null;
-    // }
+    public function add_links_to_developments(array &$tree): void {
+        foreach ($tree as &$node) {
+            if (!empty($node['content']['developments']) && !empty($node['children'])) {
+                foreach ($node['content']['developments'] as &$dev) {
+                    foreach ($node['children'] as &$child) {
+                        if (
+                            isset($child['title'], $child['link'], $child['click_bait']) &&
+                            trim($child['title']) === trim($dev['title'])
+                        ) {
+                            // 💡 Ajoute le lien dans le développement
+                            $dev['link'] = '<a href="' . esc_url($child['link']) . '">' . esc_html($child['click_bait']) . '</a>';
+                            break;
+                        }
+                        else{
+                            // echo "<br>";echo "<br>";echo "<br>";
+                            // print_r(trim($child['title']));
+                            // echo "<br>";
+                            // print_r(trim($dev['title']));
+                        }
+                    }
+                }
+            }
+    
+            if (!empty($node['children'])) {
+                $this->add_links_to_developments($node['children']);
+            }
+        }
+    }
+    
+    
+    
     
 
    
@@ -88,7 +99,10 @@ class CSB_Linker {
         $root = $this->get_root_from_tree($slug, $tree);
 
         // Niveau 1 : aucun lien
-        if ($level === 1) return $content;
+        if ($level === 1){
+            print_r($slug);
+            return $content;
+        }
 
         // Niveau 2 : parent + racine
         if ($level === 2) {
@@ -130,44 +144,6 @@ class CSB_Linker {
         return $content;
     }
 
-    // public function get_parent_and_siblings_from_tree(string $target_slug, array $tree, array $parents = [], ?string &$parent_slug = null): array {
-    //     foreach ($tree as $slug => $node) {
-    //         if ($slug === $target_slug) {
-    //             // On a trouvé le nœud cible
-    //             $siblings = [];
-    //             if ($parent_slug !== null && isset($parents[$parent_slug]['children'])) {
-    //                 foreach ($parents[$parent_slug]['children'] as $sibling_slug => $sibling_node) {
-    //                     if ($sibling_slug !== $target_slug && isset($sibling_node['link'], $sibling_node['click_bait'])) {
-    //                         $siblings[] = '<a href="' . esc_url($sibling_node['link']) . '">' . esc_html($sibling_node['click_bait']) . '</a>';
-    //                     }
-    //                 }
-    //             }
-    
-    //             $parent_link = null;
-    //             if ($parent_slug !== null && isset($parents[$parent_slug])) {
-    //                 $p = $parents[$parent_slug];
-    //                 if (isset($p['link'], $p['click_bait'])) {
-    //                     $parent_link = '<a href="' . esc_url($p['link']) . '">' . esc_html($p['click_bait']) . '</a>';
-    //                 }
-    //             }
-    
-    //             return [
-    //                 'parent' => $parent_link,
-    //                 'siblings' => $siblings
-    //             ];
-    //         }
-    
-    //         if (!empty($node['children'])) {
-    //             $parents[$slug] = $node;
-    //             $result = $this->get_parent_and_siblings_from_tree($target_slug, $node['children'], $parents, $slug);
-    //             if ($result) {
-    //                 return $result;
-    //             }
-    //         }
-    //     }
-    
-    //     return ['parent' => null, 'siblings' => []]; // Si non trouvé
-    // }
 
 
     /**
