@@ -353,7 +353,6 @@ class CSB_Generator {
         $itiration =0;
         while(!$this->is_valid_format($raw)&&$itiration<3) {
             $itiration+=1;
-
             // echo '<br>';
             // echo '<br>';
             // print_r("format incorect");
