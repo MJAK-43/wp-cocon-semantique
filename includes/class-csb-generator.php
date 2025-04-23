@@ -89,7 +89,7 @@ class CSB_Generator {
             '/\[TITRE:\s*.+?\]/',
             '/INTRO:\s+.+/',
             '/CLICK_BAIT:\s+.+/',
-            '/DEVELOPMENTS:\s+-\s*title:\s*.+\s+text:\s*.+\s+link:\s*/',
+            '/DEVELOPMENTS:\s+-\s*title:\s*.+\s+text:\s*.+\s+link:\s*<a.+?>.+?<\/a>/',
             '/CONCLUSION:\s+.+/',
             '/\[IMAGE:\s*.+?\]/',
             '/\[SLUG:\s*.+?\]/',
@@ -103,59 +103,48 @@ class CSB_Generator {
 
         return true;
     }
-       
         
     
 
     
     private function parse_content_blocks($text) {
-        // Extraire les blocs principaux avec des regex simples
-        preg_match('/\[TITRE:\s*(.*?)\]/s', $text, $titleMatch);
-        preg_match('/INTRO:\s*(.*?)\s*CLICK_BAIT:/s', $text, $introMatch);
-        preg_match('/CLICK_BAIT:\s*(.*?)\s*DEVELOPMENTS:/s', $text, $clickBaitMatch);
-        preg_match('/DEVELOPMENTS:\s*(.*?)\s*CONCLUSION:/s', $text, $devBlockMatch);
-        preg_match('/CONCLUSION:\s*(.*?)\s*\[IMAGE:/s', $text, $conclusionMatch);
-        preg_match('/\[IMAGE:\s*(.*?)\]/s', $text, $imageMatch);
-        preg_match('/\[SLUG:\s*(.*?)\]/s', $text, $slugMatch);
+        if (preg_match('/\[TITRE:\s*(.*?)\]\s*INTRO:\s*(.*?)\s*CLICK_BAIT:\s*(.*?)\s*DEVELOPMENTS:\s*((?:-\s*title:\s*.*?\s+text:\s*.*?\s+link:\s*<a.*?>.*?<\/a>\s*)+)CONCLUSION:\s*(.*?)\s*\[IMAGE:\s*(.*?)\]\s*\[SLUG:\s*(.*?)\]/s', $text, $m)) {
+            $title = trim($m[1]);
+            $intro = trim($m[2]);
+            $click_bait = trim($m[3]);
+            $dev_block = trim($m[4]);
+            $conclusion = trim($m[5]);
+            $image = trim($m[6]);
+            $slug = trim($m[7]);
     
-        if (!$titleMatch || !$introMatch || !$clickBaitMatch || !$devBlockMatch || !$conclusionMatch || !$imageMatch || !$slugMatch) {
-            return [];
-        }
+            // Parse DEVELOPMENTS
+            preg_match_all('/-\s*title:\s*(.*?)\s+text:\s*(.*?)\s+link:\s*(<a.*?>.*?<\/a>)/s', $dev_block, $matches, PREG_SET_ORDER);
     
-        $title = trim($titleMatch[1]);
-        $intro = trim($introMatch[1]);
-        $click_bait = trim($clickBaitMatch[1]);
-        $dev_block = trim($devBlockMatch[1]);
-        $conclusion = trim($conclusionMatch[1]);
-        $image = trim($imageMatch[1]);
-        $slug = trim($slugMatch[1]);
+            $developments = [];
+            foreach ($matches as $match) {
+                $developments[] = [
+                    'title' => trim($match[1]),
+                    'text' => trim($match[2]),
+                    'link' => trim($match[3])
+                ];
+            }
     
-        // Parse chaque développement
-        preg_match_all('/-\s*title:\s*(.*?)\s+text:\s*(.*?)\s+link:\s*(.*)/s', $dev_block, $matches, PREG_SET_ORDER);
-        $developments = [];
-        foreach ($matches as $match) {
-            $developments[] = [
-                'title' => trim($match[1]),
-                'text' => trim($match[2]),
-                'link' => ''  // toujours vide ici
+            return [
+                self::generate_slug($title) => [
+                    'content' => [
+                        'intro' => $intro,
+                        'developments' => $developments,
+                        'conclusion' => $conclusion,
+                        'image' => $image
+                    ],
+                    'click_bait' => $click_bait,
+                    'slug' => $slug,
+                    'title' => $title
+                ]
             ];
         }
-    
-        return [
-            self::generate_slug($title) => [
-                'content' => [
-                    'intro' => $intro,
-                    'developments' => $developments,
-                    'conclusion' => $conclusion,
-                    'image' => $image
-                ],
-                'click_bait' => $click_bait,
-                'slug' => $slug,
-                'title' => $title
-            ]
-        ];
+        return [];
     }
-    
 
     private function tree_to_slug_map(array $tree) {
         $map = [];
@@ -364,13 +353,13 @@ class CSB_Generator {
         $prompt = $this->getPromptArticle($node['title'], $context_tree,$number,$slug);
         $raw = $this->call_api($prompt);
         $itiration =0;
-        while(!$this->is_valid_format($raw)&&$itiration<2) {
+        while(!$this->is_valid_format($raw)&&$itiration<3) {
             $itiration+=1;
-            echo '<br>';
-            echo '<br>';
-            print_r($itiration);
-            echo '<br>';
-            echo '<br>';
+            // echo '<br>';
+            // echo '<br>';
+            // print_r("format incorect");
+            // echo '<br>';
+            // echo '<br>';
             $validation_prompt = $this->getPromptArticleValidation($node['title'], $context_tree, $raw);
             $raw = $this->call_api($validation_prompt); // Correction via OpenAI
         }
