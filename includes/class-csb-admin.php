@@ -34,8 +34,8 @@ class CSB_Admin {
             $this->last_tree = $generator->generate_structure_array($keyword, $this->nb,false);
             
             // echo "<br>";echo "<br>";echo "<br>";
-            //     print_r($this->last_tree);
-            //     echo "<br>";echo "<br>";echo "<br>";
+                // print_r($this->last_tree);
+                // echo "<br>";echo "<br>";echo "<br>";
         }
     
         if (isset($_POST['structure'])) {
@@ -298,16 +298,21 @@ class CSB_Admin {
     }
        
 
-    private function render_links_to_articles($tree) {
-        // Prendre le premier (et unique) nœud racine
-        $root_node = reset($tree);
+    private function render_links_to_articles($tree){
+        foreach ($tree as $slug => $node) {
+            if (!empty($node['post_id'])) {
+                //echo $node['post_id'];
+                $url = get_permalink($node['post_id']);
+                $title = esc_html($node['title']);
+                echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a></li>";
+            }
     
-        if (!empty($root_node['post_id'])) {
-            $url = get_permalink($root_node['post_id']);
-            $title = esc_html($root_node['title']);
-            echo "<ul><li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a></li></ul>";
+            if (!empty($node['children'])) {
+                $this->render_links_to_articles($node['children']); // récursif
+            }
         }
-    }
     
+        echo '</ul></div>';
+    }
       
 }
