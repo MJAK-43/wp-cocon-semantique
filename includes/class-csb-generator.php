@@ -353,7 +353,7 @@ class CSB_Generator {
         $prompt = $this->getPromptArticle($node['title'], $context_tree,$number,$slug);
         $raw = $this->call_api($prompt);
         $itiration =0;
-        while(!$this->is_valid_format($raw)&&$itiration<3) {
+        while(!$this->is_valid_format($raw)&&$itiration<1) {
             $itiration+=1;
             // echo '<br>';
             // echo '<br>';
