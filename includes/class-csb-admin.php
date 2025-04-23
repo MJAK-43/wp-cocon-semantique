@@ -33,9 +33,9 @@ class CSB_Admin {
             //$this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
             $this->last_tree = $generator->generate_structure_array($keyword, $this->nb,false);
             
-            // echo "<br>";echo "<br>";echo "<br>";
-                // print_r($this->last_tree);
-                // echo "<br>";echo "<br>";echo "<br>";
+            echo "<br>";echo "<br>";echo "<br>";
+                print_r($this->last_tree);
+                echo "<br>";echo "<br>";echo "<br>";
         }
     
         if (isset($_POST['structure'])) {
