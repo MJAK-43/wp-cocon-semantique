@@ -89,7 +89,7 @@ class CSB_Generator {
             '/\[TITRE:\s*.+?\]/',
             '/INTRO:\s+.+/',
             '/CLICK_BAIT:\s+.+/',
-            '/DEVELOPMENTS:\s+-\s*title:\s*.+\s+text:\s*.+\s+link:\s*<a.+?>.+?<\/a>/',
+            '/DEVELOPMENTS:\s+-\s*title:\s*.+\s+text:\s*.+\s+link:\s*/',
             '/CONCLUSION:\s+.+/',
             '/\[IMAGE:\s*.+?\]/',
             '/\[SLUG:\s*.+?\]/',
@@ -103,6 +103,7 @@ class CSB_Generator {
 
         return true;
     }
+       
         
     
 
