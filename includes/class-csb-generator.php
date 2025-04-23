@@ -119,14 +119,13 @@ class CSB_Generator {
             $slug = trim($m[7]);
     
             // Parse DEVELOPMENTS
-            preg_match_all('/-\s*title:\s*(.*?)\s+text:\s*(.*?)\s+link:\s*(<a.*?>.*?<\/a>)/s', $dev_block, $matches, PREG_SET_ORDER);
-    
+            preg_match_all('/-\s*title:\s*(.*?)\s+text:\s*(.*?)\s+link:\s*(.*)/s', $dev_block, $matches, PREG_SET_ORDER);    
             $developments = [];
             foreach ($matches as $match) {
                 $developments[] = [
                     'title' => trim($match[1]),
                     'text' => trim($match[2]),
-                    'link' => trim($match[3])
+                    'link' => ''
                 ];
             }
     
@@ -356,11 +355,11 @@ class CSB_Generator {
         $itiration =0;
         while(!$this->is_valid_format($raw)&&$itiration<3) {
             $itiration+=1;
-            // echo '<br>';
-            // echo '<br>';
-            // print_r("format incorect");
-            // echo '<br>';
-            // echo '<br>';
+            echo '<br>';
+            echo '<br>';
+            print_r($itiration);
+            echo '<br>';
+            echo '<br>';
             $validation_prompt = $this->getPromptArticleValidation($node['title'], $context_tree, $raw);
             $raw = $this->call_api($validation_prompt); // Correction via OpenAI
         }
