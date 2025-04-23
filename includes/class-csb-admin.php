@@ -52,7 +52,7 @@ class CSB_Admin {
         }
     
         echo '<div class="wrap">';
-        echo '<h1>Générateur de Cocon Sémantique</h1>';
+        echo '<h1>Générateur de Cocon Sémantique2</h1>';
         $this->render_keyword_form($keyword, $this->nb);
         $this->render_structure_form($this->last_tree); 
         echo '</div>';
