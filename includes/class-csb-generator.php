@@ -202,23 +202,35 @@ class CSB_Generator {
     
     
 
-    private function getPromptDevelopment(string $title, array $contextTree): string {
+    private function getPromptDevelopment(string $title, array $contextTree, array $expectedSubTitles = []): string {
         $structure = $this->to_bullet_tree($contextTree);
-        return "Tu es un expert en rédaction SEO sur WordPress.
+        $subPartList = '';
     
-        Tu dois écrire un bloc de DÉVELOPPEMENT HTML pour un article intitulé « $title ».
+        if (!empty($expectedSubTitles)) {
+            $subPartList .= "Voici les titres des sous-parties à créer :\n";
+            foreach ($expectedSubTitles as $sub) {
+                $subPartList .= "- $sub\n";
+            }
+        }
+    
+        return "Tu es un expert en rédaction SEO sur WordPress.
+        
+        Tu dois écrire un bloc de DÉVELOPPEMENT HTML pour un article intitulé : « $title ».
         
         Voici la structure du cocon sémantique global :
         
         $structure
         
+        $subPartList
+        
         Consignes :
-        - Divise ce développement en 2 à 3 sous-parties selon la structure pour les derniers sous partie créer deux sous partie.
-        - Chaque sous-partie doit avoir un <h>Titre de la section</h3> suivi de 1 ou 2 paragraphes <p>.
-        - Si c’est pertinent, tu peux utiliser des <ul><li> pour lister des conseils, caractéristiques, etc.
-        - Évite absolument toute balise ```html ou autre bloc de code Markdown.;
-        Structure le tout dans un <div class='csb-development'>.";
+        - Chaque sous-partie doit avoir un <h4>Titre</h4> suivi de 1 ou 2 paragraphes <p>.
+        - Tu peux ajouter des <ul><li> si pertinent.
+        - Ne crée pas d’autres titres que ceux listés.
+        - Structure tout dans un <div class='csb-development'>.
+        - Évite absolument les blocs ```html ou tout format Markdown.";
     }
+    
     
     
     
