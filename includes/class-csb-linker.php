@@ -51,7 +51,7 @@ class CSB_Linker {
     public function generate_structured_links(array $map,int $post_id): string {
         $content='';
         $idPostRoot= $this->get_root_from_tree($map);
-        print_r($idPostRoot);
+        print_r($map[$idPostRoot]);
         
         // if (!is_null($map[$post_id]['parent_id'])) {
         //     $link = $map[$idPostRoot][$idPostRoot]['link'] ;
