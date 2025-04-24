@@ -52,15 +52,30 @@ class CSB_Linker {
         $content = '';
     
         // Trouver l'article racine (celui qui n’a pas de parent)
-        $idPostRoot = $this->get_root_from_tree($map);
+        $idPostRoot = $this->get_root_from_map($map);
     
         // S'assurer qu'on ne réaffiche pas un lien vers lui-même
-        if ($post_id !== $idPostRoot && isset($map[$idPostRoot]['link'], $map[$idPostRoot]['title'])) {
+        if ($post_id !== $idPostRoot) {
             $link = esc_url($map[$idPostRoot]['link']);
             $title = esc_html($map[$idPostRoot]['title']);
     
             $content .= "<div class='csb-links'><h3>📌 Article racine :</h3>";
             $content .= "<ul><li><a href='$link' target='_blank'>$title</a></li></ul></div>";
+        }
+         // Liens vers les frères et sœurs
+        $siblings = $this->get_siblings_from_map($post_id, $map);
+        if (!empty($siblings)) {
+            $sibling_links = [];
+            foreach ($siblings as $sibling) {
+                if (!empty($sibling['link']) && !empty($sibling['title'])) {
+                    $sibling_links[] = "<a href='" . esc_url($sibling['link']) . "'>" . esc_html($sibling['title']) . "</a>";
+                }
+            }
+
+            if (!empty($sibling_links)) {
+                $content .= "<div class='csb-links'><h3>Articles liés :</h3>";
+                $content .= "<ul><li>" . implode("</li><li>", $sibling_links) . "</li></ul></div>";
+            }
         }
     
         return $content;
@@ -96,26 +111,24 @@ class CSB_Linker {
     /**
      * Récupère les frères et sœurs du nœud dans l’arbre.
      */
-    public function get_siblings_from_tree(string $target_slug, array $tree): array {
-        foreach ($tree as $slug => $node) {
-            if (!empty($node['children']) && is_array($node['children'])) {
-                // On vérifie si l'un des enfants est le nœud cible
-                if (array_key_exists($target_slug, $node['children'])) {
-                    $siblings = $node['children'];
-                    unset($siblings[$target_slug]); // on enlève le nœud lui-même
-                    return $siblings;
-                }
+    public function get_siblings_from_map(int $post_id, array $map): array {
+        if (!isset($map[$post_id])) return [];
     
-                // Sinon on continue la recherche récursive
-                $result = $this->get_siblings_from_tree($target_slug, $node['children']);
-                if (!empty($result)) {
-                    return $result;
-                }
+        $parent_id = $map[$post_id]['parent_id'] ?? null;
+        $siblings = [];
+    
+        foreach ($map as $id => $node) {
+            if (
+                $id !== $post_id && // exclut lui-même
+                ($node['parent_id'] ?? null) === $parent_id
+            ) {
+                $siblings[] = $node;
             }
         }
     
-        return [];
+        return $siblings;
     }
+    
     
     
     
@@ -123,7 +136,7 @@ class CSB_Linker {
     /**
      * Récupère le nœud racine à partir du slug dans l’arbre.
      */
-    public function get_root_from_tree(array $map){
+    public function get_root_from_map(array $map){
         $post_id=array_key_first($map);
         return $post_id;
     }
