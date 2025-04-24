@@ -195,7 +195,7 @@ class CSB_Generator {
         - Structure l’intro en 2 ou 3 paragraphes <p>, dans un <div class='csb-intro'>.
         - Utilise un ton engageant, accessible, et un vocabulaire fluide.
         - Pas de <h1>, <h2>, ni de résumé. Pas de liste.
-        - Évite absolument toute balise ```html ou autre bloc de code Markdown.;
+        - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
         
         Ta seule mission : captiver le lecteur pour qu’il ait envie de lire les développements.";
     }
@@ -215,11 +215,33 @@ class CSB_Generator {
         Consignes :
         - doit avoir un <h4>$title</h4> suivi de 1 ou 2 paragraphes <p>. 
         - Si c’est pertinent, tu peux utiliser des <ul><li> pour lister des conseils, caractéristiques, etc.
-        - Évite absolument toute balise ```html ou autre bloc de code Markdown.;
+        - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
         Structure le tout dans un <div class='csb-development'>.";
     }
     
+
+/*
+    private function getPromptDevelopment(string $title, array $contextTree): string {
+        $structure = $this->to_bullet_tree($contextTree);
+        return "Tu es un expert en rédaction SEO pour WordPress.
     
+    Ta tâche : rédiger un bloc de DÉVELOPPEMENT HTML pour un article intitulé « $title ».
+    
+    Voici la structure globale du cocon sémantique :
+    
+    $structure
+    
+    Consignes de rédaction :
+    - Commence par un titre HTML : <h4>$title</h4>
+    - Rédige ensuite 1 ou 2 paragraphes (<p>...</p>) informatifs et engageants.
+    - Si nécessaire, utilise une liste à puces avec <ul><li> pour structurer des points clés, astuces ou caractéristiques.
+    - Structure l’ensemble dans un bloc <div class='csb-development'> pour faciliter la mise en page WordPress.
+    - ⚠️ N’utilise **aucun** bloc de code Markdown (comme ```html).
+    
+    Garde un ton clair, naturel et informatif.";
+    }
+    
+*/ 
     
     
     private function getPromptConclusion(string $title, array $contextTree): string {
@@ -237,7 +259,7 @@ class CSB_Generator {
         - Termine sur un message encourageant ou une réflexion.
         - Utilise uniquement des balises HTML suivantes : <div class='csb-conclusion'>, <p>, <strong>.
         - Ne mets pas de liens ni d’ouverture vers d’autres sujets.
-        - Évite absolument toute balise ```html ou autre bloc de code Markdown.;
+        - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
         
         Écris de manière naturelle, engageante, et claire.";
     }
