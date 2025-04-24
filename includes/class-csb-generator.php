@@ -45,7 +45,7 @@ class CSB_Generator {
         $markdown = $this->generate_structure($keyword, $depth);
         $tree = $this->parse_markdown_structure($markdown);
         //var_dump($tree);
-        $this->assign_slugs_recursively($tree);
+        //$this->assign_slugs_recursively($tree);
         //var_dump($tree);
         return $this->tree_to_slug_map($tree);
 
@@ -84,73 +84,12 @@ class CSB_Generator {
     }
 
     
-    private function is_valid_format(string $raw): bool {
-        $required_blocks = [
-            '/\[TITRE:\s*.+?\]/',
-            '/INTRO:\s+.+/',
-            '/CLICK_BAIT:\s+.+/',
-            '/DEVELOPMENTS:\s+-\s*title:\s*.+\s+text:\s*.+\s+link:\s*<a.+?>.+?<\/a>/',
-            '/CONCLUSION:\s+.+/',
-            '/\[IMAGE:\s*.+?\]/',
-            '/\[SLUG:\s*.+?\]/',
-        ];
-
-        foreach ($required_blocks as $pattern) {
-            if (!preg_match($pattern, $raw)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-        
-    
-
-    
-    private function parse_content_blocks($text) {
-        if (preg_match('/\[TITRE:\s*(.*?)\]\s*INTRO:\s*(.*?)\s*CLICK_BAIT:\s*(.*?)\s*DEVELOPMENTS:\s*((?:-\s*title:\s*.*?\s+text:\s*.*?\s+link:\s*<a.*?>.*?<\/a>\s*)+)CONCLUSION:\s*(.*?)\s*\[IMAGE:\s*(.*?)\]\s*\[SLUG:\s*(.*?)\]/s', $text, $m)) {
-            $title = trim($m[1]);
-            $intro = trim($m[2]);
-            $click_bait = trim($m[3]);
-            $dev_block = trim($m[4]);
-            $conclusion = trim($m[5]);
-            $image = trim($m[6]);
-            $slug = trim($m[7]);
-    
-            // Parse DEVELOPMENTS
-            preg_match_all('/-\s*title:\s*(.*?)\s+text:\s*(.*?)\s+link:\s*(<a.*?>.*?<\/a>)/s', $dev_block, $matches, PREG_SET_ORDER);
-    
-            $developments = [];
-            foreach ($matches as $match) {
-                $developments[] = [
-                    'title' => trim($match[1]),
-                    'text' => trim($match[2]),
-                    'link' => trim($match[3])
-                ];
-            }
-    
-            return [
-                self::generate_slug($title) => [
-                    'content' => [
-                        'intro' => $intro,
-                        'developments' => $developments,
-                        'conclusion' => $conclusion,
-                        'image' => $image
-                    ],
-                    'click_bait' => $click_bait,
-                    'slug' => $slug,
-                    'title' => $title
-                ]
-            ];
-        }
-        return [];
-    }
 
     private function tree_to_slug_map(array $tree) {
         $map = [];
     
         foreach ($tree as $node) {
-            $slug = $node['slug'];
+            $slug = $this->generate_slug($node['title']);
             $entry = [
                 'title' => $node['title'],
             ];
@@ -166,14 +105,6 @@ class CSB_Generator {
     }
 
 
-    private function assign_slugs_recursively(&$tree) {
-        foreach ($tree as &$node) {
-            $node['slug'] = self::generate_slug($node['title']); // ou sanitize_title()
-            if (!empty($node['children'])) {
-                $this->assign_slugs_recursively($node['children']);
-            }
-        }
-    }
     
 
     /**Utilise uniquement du texte brut sans mise en forme Markdown
@@ -221,84 +152,7 @@ class CSB_Generator {
 
     }
 
-    private function getPromptArticle($title, $contextTree, $number, $slug) {
-        $structure = $this->to_bullet_tree($contextTree);
     
-        // 🧠 Génération des liens HTML à partir du vrai fullTree
-        $children_links = [];
-        if (isset($contextTree[$slug]['children'])) {
-            foreach ($contextTree[$slug]['children'] as $child_slug => $child_node) {
-                if (!empty($child_node['title']) && !empty($child_node['link']) && !empty($child_node['click_bait'])) {
-                    $children_links[] = [
-                        'title' => $child_node['title'],
-                        //'link' => '<a href="' . esc_url($child_node['link']) . '">' . esc_html($child_node['click_bait']) . '</a>',
-                    ];
-                }
-            }
-        }
-
-
-        // 🔧 Partie DEVELOPMENT avec ou sans enfants
-        $dev_part = '';
-
-        if (!empty($children_links)) {
-            $dev_part .= "Dans la section DEVELOPMENTS, crée une entrée pour chaque enfant direct de cet article.\n";
-            $dev_part .= "Chaque développement doit suivre ce format :\n";
-            $dev_part .= "- title: Le titre exact de l’enfant\n  text: Le texte du développement\n  link: (laisse vide, écris juste `link:`)\n\n";
-            $dev_part .= "Voici les titres à utiliser :\n";
-            foreach ($children_links as $child) {
-                $dev_part .= "- title: {$child['title']}\n";
-            }
-            $dev_part .= "\n⚠️ Ne mets pas de lien HTML. Juste `link:` vide.\n";
-        } else {
-            $dev_part .= "Il n’y a **aucun enfant** dans cet article. Tu dois donc créer **exactement $number sous-parties**.\n";
-            $dev_part .= "Chaque sous-partie doit suivre ce format :\n";
-            $dev_part .= "- title: Un sous-titre pertinent\n  text: Le développement\n  link:\n\n";
-            $dev_part .= "⚠️ Ne dépasse pas $number sous-parties. Ne mets **aucun lien HTML**.\n";
-        }
-
-    
-        // 📝 Prompt complet
-        return "Tu es un rédacteur professionnel en style {$this->style}.\n\n" .
-            "Contexte : voici la structure hiérarchique dans laquelle s’insère l’article \"$title\". Chaque ligne représente un titre d’article :\n\n" .
-            "$structure\n\n" .
-            "Ta mission : rédiger un article optimisé pour le sujet \"$title\" (environ 800 mots).\n\n" .
-            "Évite les répétitions et développe les idées avec des exemples concrets et pertinents.\n\n" .
-            "Respecte ce format STRICTEMENT :\n\n" .
-            "[TITRE: $title]\n" .
-            "INTRO: Introduction générale du sujet.\n" .
-            "CLICK_BAIT: Une phrase incitative qui donne envie de lire l'article (visible chez le parent).\n" .
-            "DEVELOPMENTS:\n" .
-            "$dev_part" .
-            "CONCLUSION: Conclusion synthétique de l’article.\n" .
-            "[IMAGE: description courte de l’image à générer sur Freepik]\n" .
-            "[SLUG: le slug EXACT donné ci-dessus — NE LE MODIFIE JAMAIS]\n\n" .
-            "⚠️ Très important :\n" .
-            "- Ne mets aucun emoji ou mise en forme.\n" .
-            "- Ne change pas les titres fournis.\n" .
-            "- Chaque développement doit inclure les champs : title, text";
-    }
-    
-    
-    
-
-    private function getPromptArticleValidation($title, $contextTree, $raw): string {
-        $structure = $this->to_bullet_tree($contextTree);
-    
-        return "Tu es un expert en rédaction SEO.\n\n" .
-            "Voici la structure hiérarchique du cocon sémantique (contexte global) :\n" .
-            "{$structure}\n\n" .
-            "Le titre à traiter est : \"{$title}\"\n\n" .
-            "Voici le texte généré à valider :\n" .
-            "{$raw}\n\n" .
-            "Ta mission :\n" .
-            "- Vérifie que ce texte respecte strictement le format suivant :\n" .
-            "[TITRE: ...]\nINTRO: ...\nCLICK_BAIT: ...\nDEVELOPMENTS:\n- title: ...\n  text: ...\n  link: <a href='...'>...</a>\n...\nCONCLUSION: ...\n[IMAGE: ...]\n[SLUG: ...]\n\n" .
-            "- Chaque bloc doit être présent et bien structuré.\n" .
-            "- Le lien doit être un lien HTML complet (balise <a>) donné dans le prompt initial.\n" .
-            "- Ne change pas le contenu des liens ni le format des balises.\n\n" .
-            "Corrige uniquement ce qui est nécessaire pour que le texte soit correctement parsé automatiquement.";
-    }
     
     
 
@@ -307,29 +161,122 @@ class CSB_Generator {
     }
 
 
-    public function generate_full_content(array &$tree, int $number, bool $use_fake = false) {
-        foreach ($tree as $slug => &$node) {
 
-            if ($use_fake) {
-                // 🔹 Mode TEST (sans API)
-                $fake_content = $this->generate_fake_content_for_slug($slug,$tree);
-                if (isset($fake_content[$slug])) {
-                    $data = $fake_content[$slug];
-                    $node['content'] = $data['content'];
-                    $node['click_bait'] = $data['click_bait'];
+    public function to_bullet_tree(array $map, int $current_id = null, int $indent = 0): string {
+        $out = '';
+    
+        foreach ($map as $id => $node) {
+            if ($node['parent_id'] === $current_id) {
+                $out .= str_repeat('    ', $indent) . "- {$node['title']} [ID: {$id}]\n";
+    
+                if (!empty($node['children_ids'])) {
+                    $out .= $this->to_bullet_tree($map, $id, $indent + 1);
                 }
-    
-            } else {
-                // 🔸 Mode normal (API OpenAI)
-                $this->generate_content_for_node($slug, $node, $tree, $number);
-            }
-    
-            // Récursif sur les enfants
-            if (!empty($node['children'])) {
-                $this->generate_full_content($node['children'], $number, $use_fake);
             }
         }
+        //print_r($out);
+        return $out;
     }
+    
+    
+    
+    private function getPromptIntro(string $title, array $contextTree): string {
+        $structure = $this->to_bullet_tree($contextTree);
+        return "Tu es un rédacteur SEO professionnel expert de WordPress.
+    
+        Tu dois écrire une **INTRODUCTION HTML** pour un article intitulé « $title ».
+        
+        Voici la structure complète du cocon sémantique auquel cet article appartient :
+        
+        $structure
+        
+        Consignes :
+        - Ne commence pas par « Cet article va parler de… ».
+        - Structure l’intro en 2 ou 3 paragraphes <p>, dans un <div class='csb-intro'>.
+        - Utilise un ton engageant, accessible, et un vocabulaire fluide.
+        - Pas de <h1>, <h2>, ni de résumé. Pas de liste.
+        - Évite absolument toute balise ```html ou autre bloc de code Markdown.;
+        
+        Ta seule mission : captiver le lecteur pour qu’il ait envie de lire les développements.";
+    }
+    
+    
+
+    private function getPromptDevelopment(string $title, array $contextTree): string {
+        $structure = $this->to_bullet_tree($contextTree);
+        return "Tu es un expert en rédaction SEO sur WordPress.
+    
+        Tu dois écrire un bloc de DÉVELOPPEMENT HTML pour un article intitulé « $title ».
+        
+        Voici la structure du cocon sémantique global :
+        
+        $structure
+        
+        Consignes :
+        - Divise ce développement en 2 à 3 sous-parties.
+        - Chaque sous-partie doit avoir un <h3>Titre de la section</h3> suivi de 1 ou 2 paragraphes <p>.
+        - Si c’est pertinent, tu peux utiliser des <ul><li> pour lister des conseils, caractéristiques, etc.
+        - Évite absolument toute balise ```html ou autre bloc de code Markdown.;
+        Structure le tout dans un <div class='csb-development'>.";
+    }
+    
+    
+    
+    
+    private function getPromptConclusion(string $title, array $contextTree): string {
+        $structure = $this->to_bullet_tree($contextTree);
+        return "Tu es un rédacteur SEO confirmé.
+    
+        Tu dois écrire une CONCLUSION HTML pour l’article intitulé « $title ».
+        
+        Structure du cocon sémantique complet :
+        
+        $structure
+        
+        Consignes :
+        - Résume les points forts de l’article sans redites.
+        - Termine sur un message encourageant ou une réflexion.
+        - Utilise uniquement des balises HTML suivantes : <div class='csb-conclusion'>, <p>, <strong>.
+        - Ne mets pas de liens ni d’ouverture vers d’autres sujets.
+        - Évite absolument toute balise ```html ou autre bloc de code Markdown.;
+        
+        Écris de manière naturelle, engageante, et claire.";
+    }
+    
+    
+
+    public function generate_full_content(int $post_id, array $map, int $number): string {
+        
+        $node = $map[$post_id];
+        $title = $node['title'];
+        $structure = $this->to_bullet_tree($map);
+    
+        // Prompt et génération de l’intro
+        $prompt_intro = $this->getPromptIntro($title, $map);
+        $intro = $this->call_api($prompt_intro);
+    
+        // Développements
+        $developments_html = '';
+        foreach ($node['children_ids'] ?? [] as $child_id) {
+            if (!isset($map[$child_id])) continue;
+    
+            $child = $map[$child_id];
+            $prompt_dev = $this->getPromptDevelopment($child['title'], $map);
+            $dev_content = $this->call_api($prompt_dev);
+            $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
+    
+            $developments_html .= $dev_content . $child_link;
+        }
+    
+        // Prompt et génération de la conclusion
+        $prompt_conclusion = $this->getPromptConclusion($title, $map);
+        $conclusion = $this->call_api($prompt_conclusion);
+    
+        // Concatène toutes les parties
+        return $intro .$developments_html . $conclusion;
+    }
+    
+    
     
 
     private function extract_subtree_context($slug, $tree) {
@@ -348,55 +295,7 @@ class CSB_Generator {
 
 
 
-    private function generate_content_for_node(string $slug, array &$node, array $fullTree, int $number) {
-        $context_tree = $this->extract_subtree_context($slug, $fullTree);
-        $prompt = $this->getPromptArticle($node['title'], $context_tree,$number,$slug);
-        $raw = $this->call_api($prompt);
-        $itiration =0;
-        while(!$this->is_valid_format($raw)&&$itiration<1) {
-            $itiration+=1;
-            // echo '<br>';
-            // echo '<br>';
-            // print_r("format incorect");
-            // echo '<br>';
-            // echo '<br>';
-            $validation_prompt = $this->getPromptArticleValidation($node['title'], $context_tree, $raw);
-            $raw = $this->call_api($validation_prompt); // Correction via OpenAI
-        }
-        
-        //$parsed = $this->parse_content_blocks($raw);
-
-        // echo "<br>";echo "<br>";
-        // print_r($raw);
-        // echo "<br>";echo "<br>";
-        $parsed = $this->parse_content_blocks($raw);
-        
-        if (isset($parsed[$slug])) {
-            $data = $parsed[$slug];
     
-            try {
-                $image_url = $this->get_freepik_image($data['content']['image']);
-            } catch (Exception $e) {
-                $image_url = '❌ Image non trouvée';
-            }
-    
-            $node['content'] = [
-                'intro' => $data['content']['intro'],
-                'developments' => $data['content']['developments'],
-                'conclusion' => $data['content']['conclusion'],
-                'image' => $data['content']['image'],
-                'image_url' => $image_url
-            ];
-            $node['click_bait'] = $data['click_bait'];
-        }
-    
-        // Appel récursif sur les enfants
-        if (!empty($node['children'])) {
-            foreach ($node['children'] as $child_slug => &$child) {
-                $this->generate_content_for_node($child_slug, $child, $fullTree,$number);
-            }
-        }
-    }
     
     /***
      * 
@@ -447,19 +346,6 @@ class CSB_Generator {
         return $slug;
     }
         
-    
-    private function to_bullet_tree(array $tree, $indent = 0) {
-        $out = '';
-        foreach ($tree as $slug => $node) {
-            $out .= str_repeat('    ', $indent) . "- {$node['title']} [SLUG: {$slug}]\n";
-            if (!empty($node['children'])) {
-                $out .= $this->to_bullet_tree($node['children'], $indent + 1);
-            }
-        }
-        return $out;
-    }
-
-
     private function generate_fake_structure_array() {
         return [
             'chat' => [
@@ -502,48 +388,11 @@ class CSB_Generator {
             ]
         ];
     }
+    
+    
 
-    public function generate_fake_content_for_slug($slug, array $tree = []): array {
-        // Recherche des enfants correspondants dans l'arbre
-        $children = $tree[$slug]['children'] ?? [];
+
     
-        $developments = [];
-    
-        // S'il y a des enfants : un développement par enfant
-        if (!empty($children)) {
-            foreach ($children as $child_slug => $child_node) {
-                $developments[] = [
-                    'title' => $child_node['title'],
-                    'text'  => "Contenu détaillé sur le sujet \"" . $child_node['title'] . "\".",
-                    'link'  => '' // le lien sera inséré plus tard par add_links_to_developments()
-                ];
-            }
-        } else {
-            // Sinon, on génère 3 développements fictifs
-            for ($i = 1; $i <= 3; $i++) {
-                $developments[] = [
-                    'title' => "Aspect $i de $slug",
-                    'text'  => "Explication détaillée de l'aspect $i...",
-                    'link'  => ''
-                ];
-            }
-        }
-    
-        return [
-            $slug => [
-                'click_bait' => "Découvrez tout sur $slug !",
-                'slug'       => $slug,
-                'title'      => ucfirst(str_replace('-', ' ', $slug)),
-                'content'    => [
-                    'intro'      => "Voici une introduction pour l'article $slug.",
-                    'developments' => $developments,
-                    'conclusion' => "Conclusion de l'article $slug.",
-                    'image'      => "chat mignon",
-                    'image_url'  => "https://placekitten.com/800/400"
-                ]
-            ]
-        ];
-    }
     
     
     

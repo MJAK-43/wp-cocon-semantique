@@ -3,19 +3,15 @@ if (!defined('ABSPATH')) exit;
 
 class CSB_Linker {
 
-    
-    
-    public function add_permalink_links(array &$tree) {
-        foreach ($tree as &$node) {
-            if (!empty($node['post_id'])) {
-                $node['link'] = get_permalink($node['post_id']);
-            }
-    
-            if (!empty($node['children'])) {
-                $this->add_permalink_links($node['children']);
-            }
+    public function get_node_link_by_id(int $post_id): ?string {
+        if (get_post_status($post_id)) {
+            return get_permalink($post_id);
         }
+        return null; 
     }
+    
+    
+    
 
     public function add_links_to_developments(array &$tree): void {
         foreach ($tree as &$node) {
@@ -55,7 +51,7 @@ class CSB_Linker {
     public function generate_structured_links(string $slug, string $content, int $level, array $tree): string {
         $sections = [];
     
-        $parent = $this->get_parent_from_tree($slug, $tree);
+        //$parent = $this->get_parent_from_tree($slug, $tree);
         $siblings = $this->get_siblings_from_tree($slug, $tree);
         $root = $this->get_root_from_tree($slug, $tree);
     
@@ -98,23 +94,23 @@ class CSB_Linker {
     /**
      * Récupère le parent d’un nœud donné dans l’arbre.
      */
-    public function get_parent_from_tree(string $target_slug, array $tree, array $parents = []): ?array {
-        foreach ($tree as $slug => $node) {
-            if ($slug === $target_slug) {
-                return end($parents) ?: null;
-            }
+    // public function get_parent_from_tree(string $target_slug, array $tree, array $parents = []): ?array {
+    //     foreach ($tree as $slug => $node) {
+    //         if ($slug === $target_slug) {
+    //             return end($parents) ?: null;
+    //         }
     
-            if (!empty($node['children'])) {
-                $parents[$slug] = $node;
-                $result = $this->get_parent_from_tree($target_slug, $node['children'], $parents);
-                if ($result !== null) {
-                    return $result;
-                }
-            }
-        }
+    //         if (!empty($node['children'])) {
+    //             $parents[$slug] = $node;
+    //             $result = $this->get_parent_from_tree($target_slug, $node['children'], $parents);
+    //             if ($result !== null) {
+    //                 return $result;
+    //             }
+    //         }
+    //     }
     
-        return null;
-    }
+    //     return null;
+    // }
     
 
     /**

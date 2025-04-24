@@ -4,6 +4,7 @@ if (!defined('ABSPATH')) exit;
 class CSB_Admin {
     private $last_tree = [];
     private int $nb;
+    private $mapIdPost=[];
 
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
@@ -31,11 +32,11 @@ class CSB_Admin {
         if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
             $generator = new CSB_Generator();
             //$this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
-            $this->last_tree = $generator->generate_structure_array($keyword, $this->nb,false);
+            $this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
             
-            // echo "<br>";echo "<br>";echo "<br>";
-                // print_r($this->last_tree);
-                // echo "<br>";echo "<br>";echo "<br>";
+            echo "<br>";echo "<br>";echo "<br>";
+                print_r($this->last_tree);
+                echo "<br>";echo "<br>";echo "<br>";
         }
     
         if (isset($_POST['structure'])) {
@@ -63,7 +64,7 @@ class CSB_Admin {
     
         if (!empty($this->last_tree)) {
             echo '<div class="wrap"><h2>🔗 Articles publiés</h2><ul>';
-            $this->render_links_to_articles($this->last_tree);
+            $this->render_links_to_articles();
             echo '</ul></div>';
         }
     }
@@ -154,50 +155,37 @@ class CSB_Admin {
         $publisher = new CSB_Publisher();
         $linker = new CSB_Linker();
         $generator = new CSB_Generator();
-
-        // // Étape 1 : Créer tous les articles vides (titre, slug, parent)
-        // $publisher->register_all_posts($this->last_tree,0,1);
-        // flush_rewrite_rules();
-
-
-        // // Étape 2 : Ajouter les liens WordPress dans la structure
-        // $linker->add_permalink_links($this->last_tree); // ajoute les 'link'
-        // // echo "<br><br><br>";
-        // // echo "///////////////////////////////////////////BEFORE///////////////////////////////////////////<br>";
-        // // self::debug_display_links($this->last_tree);
-        // // echo "<br><br><br>";
-
-
-        // // Étape 3 : Générer le contenu via OpenAI (avec les liens disponibles)
-        // $generator->generate_full_content($this->last_tree,$this->nb);
-        // $this->synchronize_development_links($this->last_tree);
-        // echo "<br><br><br>";
-        // echo "///////////////////////////////////////////AFTER///////////////////////////////////////////<br>";
-        // self::debug_display_links($this->last_tree);
-        // echo "<br><br><br>";
-        $publisher->register_all_posts($this->last_tree, 0, 1);
-        //flush_rewrite_rules();
-
-        $linker->add_permalink_links($this->last_tree);
-
-        // Maintenant que les liens sont bons, on peut générer le contenu
-        $generator->generate_full_content($this->last_tree, $this->nb,false);
-        $linker->add_links_to_developments($this->last_tree);
-        
-
-        
     
-        // Étape 4 : Mettre à jour les articles avec le contenu final
-        $publisher->fill_and_publish_content($this->last_tree,$this->last_tree);
-
-
-        // echo "<br><br><br>";
-        // echo "///////////////////////////////////////////AFTER__PUBLICATION///////////////////////////////////////////<br>";
-        // print_r($this->last_tree);
-        // echo "<br><br><br>";
+        // Étape 1 : Créer les articles
+        $publisher->registerAllPost($this->last_tree);
     
+        // Étape 2 : Construire la map des articles
+        $root = reset($this->last_tree); 
+        $this->mapIdPost = $this->build_node_map($root);
+    
+        // Étape 3 : Générer et publier chaque article individuellement
+        foreach ($this->mapIdPost as $id => $info) {
+            $html = $generator->generate_full_content($id, $this->mapIdPost, $this->nb);
+            $publisher->fill_and_publish_content($id, $html);
+        }
+    
+        echo '<div class="notice notice-success is-dismissible"><p>✅ Tous les articles ont été mis à jour avec leur contenu complet.</p></div>';
     }
+    
 
+
+    private function debug_display_tree(array $tree, int $indent = 0) {
+        foreach ($tree as $slug => $node) {
+            $prefix = str_repeat('— ', $indent);
+            $title = $node['title'] ?? $slug;
+            $post_id = isset($node['post_id']) ? " (ID: {$node['post_id']})" : '';
+            echo "{$prefix}<strong>{$title}</strong>{$post_id}<br>";
+    
+            if (!empty($node['children'])) {
+                $this->debug_display_tree($node['children'], $indent + 1);
+            }
+        }
+    }
     
 
     public static function debug_display_links(array $tree, $indent = 0) {
@@ -211,9 +199,43 @@ class CSB_Admin {
             }
         }
     }
+
+    private function build_node_map(array $node, ?int $parent_id = null): array {
+        $map = [];
+        //$linker= new CSB_Linker()
     
-
-
+        if (isset($node['post_id'])) {
+            $entry = [
+                'post_id'     => $node['post_id'],
+                'title'        => $node['title'] ?? '',
+                'link'        => get_permalink($node['post_id']),
+                'parent_id'   => $parent_id,
+                'children_ids' => []
+            ];
+    
+            if (!empty($node['children'])) {
+                $count = 0;
+                foreach ($node['children'] as $child) {
+                    if (isset($child['post_id'])) {
+                        $entry['children_ids'][] = $child['post_id'];
+                        $count++;
+                        if ($count >= 3) break; // Limite à 3 enfants
+                    }
+                }
+            }
+    
+            $map[$node['post_id']] = $entry;
+    
+            // Ensuite, on descend récursivement
+            if (!empty($node['children'])) {
+                foreach ($node['children'] as $child) {
+                    $map += $this->build_node_map($child, $node['post_id']);
+                }
+            }
+        }
+    
+        return $map;
+    }
     
 
     private function generate_slug($title) {
@@ -298,21 +320,20 @@ class CSB_Admin {
     }
        
 
-    private function render_links_to_articles($tree){
-        foreach ($tree as $slug => $node) {
-            if (!empty($node['post_id'])) {
-                //echo $node['post_id'];
-                $url = get_permalink($node['post_id']);
-                $title = esc_html($node['title']);
-                echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a></li>";
-            }
+    private function render_links_to_articles() {
+
+        echo '<ul>';
     
-            if (!empty($node['children'])) {
-                $this->render_links_to_articles($node['children']); // récursif
+        foreach ($this->mapIdPost as $id => $node) {
+            // Un article racine n’a pas de parent
+            if (empty($node['parent_id'])) {
+                $title = esc_html($node['title'] ?? "Article #$id");
+                $url = get_permalink($id);
+                echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a></li>";
             }
         }
     
-        echo '</ul></div>';
+        echo '</ul>';
     }
       
 }
