@@ -32,7 +32,7 @@ class CSB_Admin {
         if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
             $generator = new CSB_Generator();
             //$this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
-            $this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
+            $this->last_tree = $generator->generate_structure_array($keyword, $this->nb,true);
             
             echo "<br>";echo "<br>";echo "<br>";
                 print_r($this->last_tree);
@@ -162,11 +162,12 @@ class CSB_Admin {
         // Étape 2 : Construire la map des articles
         $root = reset($this->last_tree); 
         $this->mapIdPost = $this->build_node_map($root);
+        print_r($this->mapIdPost[array_key_first($this->mapIdPost)]);
     
         // Étape 3 : Générer et publier chaque article individuellement
         foreach ($this->mapIdPost as $id => $info) {
-            $html = $generator->generate_full_content($id, $this->mapIdPost, $this->nb);
-            $publisher->fill_and_publish_content($id, $html);
+            //$html = $generator->generate_full_content($id, $this->mapIdPost, $this->nb);
+            //$publisher->fill_and_publish_content($id, $html);
         }
     
         echo '<div class="notice notice-success is-dismissible"><p>✅ Tous les articles ont été mis à jour avec leur contenu complet.</p></div>';

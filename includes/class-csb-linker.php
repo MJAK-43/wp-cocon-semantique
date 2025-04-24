@@ -48,7 +48,7 @@ class CSB_Linker {
     /**
      * Génère les sections de liens internes selon le niveau de l'article.
      */
-    public function generate_structured_links(string $slug, string $content, int $level, array $tree): string {
+    public function generate_structured_links($array ): string {
         $sections = [];
     
         //$parent = $this->get_parent_from_tree($slug, $tree);
@@ -59,18 +59,18 @@ class CSB_Linker {
         
         // Niveau 2 ou plus : parent + frères + racine
         if ($level >=2 ) {
-            if (!empty($siblings)) {
-                $sibling_links = [];
-                foreach ($siblings as $sibling) {
-                    if (isset($sibling['link'], $sibling['click_bait'], $sibling['title'])) {
-                        $text = esc_html($sibling['click_bait']) . " (<a href='" . esc_url($sibling['link']) . "'>" . esc_html($sibling['title']) . "</a>)";
-                        $sibling_links[] = $text;
-                    }
-                }
-                if (!empty($sibling_links)) {
-                    $sections[] = "<h3>👬 Articles liés :</h3><ul><li>" . implode('</li><li>', $sibling_links) . "</li></ul>";
-                }
-            }
+            // if (!empty($siblings)) {
+            //     $sibling_links = [];
+            //     foreach ($siblings as $sibling) {
+            //         if (isset($sibling['link'], $sibling['click_bait'], $sibling['title'])) {
+            //             $text = esc_html($sibling['click_bait']) . " (<a href='" . esc_url($sibling['link']) . "'>" . esc_html($sibling['title']) . "</a>)";
+            //             $sibling_links[] = $text;
+            //         }
+            //     }
+            //     if (!empty($sibling_links)) {
+            //         $sections[] = "<h3>👬 Articles liés :</h3><ul><li>" . implode('</li><li>', $sibling_links) . "</li></ul>";
+            //     }
+            // }
     
             if ($root && isset($root['link'], $root['click_bait'], $root['title'])) {
                 $text = esc_html($root['click_bait']) . " (<a href='" . esc_url($root['link']) . "'>" . esc_html($root['title']) . "</a>)";
@@ -143,24 +143,9 @@ class CSB_Linker {
     /**
      * Récupère le nœud racine à partir du slug dans l’arbre.
      */
-    public function get_root_from_tree(string $target_slug, array $tree, array $path = []): ?array {
-        foreach ($tree as $slug => $node) {
-            $new_path = $path;
-            $new_path[] = $node;
-    
-            if ($slug === $target_slug) {
-                return $path[0] ?? $node;
-            }
-    
-            if (!empty($node['children'])) {
-                $result = $this->get_root_from_tree($target_slug, $node['children'], $new_path);
-                if ($result !== null) {
-                    return $result;
-                }
-            }
-        }
-    
-        return null;
+    public function get_root_from_tree(array $map){
+        $post_id=array_key_first($map);
+        return $post_id;
     }
     
 

@@ -213,8 +213,8 @@ class CSB_Generator {
         $structure
         
         Consignes :
-        - Divise ce développement en 2 à 3 sous-parties.
-        - Chaque sous-partie doit avoir un <h3>Titre de la section</h3> suivi de 1 ou 2 paragraphes <p>.
+        - Divise ce développement en 2 à 3 sous-parties selon la structure pour les derniers sous partie créer deux sous partie.
+        - Chaque sous-partie doit avoir un <h>Titre de la section</h3> suivi de 1 ou 2 paragraphes <p>.
         - Si c’est pertinent, tu peux utiliser des <ul><li> pour lister des conseils, caractéristiques, etc.
         - Évite absolument toute balise ```html ou autre bloc de code Markdown.;
         Structure le tout dans un <div class='csb-development'>.";
