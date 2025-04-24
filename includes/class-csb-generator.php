@@ -213,7 +213,7 @@ class CSB_Generator {
         $structure
         
         Consignes :
-        - doit avoir un <h4>Titre de la section</h4> suivi de 1 ou 2 paragraphes <p>. 
+        - doit avoir un <h4>$title</h4> suivi de 1 ou 2 paragraphes <p>. 
         - Si c’est pertinent, tu peux utiliser des <ul><li> pour lister des conseils, caractéristiques, etc.
         - Évite absolument toute balise ```html ou autre bloc de code Markdown.;
         Structure le tout dans un <div class='csb-development'>.";
@@ -252,7 +252,7 @@ class CSB_Generator {
     
         // Prompt et génération de l’intro
         $prompt_intro = $this->getPromptIntro($title, $map);
-        $intro = 'intro';//$this->call_api($prompt_intro);
+        $intro = $this->call_api($prompt_intro);
     
         // Développements
         $developments_html = '';
@@ -260,8 +260,8 @@ class CSB_Generator {
             if (!isset($map[$child_id])) continue;
             $child = $map[$child_id];
             $prompt_dev = $this->getPromptDevelopment($child['title'], $map);
-            print_r($child['title']);
-            $dev_content ="CHAT"; //$this->call_api($prompt_dev);
+            //print_r($child['title']);
+            $dev_content =$this->call_api($prompt_dev);
             $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
     
             $developments_html .= $dev_content . $child_link;
@@ -269,7 +269,7 @@ class CSB_Generator {
     
         // Prompt et génération de la conclusion
         $prompt_conclusion = $this->getPromptConclusion($title, $map);
-        $conclusion ='conclusion' ;//$this->call_api($prompt_conclusion);
+        $conclusion =$this->call_api($prompt_conclusion);
     
         // Concatène toutes les parties
         return $intro .$developments_html . $conclusion;
