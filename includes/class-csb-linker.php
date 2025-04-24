@@ -51,12 +51,13 @@ class CSB_Linker {
     public function generate_structured_links(array $map,int $post_id): string {
         $content='';
         $idPostRoot= $this->get_root_from_tree($map);
+        print_r($idPostRoot);
         
-        if (!is_null($map[$post_id]['parent_id'])) {
-            $link = $map[$idPostRoot][$idPostRoot]['link'] ;
-            $title = $map[$idPostRoot][$idPostRoot]['title'] ;
-            $content = "<h3>📌 Article racine :</h3><ul><li><a href='" . esc_url($link) . "'>" . esc_html($title) . "</a></li></ul>";
-        }
+        // if (!is_null($map[$post_id]['parent_id'])) {
+        //     $link = $map[$idPostRoot][$idPostRoot]['link'] ;
+        //     $title = $map[$idPostRoot][$idPostRoot]['title'] ;
+        //     $content = "<h3>📌 Article racine :</h3><ul><li><a href='" . esc_url($link) . "'>" . esc_html($title) . "</a></li></ul>";
+        // }
         return $content;
     }
     
