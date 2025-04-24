@@ -162,12 +162,12 @@ class CSB_Admin {
         // Étape 2 : Construire la map des articles
         $root = reset($this->last_tree); 
         $this->mapIdPost = $this->build_node_map($root);
-        print_r($this->mapIdPost[array_key_first($this->mapIdPost)]);
-    
+        print_r($this->mapIdPost);
         // Étape 3 : Générer et publier chaque article individuellement
         foreach ($this->mapIdPost as $id => $info) {
-            //$html = $generator->generate_full_content($id, $this->mapIdPost, $this->nb);
-            //$publisher->fill_and_publish_content($id, $html);
+            $html = "CHATT";//$generator->generate_full_content($id, $this->mapIdPost, $this->nb);
+            $html.=$linker->generate_structured_links();
+            $publisher->fill_and_publish_content($id, $html);
         }
     
         echo '<div class="notice notice-success is-dismissible"><p>✅ Tous les articles ont été mis à jour avec leur contenu complet.</p></div>';
