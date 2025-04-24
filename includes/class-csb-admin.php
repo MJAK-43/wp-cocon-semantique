@@ -34,9 +34,9 @@ class CSB_Admin {
             //$this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
             $this->last_tree = $generator->generate_structure_array($keyword, $this->nb,true);
             
-            echo "<br>";echo "<br>";echo "<br>";
-                print_r($this->last_tree);
-                echo "<br>";echo "<br>";echo "<br>";
+            // echo "<br>";echo "<br>";echo "<br>";
+            //     print_r($this->last_tree);
+            //     echo "<br>";echo "<br>";echo "<br>";
         }
     
         if (isset($_POST['structure'])) {
@@ -166,7 +166,7 @@ class CSB_Admin {
         // Étape 3 : Générer et publier chaque article individuellement
         foreach ($this->mapIdPost as $id => $info) {
             $html = "CHATT";//$generator->generate_full_content($id, $this->mapIdPost, $this->nb);
-            $html.=$linker->generate_structured_links();
+            $html.=$linker->generate_structured_links($this->mapIdPost,$id);
             $publisher->fill_and_publish_content($id, $html);
         }
     
