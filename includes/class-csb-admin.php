@@ -162,7 +162,7 @@ class CSB_Admin {
         // Étape 2 : Construire la map des articles
         $root = reset($this->last_tree); 
         $this->mapIdPost = $this->build_node_map($root);
-        print_r($this->mapIdPost);
+        //print_r($this->mapIdPost);
         // Étape 3 : Générer et publier chaque article individuellement
         foreach ($this->mapIdPost as $id => $info) {
             $html = "CHATT";//$generator->generate_full_content($id, $this->mapIdPost, $this->nb);
