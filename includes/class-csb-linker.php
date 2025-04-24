@@ -48,18 +48,24 @@ class CSB_Linker {
     /**
      * Génère les sections de liens internes selon le niveau de l'article.
      */
-    public function generate_structured_links(array $map,int $post_id): string {
-        $content='';
-        $idPostRoot= $this->get_root_from_tree($map);
-        print_r($map[$idPostRoot]);
-        
-        // if (!is_null($map[$post_id]['parent_id'])) {
-        //     $link = $map[$idPostRoot][$idPostRoot]['link'] ;
-        //     $title = $map[$idPostRoot][$idPostRoot]['title'] ;
-        //     $content = "<h3>📌 Article racine :</h3><ul><li><a href='" . esc_url($link) . "'>" . esc_html($title) . "</a></li></ul>";
-        // }
+    public function generate_structured_links(array $map, int $post_id): string {
+        $content = '';
+    
+        // Trouver l'article racine (celui qui n’a pas de parent)
+        $idPostRoot = $this->get_root_from_tree($map);
+    
+        // S'assurer qu'on ne réaffiche pas un lien vers lui-même
+        if ($post_id !== $idPostRoot && isset($map[$idPostRoot]['link'], $map[$idPostRoot]['title'])) {
+            $link = esc_url($map[$idPostRoot]['link']);
+            $title = esc_html($map[$idPostRoot]['title']);
+    
+            $content .= "<div class='csb-links'><h3>📌 Article racine :</h3>";
+            $content .= "<ul><li><a href='$link' target='_blank'>$title</a></li></ul></div>";
+        }
+    
         return $content;
     }
+    
     
     
 
