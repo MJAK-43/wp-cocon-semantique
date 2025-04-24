@@ -32,7 +32,7 @@ class CSB_Admin {
         if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
             $generator = new CSB_Generator();
             //$this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
-            $this->last_tree = $generator->generate_structure_array($keyword, $this->nb,true);
+            $this->last_tree = $generator->generate_structure_array($keyword, $this->nb,false);
             
             // echo "<br>";echo "<br>";echo "<br>";
             //     print_r($this->last_tree);
@@ -162,10 +162,10 @@ class CSB_Admin {
         // Étape 2 : Construire la map des articles
         $root = reset($this->last_tree); 
         $this->mapIdPost = $this->build_node_map($root);
-        print_r($this->mapIdPost);
+        //print_r($this->mapIdPost);
         // Étape 3 : Générer et publier chaque article individuellement
         foreach ($this->mapIdPost as $id => $info) {
-            $html = "CHATT";//$generator->generate_full_content($id, $this->mapIdPost, $this->nb);
+            $html =$generator->generate_full_content($id, $this->mapIdPost, $this->nb);
             $html.=$linker->generate_structured_links($this->mapIdPost,$id);
             $publisher->fill_and_publish_content($id, $html);
         }
