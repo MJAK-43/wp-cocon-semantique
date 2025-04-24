@@ -202,35 +202,22 @@ class CSB_Generator {
     
     
 
-    private function getPromptDevelopment(string $title, array $contextTree, array $expectedSubTitles = []): string {
+    private function getPromptDevelopment(string $title, array $contextTree): string {
         $structure = $this->to_bullet_tree($contextTree);
-        $subPartList = '';
-    
-        if (!empty($expectedSubTitles)) {
-            $subPartList .= "Voici les titres des sous-parties à créer :\n";
-            foreach ($expectedSubTitles as $sub) {
-                $subPartList .= "- $sub\n";
-            }
-        }
-    
         return "Tu es un expert en rédaction SEO sur WordPress.
-        
-        Tu dois écrire un bloc de DÉVELOPPEMENT HTML pour un article intitulé : « $title ».
+    
+        Tu dois écrire un bloc de DÉVELOPPEMENT HTML pour un article intitulé « $title ».
         
         Voici la structure du cocon sémantique global :
         
         $structure
         
-        $subPartList
-        
         Consignes :
-        - Chaque sous-partie doit avoir un <h4>Titre</h4> suivi de 1 ou 2 paragraphes <p>.
-        - Tu peux ajouter des <ul><li> si pertinent.
-        - Ne crée pas d’autres titres que ceux listés.
-        - Structure tout dans un <div class='csb-development'>.
-        - Évite absolument les blocs ```html ou tout format Markdown.";
+        - doit avoir un <h4>Titre de la section</h4> suivi de 1 ou 2 paragraphes <p>. 
+        - Si c’est pertinent, tu peux utiliser des <ul><li> pour lister des conseils, caractéristiques, etc.
+        - Évite absolument toute balise ```html ou autre bloc de code Markdown.;
+        Structure le tout dans un <div class='csb-development'>.";
     }
-    
     
     
     
@@ -265,16 +252,16 @@ class CSB_Generator {
     
         // Prompt et génération de l’intro
         $prompt_intro = $this->getPromptIntro($title, $map);
-        $intro = $this->call_api($prompt_intro);
+        $intro = 'intro';//$this->call_api($prompt_intro);
     
         // Développements
         $developments_html = '';
         foreach ($node['children_ids'] ?? [] as $child_id) {
             if (!isset($map[$child_id])) continue;
-    
             $child = $map[$child_id];
             $prompt_dev = $this->getPromptDevelopment($child['title'], $map);
-            $dev_content = $this->call_api($prompt_dev);
+            print_r($child['title']);
+            $dev_content ="CHAT"; //$this->call_api($prompt_dev);
             $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
     
             $developments_html .= $dev_content . $child_link;
@@ -282,7 +269,7 @@ class CSB_Generator {
     
         // Prompt et génération de la conclusion
         $prompt_conclusion = $this->getPromptConclusion($title, $map);
-        $conclusion = $this->call_api($prompt_conclusion);
+        $conclusion ='conclusion' ;//$this->call_api($prompt_conclusion);
     
         // Concatène toutes les parties
         return $intro .$developments_html . $conclusion;
