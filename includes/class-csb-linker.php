@@ -48,41 +48,12 @@ class CSB_Linker {
     /**
      * Génère les sections de liens internes selon le niveau de l'article.
      */
-    public function generate_structured_links($array ): string {
-        $sections = [];
-    
-        //$parent = $this->get_parent_from_tree($slug, $tree);
-        $siblings = $this->get_siblings_from_tree($slug, $tree);
-        $root = $this->get_root_from_tree($slug, $tree);
-    
+    public function generate_structured_links(array $map,int $post_id): string {
+        $content='';
+        $idPostRoot= $this->get_root_from_tree($map);
         
-        
-        // Niveau 2 ou plus : parent + frères + racine
-        if ($level >=2 ) {
-            // if (!empty($siblings)) {
-            //     $sibling_links = [];
-            //     foreach ($siblings as $sibling) {
-            //         if (isset($sibling['link'], $sibling['click_bait'], $sibling['title'])) {
-            //             $text = esc_html($sibling['click_bait']) . " (<a href='" . esc_url($sibling['link']) . "'>" . esc_html($sibling['title']) . "</a>)";
-            //             $sibling_links[] = $text;
-            //         }
-            //     }
-            //     if (!empty($sibling_links)) {
-            //         $sections[] = "<h3>👬 Articles liés :</h3><ul><li>" . implode('</li><li>', $sibling_links) . "</li></ul>";
-            //     }
-            // }
-    
-            if ($root && isset($root['link'], $root['click_bait'], $root['title'])) {
-                $text = esc_html($root['click_bait']) . " (<a href='" . esc_url($root['link']) . "'>" . esc_html($root['title']) . "</a>)";
-                $sections[] = "<h3>📌 Article racine :</h3><ul><li>$text</li></ul>";
-            }
-        }
-        else // Niveau 1 : aucun lien
-            return $content;
-    
-        if (!empty($sections)) {
-            $content .= "\n\n" . implode("\n\n", $sections);
-        }
+        if(!is_null($map['parent_id']))
+            $content = "<h3>📌 Article racine :</h3><ul><li>$map[$idPostRoot]['link']</li></ul>";
     
         return $content;
     }
