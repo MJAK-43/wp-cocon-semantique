@@ -32,7 +32,7 @@ class CSB_Admin {
         if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
             $generator = new CSB_Generator();
             //$this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
-            $this->last_tree = $generator->generate_structure_array($keyword, $this->nb,false);
+            $this->last_tree = $generator->generate_structure_array($keyword, $this->nb,true);
             
             // echo "<br>";echo "<br>";echo "<br>";
             //     print_r($this->last_tree);

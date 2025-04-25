@@ -291,7 +291,7 @@ class CSB_Generator {
             if (!isset($map[$child_id])) continue;
             $child = $map[$child_id];
             $prompt_dev = $this->getPromptDevelopment($child['title'], $map);
-            print_r($child['title']);
+            //print_r($child['title']);
             $dev_content =$this->call_api($prompt_dev);
             $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
     
@@ -309,7 +309,7 @@ class CSB_Generator {
         // print_r($image_description);
         
         //echo "<br>";echo "<br>";
-        $image_url = $this->get_freepik_image($image_description);
+        //$image_url = $this->get_freepik_image($image_description);
 
         // if (!str_starts_with($image_url, '❌')) {
         //     $image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($image_description) . "\" style=\"max-width:100%; height:auto;\" />";
