@@ -306,7 +306,7 @@ class CSB_Generator {
         $structure = $this->to_bullet_tree($map);
     
         // Prompt et génération de l’intro
-        $prompt_intro = "";//$this->getPromptIntro($title, $map);
+        $prompt_intro = $this->getPromptIntro($title, $map);
         $intro = $this->call_api($prompt_intro);
     
         // Développements
@@ -473,6 +473,12 @@ class CSB_Generator {
                 ]
             ]
         ];
+    }
+
+    public function count_tokens($text) {
+        $words = str_word_count(strip_tags($text));
+        // 1 token ≈ 0.75 mot en moyenne
+        return (int) ceil($words / 0.75);
     }
     
     
