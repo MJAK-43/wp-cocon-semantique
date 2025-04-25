@@ -247,24 +247,25 @@ class CSB_Generator {
         $structure
     
         Règles :
-        - Crée exactement {$children_count} sous-thèmes internes logiques et pertinents pour enrichir le sujet.
-        - Pour CHAQUE sous-thème :
+        - Crée exactement {$children_count} blocs de développement indépendants.
+        - Pour CHAQUE bloc :
             - Ouvre un <div class='csb-development'>.
-            - Mets un titre <h4> créatif et pertinent pour ce sous-thème.
-            - Utilise uniquement la balise <h4> pour le titre de chaque sous-thème.
-            - Ajoute 1 ou 2 paragraphes <p> informatifs et engageants.
-            - Si pertinent, ajoute une liste <ul><li>...</li></ul>.
+            - Mets un titre unique dans une seule balise <h4> (le titre doit être pertinent et optimisé SEO).
+            - Ajoute 1 ou 2 paragraphes <p> descriptifs et engageants.
+            - Tu peux ajouter une liste <ul><li>...</li></ul> si nécessaire.
             - Ferme le <div>.
-        - Tous les blocs doivent être indépendants les uns des autres.
+        - Chaque <div> doit contenir exactement UN <h4> et être totalement indépendant.
     
         Interdictions :
-        - Ne fais aucun lien vers d'autres articles.
-        - Ne commence pas par une introduction générale, ni de conclusion globale.
-        - N'utilise jamais de balises ```html ni de bloc Markdown.
+        - Aucun lien externe ou interne vers d'autres articles.
+        - Ne commence pas par une introduction générale ni de conclusion générale.
+        - N'utilise jamais de balises ```html ni aucun bloc Markdown.
     
         Style :
-        - Clair, naturel, agréable à lire, orienté SEO WordPress.";
+        - Langage clair, naturel, engageant et adapté au SEO WordPress.
+        - Varie légèrement les styles d'écriture pour rendre la lecture agréable.";
     }
+    
     
     
     
