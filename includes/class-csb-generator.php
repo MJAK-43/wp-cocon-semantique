@@ -237,7 +237,7 @@ class CSB_Generator {
     }
     private function getPromptLeafDevelopment(string $title, array $contextTree): string {
         $structure = $this->to_bullet_tree($contextTree);
-        $children_count = $this->expected_children_count;
+        $children_count = 2;//$this->expected_children_count;
     
         return "Tu es un expert en rédaction SEO sur WordPress.
     
