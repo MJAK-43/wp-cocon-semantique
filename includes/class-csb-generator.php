@@ -8,6 +8,7 @@ class CSB_Generator {
     private $temperature;
     private $style;
     private $image_description;
+    private $expected_children_count;
 
     private function getPromptStructure($keyword, $depth) {
         return "Tu es un expert en SEO abtimiser pour le référencement. Génère une structure hiérarchique de cocon sémantique en texte brut.
@@ -23,6 +24,9 @@ class CSB_Generator {
     public function __construct($api_key = null, $freepik_api_key = null) {
         $this->api_key = $api_key ?: get_option('csb_openai_api_key');
         $this->freepik_api_key = $freepik_api_key ?: get_option('csb_freepik_api_key');
+        // echo "<br>";
+        // print_r($this->freepik_api_key);
+        // echo "<br>";
         $this->model = get_option('csb_model', 'gpt-3.5-turbo');
         $this->temperature = floatval(get_option('csb_temperature', 0.7));
         $this->style = get_option('csb_writing_style', 'SEO');
@@ -40,8 +44,12 @@ class CSB_Generator {
     }
 
     public function generate_structure_array($keyword, $depth = 1, bool $use_fake = false) {
-        if($use_fake)
+        if($use_fake){
+            $this->expected_children_count=2;
             return $this->generate_fake_structure_array();
+        }
+        else
+            $this->expected_children_count=$depth;
         $markdown = $this->generate_structure($keyword, $depth);
         $tree = $this->parse_markdown_structure($markdown);
         //var_dump($tree);
@@ -227,30 +235,37 @@ class CSB_Generator {
         - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
         Structure le tout dans un <div class='csb-development'>.";
     }
-    
-
-/*
-    private function getPromptDevelopment(string $title, array $contextTree): string {
+    private function getPromptLeafDevelopment(string $title, array $contextTree): string {
         $structure = $this->to_bullet_tree($contextTree);
-        return "Tu es un expert en rédaction SEO pour WordPress.
+        $paragraphs_count = $this->expected_children_count; // on récupère juste pour simplifier
     
-    Ta tâche : rédiger un bloc de DÉVELOPPEMENT HTML pour un article intitulé « $title ».
+        return "Tu es un expert en rédaction SEO sur WordPress.
     
-    Voici la structure globale du cocon sémantique :
+        Tu dois écrire un DÉVELOPPEMENT HTML complet pour un article intitulé « $title » (c'est une feuille du cocon sémantique, donc sans enfants).
     
-    $structure
+        Voici la structure globale du cocon sémantique :
     
-    Consignes de rédaction :
-    - Commence par un titre HTML : <h4>$title</h4>
-    - Rédige ensuite 1 ou 2 paragraphes (<p>...</p>) informatifs et engageants.
-    - Si nécessaire, utilise une liste à puces avec <ul><li> pour structurer des points clés, astuces ou caractéristiques.
-    - Structure l’ensemble dans un bloc <div class='csb-development'> pour faciliter la mise en page WordPress.
-    - ⚠️ N’utilise **aucun** bloc de code Markdown (comme ```html).
+        $structure
     
-    Garde un ton clair, naturel et informatif.";
+        Règles :
+        - Structure ton texte dans un SEUL bloc <div class='csb-development'>.
+        - Commence par un titre <h4>$title</h4>.
+        - Puis écris {$paragraphs_count} paragraphes <p> engageants, informatifs et fluides.
+        - Si pertinent, insère une liste à puces <ul><li>...</li></ul> entre les paragraphes pour détailler certains éléments.
+        - Pas de sous-titres supplémentaires <h4> (seulement le principal).
+    
+        Interdictions :
+        - Ne fais **aucun lien** vers d'autres articles.
+        - Pas d'introduction ni de conclusion globale spécifique à cet article.
+        - N'utilise **jamais** de balise ```html ni de bloc Markdown.
+    
+        Objectif :
+        - Donne un contenu naturel, agréable à lire, sans lourdeur.
+        - Respecte strictement la structure HTML demandée.";
     }
     
-*/ 
+    
+    
     
     
     private function getPromptConclusion(string $title, array $contextTree): string {
@@ -283,46 +298,59 @@ class CSB_Generator {
     
         // Prompt et génération de l’intro
         $prompt_intro = $this->getPromptIntro($title, $map);
-        $intro = $this->call_api($prompt_intro);
+        //$intro = $this->call_api($prompt_intro);
     
         // Développements
         $developments_html = '';
-        foreach ($node['children_ids'] ?? [] as $child_id) {
-            if (!isset($map[$child_id])) continue;
-            $child = $map[$child_id];
-            $prompt_dev = $this->getPromptDevelopment($child['title'], $map);
-            //print_r($child['title']);
-            $dev_content =$this->call_api($prompt_dev);
-            $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
-    
-            $developments_html .= $dev_content . $child_link;
+        if (!empty($node['children_ids'])) {
+            // L'article a de vrais enfants : on génère normalement
+            foreach ($node['children_ids'] as $child_id) {
+                if (!isset($map[$child_id])) continue;
+                $child = $map[$child_id];
+                $prompt_dev = $this->getPromptDevelopment($child['title'], $map);
+                $dev_content = $this->call_api($prompt_dev);
+                $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
+        
+                $developments_html .= $dev_content . $child_link;
+            }
+        } else {
+            // L'article est une feuille : on génère un développement complet artificiel
+            $prompt_leaf = $this->getPromptLeafDevelopment($title, $map);
+            $dev_content = $this->call_api($prompt_leaf);
+            $developments_html .= $dev_content;
         }
     
         // Prompt et génération de la conclusion
         $prompt_conclusion = $this->getPromptConclusion($title, $map);
-        $conclusion =$this->call_api($prompt_conclusion);
+        //$conclusion =$this->call_api($prompt_conclusion);
         // Récupération de l'URL de l'image depuis Freepik
-        //$image_description= $this->normalize_keyword($title);
-        // echo "<br>";echo "<br>";
-        // print_r($title);
-        // echo "<br>";
-        // print_r($image_description);
-        
-        //echo "<br>";echo "<br>";
-        //$image_url = $this->get_freepik_image($image_description);
+        $image = '';
 
-        // if (!str_starts_with($image_url, '❌')) {
-        //     $image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($image_description) . "\" style=\"max-width:100%; height:auto;\" />";
-        // } else {
-        //     // Utilise l'image locale par défaut
-        //     $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
-        //     $image = "\n\n<img src=\"" . esc_url($default_image_url) . "\" alt=\"Image par défaut\" style=\"max-width:100%; height:auto;\" />";
-        // }
+        // try {
+        //     $image_description = $this->normalize_keyword($title);
+        //     $image_url = $this->get_freepik_image($image_description);
+        //     // echo "<br";
+        //     // print_r($image_description);
+        //     // echo "<br";
+        //     // print_r($image_url);
+        //     if (!str_starts_with($image_url, '❌')) {
+        //         $image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($image_description) . "\" style=\"max-width:100%; height:auto;\" />";
+        //     } else {
+        //         throw new Exception("URL image invalide.");
+        //     }
+        // } catch (Exception $e) {
+            // Fallback vers l'image par défaut
+            $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
+            $image = "\n\n<img src=\"" . esc_url($default_image_url) . "\" alt=\"Image par défaut\" style=\"max-width:100%; height:auto;\" />";
+            
+            // Optionnel : log de l'erreur
+            //error_log("Erreur lors de la récupération de l'image Freepik : " . $e->getMessage());
+        //}
         
 
     
         // Concatène toutes les parties
-        return $intro .$developments_html . $conclusion;/*.$image*/;
+        return /*$intro .*/$developments_html /*. $conclusion.*/.$image;
     }
     
     
@@ -368,7 +396,7 @@ class CSB_Generator {
         CURLOPT_CUSTOMREQUEST => "GET",
         CURLOPT_HTTPHEADER => [
             "Accept-Language: fr-FR",
-            "x-freepik-api-key: FPSXbef134979a9a48aeb5afacdb9793d74b"
+            "x-freepik-api-key: " . $this->freepik_api_key
         ],
         ]);
         // 4. Exécution de la requête API

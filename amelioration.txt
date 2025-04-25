@@ -1,4 +1,1 @@
-génération strucuture 
-
-génération de map :
-
+freepic image : input description   pour chaque image
