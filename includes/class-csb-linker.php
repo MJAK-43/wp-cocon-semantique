@@ -59,7 +59,7 @@ class CSB_Linker {
             $link = esc_url($map[$idPostRoot]['link']);
             $title = esc_html($map[$idPostRoot]['title']);
     
-            $content .= "<div class='csb-links'><h3>📌 Article racine :</h3>";
+            $content .= "<div class='csb-links'><h3> Tout savoir sur ce sujet :</h3>";
             $content .= "<ul><li><a href='$link' target='_blank'>$title</a></li></ul></div>";
         }
          // Liens vers les frères et sœurs

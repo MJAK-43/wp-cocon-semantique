@@ -165,7 +165,7 @@ class CSB_Admin {
         //print_r($this->mapIdPost);
         // Étape 3 : Générer et publier chaque article individuellement
         foreach ($this->mapIdPost as $id => $info) {
-            $html =$generator->generate_full_content($id, $this->mapIdPost, $this->nb,true);
+            $html =$generator->generate_full_content($id, $this->mapIdPost, $this->nb,false);
             $html.=$linker->generate_structured_links($this->mapIdPost,$id);
             $publisher->fill_and_publish_content($id, $html);
         }

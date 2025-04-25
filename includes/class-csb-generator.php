@@ -237,32 +237,34 @@ class CSB_Generator {
     }
     private function getPromptLeafDevelopment(string $title, array $contextTree): string {
         $structure = $this->to_bullet_tree($contextTree);
-        $paragraphs_count = $this->expected_children_count; // on récupère juste pour simplifier
+        $children_count = $this->expected_children_count;
     
         return "Tu es un expert en rédaction SEO sur WordPress.
     
-        Tu dois écrire un DÉVELOPPEMENT HTML complet pour un article intitulé « $title » (c'est une feuille du cocon sémantique, donc sans enfants).
+        Tu dois écrire un ensemble de BLOCS DE DÉVELOPPEMENT HTML pour un article intitulé « $title », qui est une feuille du cocon sémantique (sans enfants réels).
     
         Voici la structure globale du cocon sémantique :
-    
         $structure
     
         Règles :
-        - Structure ton texte dans un SEUL bloc <div class='csb-development'>.
-        - Commence par un titre <h4>$title</h4>.
-        - Puis écris {$paragraphs_count} paragraphes <p> engageants, informatifs et fluides.
-        - Si pertinent, insère une liste à puces <ul><li>...</li></ul> entre les paragraphes pour détailler certains éléments.
-        - Pas de sous-titres supplémentaires <h4> (seulement le principal).
+        - Crée exactement {$children_count} sous-thèmes internes logiques et pertinents pour enrichir le sujet.
+        - Pour CHAQUE sous-thème :
+            - Ouvre un <div class='csb-development'>.
+            - Mets un titre <h4> créatif et pertinent pour ce sous-thème.
+            - Ajoute 1 ou 2 paragraphes <p> informatifs et engageants.
+            - Si pertinent, ajoute une liste <ul><li>...</li></ul>.
+            - Ferme le <div>.
+        - Tous les blocs doivent être indépendants les uns des autres.
     
         Interdictions :
-        - Ne fais **aucun lien** vers d'autres articles.
-        - Pas d'introduction ni de conclusion globale spécifique à cet article.
-        - N'utilise **jamais** de balise ```html ni de bloc Markdown.
+        - Ne fais aucun lien vers d'autres articles.
+        - Ne commence pas par une introduction générale, ni de conclusion globale.
+        - N'utilise jamais de balises ```html ni de bloc Markdown.
     
-        Objectif :
-        - Donne un contenu naturel, agréable à lire, sans lourdeur.
-        - Respecte strictement la structure HTML demandée.";
+        Style :
+        - Clair, naturel, agréable à lire, orienté SEO WordPress.";
     }
+    
     
     
     
@@ -297,7 +299,7 @@ class CSB_Generator {
         $structure = $this->to_bullet_tree($map);
     
         // Prompt et génération de l’intro
-        $prompt_intro = $this->getPromptIntro($title, $map);
+        $prompt_intro = "";//$this->getPromptIntro($title, $map);
         //$intro = $this->call_api($prompt_intro);
     
         // Développements
@@ -308,7 +310,7 @@ class CSB_Generator {
                 if (!isset($map[$child_id])) continue;
                 $child = $map[$child_id];
                 $prompt_dev = $this->getPromptDevelopment($child['title'], $map);
-                $dev_content = $this->call_api($prompt_dev);
+                $dev_content ="" ;//$this->call_api($prompt_dev);
                 $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
         
                 $developments_html .= $dev_content . $child_link;
@@ -322,7 +324,7 @@ class CSB_Generator {
     
         // Prompt et génération de la conclusion
         $prompt_conclusion = $this->getPromptConclusion($title, $map);
-        //$conclusion =$this->call_api($prompt_conclusion);
+        $conclusion ="";//$this->call_api($prompt_conclusion);
         // Récupération de l'URL de l'image depuis Freepik
         $image = '';
 
