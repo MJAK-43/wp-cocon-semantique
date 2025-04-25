@@ -51,6 +51,15 @@ class CSB_Generator {
 
     }
 
+    private function normalize_keyword($title) {
+        // Convertir les accents
+        $translit = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $title);
+        // Nettoyer les caractères non alphanumériques sauf espace
+        $clean = preg_replace('/[^a-zA-Z0-9 ]/', '', $translit);
+        // Retourner le résultat en minuscule
+        return strtolower(trim($clean));
+    }
+
     private function parse_markdown_structure($text) {
         $lines = explode("\n", trim($text));
         $stack = [];
@@ -274,7 +283,7 @@ class CSB_Generator {
     
         // Prompt et génération de l’intro
         $prompt_intro = $this->getPromptIntro($title, $map);
-        //$intro = $this->call_api($prompt_intro);
+        $intro = $this->call_api($prompt_intro);
     
         // Développements
         $developments_html = '';
@@ -282,8 +291,8 @@ class CSB_Generator {
             if (!isset($map[$child_id])) continue;
             $child = $map[$child_id];
             $prompt_dev = $this->getPromptDevelopment($child['title'], $map);
-            //print_r($child['title']);
-            //$dev_content =$this->call_api($prompt_dev);
+            print_r($child['title']);
+            $dev_content =$this->call_api($prompt_dev);
             $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
     
             $developments_html .= $dev_content . $child_link;
@@ -291,22 +300,29 @@ class CSB_Generator {
     
         // Prompt et génération de la conclusion
         $prompt_conclusion = $this->getPromptConclusion($title, $map);
-        //$conclusion =$this->call_api($prompt_conclusion);
+        $conclusion =$this->call_api($prompt_conclusion);
         // Récupération de l'URL de l'image depuis Freepik
-        $image_url = $this->get_freepik_image($title);
+        //$image_description= $this->normalize_keyword($title);
+        // echo "<br>";echo "<br>";
+        // print_r($title);
+        // echo "<br>";
+        // print_r($image_description);
+        
+        //echo "<br>";echo "<br>";
+        $image_url = $this->get_freepik_image($image_description);
 
-        if (!str_starts_with($image_url, '❌')) {
-            $image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($title) . "\" style=\"max-width:100%; height:auto;\" />";
-        } else {
-            // Utilise l'image locale par défaut
-            $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
-            $image = "\n\n<img src=\"" . esc_url($default_image_url) . "\" alt=\"Image par défaut\" style=\"max-width:100%; height:auto;\" />";
-        }
+        // if (!str_starts_with($image_url, '❌')) {
+        //     $image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($image_description) . "\" style=\"max-width:100%; height:auto;\" />";
+        // } else {
+        //     // Utilise l'image locale par défaut
+        //     $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
+        //     $image = "\n\n<img src=\"" . esc_url($default_image_url) . "\" alt=\"Image par défaut\" style=\"max-width:100%; height:auto;\" />";
+        // }
         
 
     
         // Concatène toutes les parties
-        return /*$intro .$developments_html .*/ $conclusion.$image;
+        return $intro .$developments_html . $conclusion;/*.$image*/;
     }
     
     
