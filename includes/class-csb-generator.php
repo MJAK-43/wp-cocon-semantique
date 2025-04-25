@@ -251,6 +251,7 @@ class CSB_Generator {
         - Pour CHAQUE sous-thème :
             - Ouvre un <div class='csb-development'>.
             - Mets un titre <h4> créatif et pertinent pour ce sous-thème.
+            - Utilise uniquement la balise <h4> pour le titre de chaque sous-thème.
             - Ajoute 1 ou 2 paragraphes <p> informatifs et engageants.
             - Si pertinent, ajoute une liste <ul><li>...</li></ul>.
             - Ferme le <div>.
