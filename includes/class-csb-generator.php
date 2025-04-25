@@ -241,30 +241,35 @@ class CSB_Generator {
     
         return "Tu es un expert en rédaction SEO sur WordPress.
     
-        Tu dois écrire un ensemble de BLOCS DE DÉVELOPPEMENT HTML pour un article intitulé « $title », qui est une feuille du cocon sémantique (sans enfants réels).
+        Tu dois écrire un DÉVELOPPEMENT HTML pour l'article intitulé « $title », qui est une feuille du cocon sémantique (pas d'enfants).
     
         Voici la structure globale du cocon sémantique :
         $structure
     
-        Règles :
-        - Crée exactement {$children_count} blocs de développement indépendants.
-        - Pour CHAQUE bloc :
+        Consignes STRICTES :
+        - Crée exactement {$children_count} parties distinctes.
+        - Pour chaque partie :
             - Ouvre un <div class='csb-development'>.
-            - Mets un titre unique dans une seule balise <h4> (le titre doit être pertinent et optimisé SEO).
+            - Commence avec un seul et unique titre dans une balise <h4> (pas d'autres titres).
             - Ajoute 1 ou 2 paragraphes <p> descriptifs et engageants.
-            - Tu peux ajouter une liste <ul><li>...</li></ul> si nécessaire.
-            - Ferme le <div>.
-        - Chaque <div> doit contenir exactement UN <h4> et être totalement indépendant.
+            - Si pertinent, ajoute une liste <ul><li>...</li></ul> entre les paragraphes.
+            - Ferme proprement le <div>.
+    
+        Règles :
+        - Il doit y avoir exactement {$children_count} blocs de développement au final.
+        - Ne dépasse jamais ce nombre.
+        - N'ajoute pas d'introduction globale ni de conclusion globale.
+        - Aucun lien externe ou interne.
     
         Interdictions :
-        - Aucun lien externe ou interne vers d'autres articles.
-        - Ne commence pas par une introduction générale ni de conclusion générale.
-        - N'utilise jamais de balises ```html ni aucun bloc Markdown.
+        - Ne pas utiliser de balises ```html ni de format Markdown.
+        - Ne pas générer plus ou moins de blocs que demandé.
     
         Style :
-        - Langage clair, naturel, engageant et adapté au SEO WordPress.
-        - Varie légèrement les styles d'écriture pour rendre la lecture agréable.";
+        - Langage fluide, naturel et SEO-friendly.
+        - Chaque bloc doit être autonome et agréable à lire.";
     }
+    
     
     
     
