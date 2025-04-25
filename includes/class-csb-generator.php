@@ -9,6 +9,12 @@ class CSB_Generator {
     private $style;
     private $image_description;
     private $expected_children_count;
+    private $tokens_used = 0;
+
+    public function get_tokens_used() {
+        return $this->tokens_used;
+    }
+
 
     private function getPromptStructure($keyword, $depth) {
         return "Tu es un expert en SEO abtimiser pour le référencement. Génère une structure hiérarchique de cocon sémantique en texte brut.
@@ -17,6 +23,7 @@ class CSB_Generator {
         - Utilise **4 espaces** pour chaque niveau d’imbrication (indentation).
         - Le mot-clé principal est : \"$keyword\"
         - $depth sous-thèmes, chacun avec $depth sous-sous-thèmes.
+        - Chaque titre doit commencer par une majuscule à chaque mot
         Pas de commentaires, pas de balises, juste le texte hiérarchique.";
     }
     
@@ -163,6 +170,10 @@ class CSB_Generator {
 
         if (!isset($body['choices'][0]['message']['content'])) {
             return '❌ Erreur : réponse OpenAI invalide ou vide.';
+        }
+        // ➔ Stocke les tokens utilisés si possible
+        if (isset($body['usage']['total_tokens'])) {
+            $this->tokens_used += (int)$body['usage']['total_tokens'];
         }
 
         return $body['choices'][0]['message']['content'];
@@ -378,10 +389,6 @@ class CSB_Generator {
         }
         return null;
     }
-
-
-
-    
     
     /***
      * 
@@ -475,11 +482,7 @@ class CSB_Generator {
         ];
     }
 
-    public function count_tokens($text) {
-        $words = str_word_count(strip_tags($text));
-        // 1 token ≈ 0.75 mot en moyenne
-        return (int) ceil($words / 0.75);
-    }
+    
     
     
 

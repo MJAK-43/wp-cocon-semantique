@@ -24,8 +24,14 @@ class CSB_Admin {
         
     }
 
+    private function capitalize_each_word($text) {
+        $text = strtolower($text);    // On met tout en minuscule d'abord
+        $text = ucwords($text);       // Puis on met en majuscule chaque mot
+        return $text;
+    }
+
     public function render_admin_page() {
-        $keyword = isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '';
+        $keyword =$this->capitalize_each_word(isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '');
         $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
 
     
@@ -170,7 +176,12 @@ class CSB_Admin {
             $publisher->fill_and_publish_content($id, $html);
         }
     
+        // 🔥 Après publication, récupérer les tokens utilisés
+        $total_tokens = $generator->get_total_tokens_used();
+
         echo '<div class="notice notice-success is-dismissible"><p>✅ Tous les articles ont été mis à jour avec leur contenu complet.</p></div>';
+        echo '<div class="notice notice-info is-dismissible"><p>🧠 Nombre total de tokens utilisés : <strong>' . intval($total_tokens) . '</strong> tokens.</p></div>';
+
     }
     
 
@@ -321,20 +332,22 @@ class CSB_Admin {
     }
        
 
-    private function render_links_to_articles() {
-
-        echo '<ul>';
+    private function render_links_to_articles($parent_id = null, $level = 0) {
+        echo '<ul style="padding-left: ' . (20 * $level) . 'px;">';
     
         foreach ($this->mapIdPost as $id => $node) {
-            // Un article racine n’a pas de parent
-            if (empty($node['parent_id'])) {
+            if ($node['parent_id'] === $parent_id) {
                 $title = esc_html($node['title'] ?? "Article #$id");
                 $url = get_permalink($id);
                 echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a></li>";
+    
+                // 🔥 Appel récursif pour afficher les enfants
+                $this->render_links_to_articles($id, $level + 1);
             }
         }
     
         echo '</ul>';
     }
+    
       
 }
