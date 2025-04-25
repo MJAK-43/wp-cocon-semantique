@@ -292,9 +292,21 @@ class CSB_Generator {
         // Prompt et génération de la conclusion
         $prompt_conclusion = $this->getPromptConclusion($title, $map);
         $conclusion =$this->call_api($prompt_conclusion);
+        // Récupération de l'URL de l'image depuis Freepik
+        $image_url = $this->get_freepik_image($title);
+
+        if (!str_starts_with($image_url, '❌')) {
+            $image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($title) . "\" style=\"max-width:100%; height:auto;\" />";
+        } else {
+            // Utilise l'image locale par défaut
+            $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
+            $image = "\n\n<img src=\"" . esc_url($default_image_url) . "\" alt=\"Image par défaut\" style=\"max-width:100%; height:auto;\" />";
+        }
+        
+
     
         // Concatène toutes les parties
-        return $intro .$developments_html . $conclusion;
+        return $intro .$developments_html . $conclusion.$image;
     }
     
     
