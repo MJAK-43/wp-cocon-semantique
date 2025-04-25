@@ -274,7 +274,7 @@ class CSB_Generator {
     
         // Prompt et génération de l’intro
         $prompt_intro = $this->getPromptIntro($title, $map);
-        $intro = $this->call_api($prompt_intro);
+        //$intro = $this->call_api($prompt_intro);
     
         // Développements
         $developments_html = '';
@@ -283,7 +283,7 @@ class CSB_Generator {
             $child = $map[$child_id];
             $prompt_dev = $this->getPromptDevelopment($child['title'], $map);
             //print_r($child['title']);
-            $dev_content =$this->call_api($prompt_dev);
+            //$dev_content =$this->call_api($prompt_dev);
             $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
     
             $developments_html .= $dev_content . $child_link;
@@ -291,7 +291,7 @@ class CSB_Generator {
     
         // Prompt et génération de la conclusion
         $prompt_conclusion = $this->getPromptConclusion($title, $map);
-        $conclusion =$this->call_api($prompt_conclusion);
+        //$conclusion =$this->call_api($prompt_conclusion);
         // Récupération de l'URL de l'image depuis Freepik
         $image_url = $this->get_freepik_image($title);
 
@@ -306,7 +306,7 @@ class CSB_Generator {
 
     
         // Concatène toutes les parties
-        return $intro .$developments_html . $conclusion.$image;
+        return /*$intro .$developments_html .*/ $conclusion.$image;
     }
     
     
