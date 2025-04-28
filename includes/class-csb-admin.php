@@ -198,7 +198,7 @@ class CSB_Admin {
             if ($info['parent_id'] === null && !empty($forced_link)) {
                 continue;
             }
-            $html =$this->generator->generate_full_content($id, $this->mapIdPost, $this->nb,false);
+            $html =$this->generator->generate_full_content($id, $this->mapIdPost, $this->nb,true);
             $html.=$linker->generate_structured_links($this->mapIdPost,$id);
             $publisher->fill_and_publish_content($id, $html);
         }
