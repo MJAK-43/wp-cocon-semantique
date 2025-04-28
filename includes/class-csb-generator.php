@@ -64,6 +64,7 @@ class CSB_Generator {
         print_r("expected_children_count = ");
         print_r($this->generator->expected_children_count);
         echo "<br>";echo "<br>"; 
+        
         $markdown = $this->generate_structure($keyword, $depth);
         $tree = $this->parse_markdown_structure($markdown);
         //var_dump($tree);
