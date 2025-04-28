@@ -89,6 +89,7 @@ class CSB_Admin {
 
     private function render_structure_form($tree, $prefix = 'structure', $level = 0) {
         echo '<form method="post">';
+        echo '<input type="hidden" name="csb_nb_nodes" value="' . intval($this->nb) . '" />';  
         echo '<fieldset style="padding: 1em; border: 1px solid #ccd0d4; background: #fff; margin-bottom: 1em;">';
         echo '<legend style="font-weight: bold;">Structure générée</legend>';
     
