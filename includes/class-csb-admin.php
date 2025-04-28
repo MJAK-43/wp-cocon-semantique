@@ -377,14 +377,14 @@ class CSB_Admin {
     
                 echo "</li>"; // Fermeture du LI APRÈS les enfants
             }
-            $title = esc_html($node['title'] ?? "Article #$id");
-            $url = $node['link'];
-            echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a>";
+            // $title = esc_html($node['title'] ?? "Article #$id");
+            // $url = $node['link'];
+            // echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a>";
 
-            // 🔥 Appel récursif pour afficher les enfants, **À L'INTÉRIEUR DU LI**
-            $this->render_links_to_articles($id, $level + 1);
+            // // 🔥 Appel récursif pour afficher les enfants, **À L'INTÉRIEUR DU LI**
+            // //$this->render_links_to_articles($id, $level + 1);
 
-            echo "</li>"; // Fermeture du LI APRÈS les enfants
+            // echo "</li>"; // Fermeture du LI APRÈS les enfants
         }
     
         echo '</ul>';
