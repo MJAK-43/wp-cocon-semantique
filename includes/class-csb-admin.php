@@ -52,11 +52,8 @@ class CSB_Admin {
             $this->handle_structure_actions($this->last_tree); 
             
             if (isset($_POST['csb_validate_publish'])) {
-                $this->process_structure();
-                // echo "<br>";echo "<br>";echo "<br>";
-                // print_r($this->last_tree);
-                // echo "<br>";echo "<br>";echo "<br>";
-                //echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
+                $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
+                $this->process_structure();   
             }
         }
     
