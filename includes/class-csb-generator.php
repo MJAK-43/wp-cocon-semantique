@@ -8,7 +8,7 @@ class CSB_Generator {
     private $temperature;
     private $style;
     private $image_description;
-    public $expected_children_count;
+    //public $expected_children_count;
     private $tokens_used = 0;
 
     public function get_tokens_used() {
@@ -54,17 +54,17 @@ class CSB_Generator {
 
         
         if($use_fake){
-            $this->expected_children_count=2;
+            //$this->expected_children_count=2;
             return $this->generate_fake_structure_array();
         }
-        else
-            $this->expected_children_count=$depth;
+        // else
+        //     $this->expected_children_count=$depth;
 
-        echo "<br>";echo "<br>";
-        print_r("expected_children_count = ");
-        print_r($this->generator->expected_children_count);
-        echo "<br>";echo "<br>"; 
-        
+        // echo "<br>";echo "<br>";
+        // print_r("expected_children_count = ");
+        // print_r($this->generator->expected_children_count);
+        // echo "<br>";echo "<br>"; 
+
         $markdown = $this->generate_structure($keyword, $depth);
         $tree = $this->parse_markdown_structure($markdown);
         //var_dump($tree);
@@ -254,9 +254,9 @@ class CSB_Generator {
         - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
         Structure le tout dans un <div class='csb-development'>.";
     }
-    private function getPromptLeafDevelopment(string $title, array $contextTree): string {
+    private function getPromptLeafDevelopment(string $title, array $contextTree,$number): string {
         $structure = $this->to_bullet_tree($contextTree);
-        $children_count =$this->expected_children_count;
+        $children_count =$number;
     
         return "Tu es un expert en rédaction SEO sur WordPress.
     
@@ -343,7 +343,7 @@ class CSB_Generator {
             }
         } else {
             // L'article est une feuille : on génère un développement complet artificiel
-            $prompt_leaf = $this->getPromptLeafDevelopment($title, $map);
+            $prompt_leaf = $this->getPromptLeafDevelopment($title, $map,$number);
             $dev_content = $this->call_api($prompt_leaf);
             $developments_html .= $dev_content;
         }
