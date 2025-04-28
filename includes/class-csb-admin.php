@@ -158,32 +158,6 @@ class CSB_Admin {
         echo '</ul>';
     }
     
-    private function synchronize_development_links(array &$tree) {
-        foreach ($tree as &$node) {
-            // On synchronise les liens dans les developpements du parent
-            if (!empty($node['content']['developments']) && !empty($node['children'])) {
-                foreach ($node['content']['developments'] as &$dev) {
-                    foreach ($node['children'] as &$child) {
-                        if (
-                            isset($child['title'], $child['link'], $child['click_bait']) &&
-                            trim($child['title']) === trim($dev['title'])
-                        ) {
-                            // ⚠️ on stocke aussi le lien dans l'enfant si jamais pas encore fait
-                            $child['link'] = $child['link'] ?? get_permalink($child['post_id']);
-    
-                            // On réutilise le lien de l'enfant dans le développement du parent
-                            $dev['link'] = '<a href="' . esc_url($child['link']) . '">' . esc_html($child['click_bait']) . '</a>';
-                            break;
-                        }
-                    }
-                }
-            }
-    
-            if (!empty($node['children'])) {
-                $this->synchronize_development_links($node['children']);
-            }
-        }
-    }
     
 
     private function process_structure() {
@@ -396,10 +370,12 @@ class CSB_Admin {
             if ($node['parent_id'] === $parent_id) {
                 $title = esc_html($node['title'] ?? "Article #$id");
                 $url = $node['link'];
-                echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a></li>";
+                echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a>";
     
-                // 🔥 Appel récursif pour afficher les enfants
+                // 🔥 Appel récursif pour afficher les enfants, **À L'INTÉRIEUR DU LI**
                 $this->render_links_to_articles($id, $level + 1);
+    
+                echo "</li>"; // Fermeture du LI APRÈS les enfants
             }
         }
     
