@@ -164,6 +164,7 @@ class CSB_Admin {
         $linker = new CSB_Linker();
         //$generator = new CSB_Generator();
         echo "<br>";echo "<br>";
+        print_r("expected_children_count = ");
         print_r($this->generator->expected_children_count);
         echo "<br>";echo "<br>";
         // Exemple d'utilisation :
@@ -177,26 +178,26 @@ class CSB_Admin {
         // }
 
     
-        // Étape 1 : Créer les articles
-        $publisher->registerAllPost($this->last_tree);
+        // // Étape 1 : Créer les articles
+        // $publisher->registerAllPost($this->last_tree);
     
-        // Étape 2 : Construire la map des articles
-        $root = reset($this->last_tree); 
-        $this->mapIdPost = $this->build_node_map($root);
-        //print_r($this->mapIdPost);
-        // Étape 3 : Générer et publier chaque article individuellement
-        foreach ($this->mapIdPost as $id => $info) {
-            $html =$this->generator->generate_full_content($id, $this->mapIdPost, $this->nb,false);
-            $html.=$linker->generate_structured_links($this->mapIdPost,$id);
-            $publisher->fill_and_publish_content($id, $html);
-        }
+        // // Étape 2 : Construire la map des articles
+        // $root = reset($this->last_tree); 
+        // $this->mapIdPost = $this->build_node_map($root);
+        // //print_r($this->mapIdPost);
+        // // Étape 3 : Générer et publier chaque article individuellement
+        // foreach ($this->mapIdPost as $id => $info) {
+        //     $html =$this->generator->generate_full_content($id, $this->mapIdPost, $this->nb,false);
+        //     $html.=$linker->generate_structured_links($this->mapIdPost,$id);
+        //     $publisher->fill_and_publish_content($id, $html);
+        // }
     
-        // 🔥 Après publication, récupérer les tokens utilisés
-        $total_tokens = $this->generator->get_tokens_used();
-        //curl('https://isoluce.slack.com/archives/D08MREPLUGG/p1745596328927739');
+        // // 🔥 Après publication, récupérer les tokens utilisés
+        // $total_tokens = $this->generator->get_tokens_used();
+        // //curl('https://isoluce.slack.com/archives/D08MREPLUGG/p1745596328927739');
 
-        echo '<div class="notice notice-success is-dismissible"><p>✅ Tous les articles ont été mis à jour avec leur contenu complet.</p></div>';
-        echo '<div class="notice notice-info is-dismissible"><p>🧠 Nombre total de tokens utilisés : <strong>' . intval($total_tokens) . '</strong> tokens.</p></div>';
+        // echo '<div class="notice notice-success is-dismissible"><p>✅ Tous les articles ont été mis à jour avec leur contenu complet.</p></div>';
+        // echo '<div class="notice notice-info is-dismissible"><p>🧠 Nombre total de tokens utilisés : <strong>' . intval($total_tokens) . '</strong> tokens.</p></div>';
 
     }
     
