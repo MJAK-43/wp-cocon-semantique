@@ -254,7 +254,7 @@ class CSB_Admin {
             $entry = [
                 'post_id'     => $node['post_id'],
                 'title'        => $node['title'] ?? '',
-                'link'        => $forced_link ?? ($node['post_id'] ? get_permalink($node['post_id']) : null),
+                'link' => $forced_link ?? ($node['post_id'] ? wp_make_link_relative(get_permalink($node['post_id'])) : null),
                 'parent_id'   => $parent_id,
                 'children_ids' => []
             ];

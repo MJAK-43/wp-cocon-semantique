@@ -3,16 +3,6 @@ if (!defined('ABSPATH')) exit;
 
 class CSB_Linker {
 
-    public function get_node_link_by_id(int $post_id): ?string {
-        if (get_post_status($post_id)) {
-            return get_permalink($post_id);
-        }
-        return null; 
-    }
-    
-    
-    
-
     public function add_links_to_developments(array &$tree): void {
         foreach ($tree as &$node) {
             if (!empty($node['content']['developments']) && !empty($node['children'])) {
@@ -79,31 +69,6 @@ class CSB_Linker {
         return $content;
     }
     
-    
-    
-
-
-
-    /**
-     * Récupère le parent d’un nœud donné dans l’arbre.
-     */
-    // public function get_parent_from_tree(string $target_slug, array $tree, array $parents = []): ?array {
-    //     foreach ($tree as $slug => $node) {
-    //         if ($slug === $target_slug) {
-    //             return end($parents) ?: null;
-    //         }
-    
-    //         if (!empty($node['children'])) {
-    //             $parents[$slug] = $node;
-    //             $result = $this->get_parent_from_tree($target_slug, $node['children'], $parents);
-    //             if ($result !== null) {
-    //                 return $result;
-    //             }
-    //         }
-    //     }
-    
-    //     return null;
-    // }
     
 
     /**
