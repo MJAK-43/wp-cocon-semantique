@@ -96,7 +96,7 @@ class CSB_Admin {
     
         if ($use_existing_root) {
             echo '<tr><th><label for="existing_root_url">URL de l’article racine</label></th>';
-            echo '<td><input type="url" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" class="regular-text" required></td></tr>';
+            echo '<td><input type="url" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" class="regular-text"></td>';
         }
     
         echo '</table>';
@@ -255,15 +255,6 @@ class CSB_Admin {
             }
         }
     }
-    private function get_root_nodes(array $map): array {
-        $roots = [];
-        foreach ($map as $node) {
-            if (empty($node['parent_id'])) {
-                $roots[] = $node;
-            }
-        }
-        return $roots;
-    }
     
 
     public static function debug_display_links(array $tree, $indent = 0) {
@@ -398,42 +389,21 @@ class CSB_Admin {
     }
        
 
-    public function render_links_to_articles(int $current_id = null, int $level = 0): string {
-        $html = '';
+    private function render_links_to_articles($parent_id = null, $level = 0) {
+        echo '<ul style="padding-left: ' . (20 * $level) . 'px;">';
     
-        // Si c'est la toute première fois, afficher les racines
-        if ($current_id === null) {
-            foreach ($this->get_root_nodes($this->mapIdPost) as $root) {
-                $html .= $this->render_links_to_articles($root['post_id'], $level);
+        foreach ($this->mapIdPost as $id => $node) {
+            if ($node['parent_id'] === $parent_id) {
+                $title = esc_html($node['title'] ?? "Article #$id");
+                $url = $node['link'];
+                echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a></li>";
+    
+                // 🔥 Appel récursif pour afficher les enfants
+                $this->render_links_to_articles($id, $level + 1);
             }
-            return "<ul>$html</ul>";
         }
     
-        // Sinon on affiche ce nœud
-        if (!isset($this->mapIdPost[$current_id])) {
-            return '';
-        }
-    
-        $node = $this->mapIdPost[$current_id];
-        $link = esc_url($node['link']);
-        $title = esc_html($node['title']);
-    
-        // Générer un peu d'indentation en fonction du level
-        $indent = str_repeat('&nbsp;&nbsp;&nbsp;', $level);
-    
-        $html .= "<li>" . $indent . "<a href='$link' target='_blank'>$title</a>";
-    
-        if (!empty($node['children_ids'])) {
-            $html .= '<ul>';
-            foreach ($node['children_ids'] as $child_id) {
-                $html .= $this->render_links_to_articles($child_id, $level + 1);
-            }
-            $html .= '</ul>';
-        }
-    
-        $html .= '</li>';
-    
-        return $html;
+        echo '</ul>';
     }
     
       
