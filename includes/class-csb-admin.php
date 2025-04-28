@@ -215,7 +215,7 @@ class CSB_Admin {
         $this->mapIdPost = $this->build_node_map($root, null, $forced_link);
 
         if (!empty($forced_link)) {
-            echo '<div class="notice notice-info is-dismissible"><p>🔗 Lien utilisateur : <a href="' . esc_url($forced_link) . '" target="_blank">' . esc_html($forced_link) . '</a></p></div>';
+            //echo '<div class="notice notice-info is-dismissible"><p>🔗 Lien utilisateur : <a href="' . esc_url($forced_link) . '" target="_blank">' . esc_html($forced_link) . '</a></p></div>';
         }
         echo "<br>";
         print_r($this->mapIdPost);
