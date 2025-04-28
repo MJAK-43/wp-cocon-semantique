@@ -395,7 +395,7 @@ class CSB_Admin {
         foreach ($this->mapIdPost as $id => $node) {
             if ($node['parent_id'] === $parent_id) {
                 $title = esc_html($node['title'] ?? "Article #$id");
-                $url = get_permalink($id);
+                $url = $node['link'];
                 echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a></li>";
     
                 // 🔥 Appel récursif pour afficher les enfants
