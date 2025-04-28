@@ -54,7 +54,7 @@ class CSB_Admin {
                 // echo "<br>";echo "<br>";echo "<br>";
                 // print_r($this->last_tree);
                 // echo "<br>";echo "<br>";echo "<br>";
-                echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
+                //echo '<div class="notice notice-success is-dismissible"><p>✅ Articles publiés avec succès.</p></div>';
             }
         }
     
@@ -161,6 +161,16 @@ class CSB_Admin {
         $publisher = new CSB_Publisher();
         $linker = new CSB_Linker();
         $generator = new CSB_Generator();
+        // Exemple d'utilisation :
+        $file_url = 'https://app.posteria.fr/crons/freepikImageCoconSemantique/chatnoir/chatsurletoitdelamaison'; // Ton lien ici
+        try {
+            $data = download_public_file($file_url);
+            //file_put_contents('fichier_recupere.png', $data);
+            //print_r($data);
+        } catch (Exception $e) {
+            echo "❌ Erreur : " . $e->getMessage();
+        }
+
     
         // Étape 1 : Créer les articles
         $publisher->registerAllPost($this->last_tree);
@@ -178,6 +188,7 @@ class CSB_Admin {
     
         // 🔥 Après publication, récupérer les tokens utilisés
         $total_tokens = $generator->get_total_tokens_used();
+        curl('https://isoluce.slack.com/archives/D08MREPLUGG/p1745596328927739');
 
         echo '<div class="notice notice-success is-dismissible"><p>✅ Tous les articles ont été mis à jour avec leur contenu complet.</p></div>';
         echo '<div class="notice notice-info is-dismissible"><p>🧠 Nombre total de tokens utilisés : <strong>' . intval($total_tokens) . '</strong> tokens.</p></div>';
@@ -351,3 +362,23 @@ class CSB_Admin {
     
       
 }
+
+function download_public_file($file_url) {
+    $ch = curl_init();
+
+    curl_setopt($ch, CURLOPT_URL, $file_url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Pour suivre les redirections (important pour Slack)
+
+    $response = curl_exec($ch);
+    $err = curl_error($ch);
+    curl_close($ch);
+
+    if ($err) {
+        throw new Exception("Erreur cURL : " . $err);
+    }
+
+    return $response; // C'est du contenu brut (image, fichier...)
+}
+
+
