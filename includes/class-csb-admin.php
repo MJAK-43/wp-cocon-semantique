@@ -189,6 +189,10 @@ class CSB_Admin {
     private function process_structure() {
         $publisher = new CSB_Publisher();
         $linker = new CSB_Linker();
+        $use_existing_root = isset($_POST['use_existing_root']) && $_POST['use_existing_root'] == '1';
+        $forced_link = isset($_POST['existing_root_url']) ? esc_url_raw($_POST['existing_root_url']) : null;    
+
+
         //$generator = new CSB_Generator();
         //echo '<div class="notice notice-info"><p>expected_children_count = ' . intval($this->generator->expected_children_count) . '</p></div>';
         //Exemple d'utilisation :
@@ -208,8 +212,14 @@ class CSB_Admin {
     
         // Étape 2 : Construire la map des articles
         $root = reset($this->last_tree); 
-        $this->mapIdPost = $this->build_node_map($root);
-        //print_r($this->mapIdPost);
+        $this->mapIdPost = $this->build_node_map($root, null, $forced_link);
+
+        if (!empty($forced_link)) {
+            echo '<div class="notice notice-info is-dismissible"><p>🔗 Lien utilisateur : <a href="' . esc_url($forced_link) . '" target="_blank">' . esc_html($forced_link) . '</a></p></div>';
+        }
+        echo "<br>";
+        print_r($this->mapIdPost);
+        echo "<br>";
         // Étape 3 : Générer et publier chaque article individuellement
         foreach ($this->mapIdPost as $id => $info) {
             $html =$this->generator->generate_full_content($id, $this->mapIdPost, $this->nb,false);
@@ -223,12 +233,12 @@ class CSB_Admin {
 
         echo '<div class="notice notice-success is-dismissible"><p>✅ Tous les articles ont été mis à jour avec leur contenu complet.</p></div>';
         echo '<div class="notice notice-info is-dismissible"><p>🧠 Nombre total de tokens utilisés : <strong>' . intval($total_tokens) . '</strong> tokens.</p></div>';
-        // ➡️ Ajouté juste ici
-        if (!empty($_POST['existing_root_url'])) {
-            echo '<p>🔗 Lien fourni par l\'utilisateur : ' . esc_url($_POST['existing_root_url']) . '</p>';
-        }
-        else 
-            echo '<p> Pas de lien fornie</p>';
+        
+        // if (!empty($_POST['existing_root_url'])) {
+        //     echo '<p>🔗 Lien fourni par l\'utilisateur : ' . esc_url($_POST['existing_root_url']) . '</p>';
+        // }
+        // else 
+        //     echo '<p> Pas de lien fornie</p>';
     }
     
 
@@ -259,7 +269,7 @@ class CSB_Admin {
         }
     }
 
-    private function build_node_map(array $node, ?int $parent_id = null): array {
+    private function build_node_map(array $node, ?string $parent_id = null, ?string $forced_link = null): array {
         $map = [];
         //$linker= new CSB_Linker()
     
@@ -267,7 +277,7 @@ class CSB_Admin {
             $entry = [
                 'post_id'     => $node['post_id'],
                 'title'        => $node['title'] ?? '',
-                'link'        => get_permalink($node['post_id']),
+                'link'        => $forced_link ?? ($node['post_id'] ? get_permalink($node['post_id']) : null),
                 'parent_id'   => $parent_id,
                 'children_ids' => []
             ];
