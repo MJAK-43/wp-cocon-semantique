@@ -106,8 +106,7 @@ class CSB_Admin {
     
     
 
-    private function render_structure_form($tree, $prefix = 'structure', $level = 0, $use_existing_root = 0, $existing_root_url = '')
-    {
+    private function render_structure_form($tree, $prefix = 'structure', $level = 0, $use_existing_root = 0, $existing_root_url = ''){
         echo '<form method="post">';
         echo '<input type="hidden" name="csb_nb_nodes" value="' . intval($this->nb) . '" />';
 
@@ -370,24 +369,24 @@ class CSB_Admin {
         echo '<ul style="padding-left: ' . (20 * $level) . 'px;">';
     
         foreach ($this->mapIdPost as $id => $node) {
-            // if ($node['parent_id'] === $parent_id) {
-            //     $title = esc_html($node['title'] ?? "Article #$id");
-            //     $url = $node['link'];
-            //     echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a>";
+            if ($node['parent_id'] === $parent_id) {
+                $title = esc_html($node['title'] ?? "Article #$id");
+                $url = $node['link'];
+                echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a>";
     
-            //     // 🔥 Appel récursif pour afficher les enfants, **À L'INTÉRIEUR DU LI**
-            //     $this->render_links_to_articles($id, $level + 1);
+                // 🔥 Appel récursif pour afficher les enfants, **À L'INTÉRIEUR DU LI**
+                $this->render_links_to_articles($id, $level + 1);
     
-            //     echo "</li>"; // Fermeture du LI APRÈS les enfants
-            // }
-            $title = esc_html($node['title'] ?? "Article #$id");
-            $url = $node['link'];
-            echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a>";
+                echo "</li>"; // Fermeture du LI APRÈS les enfants
+            }
+            // $title = esc_html($node['title'] ?? "Article #$id");
+            // $url = $node['link'];
+            // echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a>";
 
             // 🔥 Appel récursif pour afficher les enfants, **À L'INTÉRIEUR DU LI**
-            //$this->render_links_to_articles($id, $level + 1);
+            // $this->render_links_to_articles($id, $level + 1);
 
-            echo "</li>"; // Fermeture du LI APRÈS les enfants
+            // echo "</li>"; // Fermeture du LI APRÈS les enfants
         }
     
         echo '</ul>';

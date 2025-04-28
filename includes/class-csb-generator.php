@@ -136,9 +136,6 @@ class CSB_Generator {
         return $map;
     }
 
-
-    
-
     /**Utilise uniquement du texte brut sans mise en forme Markdown
      * Envoie une requête à l'API ChatGPT avec le prompt donne
      */
@@ -336,7 +333,7 @@ class CSB_Generator {
                 if (!isset($map[$child_id])) continue;
                 $child = $map[$child_id];
                 $prompt_dev = $this->getPromptDevelopment($child['title'], $map);
-                $dev_content =$this->call_api($prompt_dev);
+                $dev_content ="";//$this->call_api($prompt_dev);
                 $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
         
                 $developments_html .= $dev_content . $child_link;
@@ -344,19 +341,19 @@ class CSB_Generator {
         } else {
             // L'article est une feuille : on génère un développement complet artificiel
             $prompt_leaf = $this->getPromptLeafDevelopment($title, $map,$number);
-            $dev_content =$this->call_api($prompt_leaf);
+            $dev_content ="";//$this->call_api($prompt_leaf);
             $developments_html .= $dev_content;
         }
     
         // Prompt et génération de la conclusion
         $prompt_conclusion = $this->getPromptConclusion($title, $map);
-        $conclusion =$this->call_api($prompt_conclusion);
+        $conclusion ="";//$this->call_api($prompt_conclusion);
         // Récupération de l'URL de l'image depuis Freepik
         $image = '';
 
         try {
             $image_description = $this->normalize_keyword($title);
-            $image_url = $this->get_freepik_image($image_description);
+            $image_url =$this->fetch_image_from_api($image_description, $intro); //$this->get_freepik_image($image_description);
             // echo "<br";
             // print_r($image_description);
             // echo "<br";
@@ -446,6 +443,29 @@ class CSB_Generator {
         $slug = sanitize_title($title);
         return $slug;
     }
+
+    public function fetch_image_from_api(string $title, string $text): ?string {
+        // Ici tu construis l'URL de l'API externe selon ton titre et ton texte
+        $api_url = 'https://app.posteria.fr/crons/freepikImageCoconSemantique/' . rawurlencode($title) . '/' . rawurlencode($text);
+    
+        $ch = curl_init();
+    
+        curl_setopt($ch, CURLOPT_URL, $api_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Important pour suivre les redirections
+    
+        $response = curl_exec($ch);
+        $err = curl_error($ch);
+        curl_close($ch);
+    
+        if ($err) {
+            error_log("Erreur lors de l'appel API d'image : " . $err);
+            return null;
+        }
+    
+        return $response; // Contenu brut de l'image ou URL selon API
+    }
+    
         
     private function generate_fake_structure_array() {
         return [
