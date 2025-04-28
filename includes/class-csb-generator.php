@@ -51,12 +51,19 @@ class CSB_Generator {
     }
 
     public function generate_structure_array($keyword, $depth = 1, bool $use_fake = false) {
+
+        
         if($use_fake){
             $this->expected_children_count=2;
             return $this->generate_fake_structure_array();
         }
         else
             $this->expected_children_count=$depth;
+
+        echo "<br>";echo "<br>";
+        print_r("expected_children_count = ");
+        print_r($this->generator->expected_children_count);
+        echo "<br>";echo "<br>"; 
         $markdown = $this->generate_structure($keyword, $depth);
         $tree = $this->parse_markdown_structure($markdown);
         //var_dump($tree);
