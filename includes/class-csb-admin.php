@@ -35,12 +35,15 @@ class CSB_Admin {
     public function render_admin_page() {
         $keyword =$this->capitalize_each_word(isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '');
         $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
+        $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
+        $existing_root_url = isset($_POST['existing_root_url']) ? esc_url($_POST['existing_root_url']) : '';
+
 
     
         if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
             //$generator = new CSB_Generator();
             //$this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
-            $this->last_tree = $this->generator->generate_structure_array($keyword, $this->nb,false);
+            $this->last_tree = $this->generator->generate_structure_array($keyword, $this->nb,true);
             
             // echo "<br>";echo "<br>";echo "<br>";
             //     print_r($this->last_tree);
@@ -60,7 +63,7 @@ class CSB_Admin {
         echo '<div class="wrap">';
         echo '<h1>Générateur de Cocon Sémantique</h1>';
         $this->render_keyword_form($keyword, $this->nb);
-        $this->render_structure_form($this->last_tree); 
+        $this->render_structure_form($this->last_tree, 'structure', 0, $use_existing_root, $existing_root_url);
         echo '</div>';
     
         echo '<div style="margin: 1em 0; padding: 1em; border-left: 4px solid #0073aa; background: #f1f1f1;">';
@@ -76,30 +79,56 @@ class CSB_Admin {
     
 
     private function render_keyword_form($keyword, $nb) {
+        $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
+        $existing_root_url = isset($_POST['existing_root_url']) ? esc_url($_POST['existing_root_url']) : '';
+    
         echo '<form method="post">';
         echo '<table class="form-table">';
+    
         echo '<tr><th><label for="csb_keyword">Mot-clé principal</label></th>';
         echo '<td><input type="text" name="csb_keyword" value="' . esc_attr($keyword) . '" class="regular-text" required></td></tr>';
+    
         echo '<tr><th><label for="csb_nb_nodes">Nombre de sous-niveaux</label></th>';
         echo '<td><input type="number" name="csb_nb_nodes" value="' . esc_attr($nb) . '" class="regular-text" required></td></tr>';
+    
+        echo '<tr><th><label for="use_existing_root">Utiliser un article racine existant</label></th>';
+        echo '<td><input type="checkbox" name="use_existing_root" value="1" ' . checked(1, $use_existing_root, false) . ' onchange="this.form.submit();"></td></tr>';
+    
+        if ($use_existing_root) {
+            echo '<tr><th><label for="existing_root_url">URL de l’article racine</label></th>';
+            echo '<td><input type="url" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" class="regular-text" required></td></tr>';
+        }
+    
         echo '</table>';
         submit_button('Générer la structure', 'primary', 'submit');
         echo '</form>';
     }
+    
+    
 
-    private function render_structure_form($tree, $prefix = 'structure', $level = 0) {
+    private function render_structure_form($tree, $prefix = 'structure', $level = 0, $use_existing_root = 0, $existing_root_url = '')
+    {
         echo '<form method="post">';
-        echo '<input type="hidden" name="csb_nb_nodes" value="' . intval($this->nb) . '" />';  
+        echo '<input type="hidden" name="csb_nb_nodes" value="' . intval($this->nb) . '" />';
+
         echo '<fieldset style="padding: 1em; border: 1px solid #ccd0d4; background: #fff; margin-bottom: 1em;">';
         echo '<legend style="font-weight: bold;">Structure générée</legend>';
-    
+
         $this->render_structure_fields($tree, $prefix, $level);
-    
+
         echo '</fieldset>';
+
+        if ($use_existing_root) {
+            echo '<input type="hidden" name="use_existing_root" value="1" />';
+        }
+        if (!empty($existing_root_url)) {
+            echo '<input type="hidden" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" />';
+        }
+
         submit_button('Valider et publier', 'primary', 'csb_validate_publish');
         echo '</form>';
     }
-    
+
 
     private function render_structure_fields($tree, $prefix, $level) {
         echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . (($level+20)) . 'px;">';
@@ -194,7 +223,10 @@ class CSB_Admin {
 
         echo '<div class="notice notice-success is-dismissible"><p>✅ Tous les articles ont été mis à jour avec leur contenu complet.</p></div>';
         echo '<div class="notice notice-info is-dismissible"><p>🧠 Nombre total de tokens utilisés : <strong>' . intval($total_tokens) . '</strong> tokens.</p></div>';
-
+        // ➡️ Ajouté juste ici
+        if (!empty($_POST['existing_root_url'])) {
+            echo '<p>🔗 Lien fourni par l\'utilisateur : ' . esc_url($_POST['existing_root_url']) . '</p>';
+        }
     }
     
 
