@@ -163,6 +163,9 @@ class CSB_Admin {
         $publisher = new CSB_Publisher();
         $linker = new CSB_Linker();
         //$generator = new CSB_Generator();
+        echo "<br>";echo "<br>";
+        print_r($this->generator->expected_children_count);
+        echo "<br>";echo "<br>";
         // Exemple d'utilisation :
         // $file_url = 'https://app.posteria.fr/crons/freepikImageCoconSemantique/chatnoir/chatsurletoitdelamaison'; // Ton lien ici
         // try {

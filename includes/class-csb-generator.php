@@ -8,7 +8,7 @@ class CSB_Generator {
     private $temperature;
     private $style;
     private $image_description;
-    private $expected_children_count;
+    public $expected_children_count;
     private $tokens_used = 0;
 
     public function get_tokens_used() {
