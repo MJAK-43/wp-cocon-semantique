@@ -196,6 +196,9 @@ class CSB_Admin {
 
         // Étape 3 : Générer et publier chaque article individuellement
         foreach ($this->mapIdPost as $id => $info) {
+            if ($info['parent_id'] === null && !empty($forced_link)) {
+                continue;
+            }
             $html =$this->generator->generate_full_content($id, $this->mapIdPost, $this->nb,false);
             $html.=$linker->generate_structured_links($this->mapIdPost,$id);
             $publisher->fill_and_publish_content($id, $html);
