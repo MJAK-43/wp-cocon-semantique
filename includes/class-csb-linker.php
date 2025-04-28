@@ -51,10 +51,8 @@ class CSB_Linker {
     public function generate_structured_links(array $map, int $post_id): string {
         $content = '';
     
-        // Trouver l'article racine (celui qui n’a pas de parent)
         $idPostRoot = $this->get_root_from_map($map);
-    
-        // S'assurer qu'on ne réaffiche pas un lien vers lui-même
+
         if ($post_id !== $idPostRoot) {
             $link = esc_url($map[$idPostRoot]['link']);
             $title = esc_html($map[$idPostRoot]['title']);
