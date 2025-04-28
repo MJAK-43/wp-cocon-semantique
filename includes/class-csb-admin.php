@@ -227,6 +227,8 @@ class CSB_Admin {
         if (!empty($_POST['existing_root_url'])) {
             echo '<p>🔗 Lien fourni par l\'utilisateur : ' . esc_url($_POST['existing_root_url']) . '</p>';
         }
+        else 
+            echo '<p> Pas de lien fornie</p>';
     }
     
 
