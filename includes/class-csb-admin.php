@@ -188,11 +188,11 @@ class CSB_Admin {
         $root = reset($this->last_tree); 
         $this->mapIdPost = $this->build_node_map($root, null, $forced_link);
 
-        if (!empty($forced_link)) {
-            echo '<div class="notice notice-info is-dismissible"><p>🔗 Lien utilisateur : <a href="' . esc_url($forced_link) . '" target="_blank">' . esc_html($forced_link) . '</a></p></div>';
-        }
-        else
-            echo '<div class="notice notice-info is-dismissible"><p>🔗 Lien utilisateur absent</p></div>';
+        // if (!empty($forced_link)) {
+        //     echo '<div class="notice notice-info is-dismissible"><p>🔗 Lien utilisateur : <a href="' . esc_url($forced_link) . '" target="_blank">' . esc_html($forced_link) . '</a></p></div>';
+        // }
+        // else
+        //     echo '<div class="notice notice-info is-dismissible"><p>🔗 Lien utilisateur absent</p></div>';
 
         // Étape 3 : Générer et publier chaque article individuellement
         foreach ($this->mapIdPost as $id => $info) {
