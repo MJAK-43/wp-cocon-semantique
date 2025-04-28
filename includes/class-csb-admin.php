@@ -43,7 +43,7 @@ class CSB_Admin {
         if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
             //$generator = new CSB_Generator();
             //$this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
-            $this->last_tree = $this->generator->generate_structure_array($keyword, $this->nb,false);
+            $this->last_tree = $this->generator->generate_structure_array($keyword, $this->nb,true);
             
             // echo "<br>";echo "<br>";echo "<br>";
             //     print_r($this->last_tree);
@@ -198,7 +198,7 @@ class CSB_Admin {
             if ($info['parent_id'] === null && !empty($forced_link)) {
                 continue;
             }
-            $html =$this->generator->generate_full_content($id, $this->mapIdPost, $this->nb,true);
+            $html =$this->generator->generate_full_content($id, $this->mapIdPost, $this->nb);
             $html.=$linker->generate_structured_links($this->mapIdPost,$id);
             $publisher->fill_and_publish_content($id, $html);
         }
