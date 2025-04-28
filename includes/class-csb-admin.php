@@ -5,10 +5,12 @@ class CSB_Admin {
     private $last_tree = [];
     private int $nb;
     private $mapIdPost=[];
+    private $generator;
 
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         //echo "DOG";
+        $this->generator= new CSB_Generator;
     }
 
     public function add_admin_menu() {
@@ -36,9 +38,9 @@ class CSB_Admin {
 
     
         if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
-            $generator = new CSB_Generator();
+            //$generator = new CSB_Generator();
             //$this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
-            $this->last_tree = $generator->generate_structure_array($keyword, $this->nb,true);
+            $this->last_tree = $this->generator->generate_structure_array($keyword, $this->nb,true);
             
             // echo "<br>";echo "<br>";echo "<br>";
             //     print_r($this->last_tree);
@@ -160,7 +162,7 @@ class CSB_Admin {
     private function process_structure() {
         $publisher = new CSB_Publisher();
         $linker = new CSB_Linker();
-        $generator = new CSB_Generator();
+        //$generator = new CSB_Generator();
         // Exemple d'utilisation :
         // $file_url = 'https://app.posteria.fr/crons/freepikImageCoconSemantique/chatnoir/chatsurletoitdelamaison'; // Ton lien ici
         // try {
@@ -181,13 +183,13 @@ class CSB_Admin {
         //print_r($this->mapIdPost);
         // Étape 3 : Générer et publier chaque article individuellement
         foreach ($this->mapIdPost as $id => $info) {
-            $html =$generator->generate_full_content($id, $this->mapIdPost, $this->nb,false);
+            $html =$this->generator->generate_full_content($id, $this->mapIdPost, $this->nb,false);
             $html.=$linker->generate_structured_links($this->mapIdPost,$id);
             $publisher->fill_and_publish_content($id, $html);
         }
     
         // 🔥 Après publication, récupérer les tokens utilisés
-        $total_tokens = $generator->get_tokens_used();
+        $total_tokens = $this->generator->get_tokens_used();
         //curl('https://isoluce.slack.com/archives/D08MREPLUGG/p1745596328927739');
 
         echo '<div class="notice notice-success is-dismissible"><p>✅ Tous les articles ont été mis à jour avec leur contenu complet.</p></div>';
