@@ -445,14 +445,17 @@ class CSB_Generator {
     }
 
     public function fetch_image_from_api(string $title, string $text): ?string {
-        // Ici tu construis l'URL de l'API externe selon ton titre et ton texte
-        $api_url = 'https://app.posteria.fr/crons/freepikImageCoconSemantique/' . rawurlencode($title) . '/' . rawurlencode($text);
+        // 🔥 Normalisation du titre et du texte
+        $normalized_title = $this->normalize_keyword($title);
+        $normalized_text = $this->normalize_keyword($text);
+    
+        // Construction de l'URL
+        $api_url = 'https://app.posteria.fr/crons/freepikImageCoconSemantique/' . rawurlencode($normalized_title) . '/' . rawurlencode($normalized_text);
     
         $ch = curl_init();
-    
         curl_setopt($ch, CURLOPT_URL, $api_url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Important pour suivre les redirections
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     
         $response = curl_exec($ch);
         $err = curl_error($ch);
@@ -463,7 +466,7 @@ class CSB_Generator {
             return null;
         }
     
-        return $response; // Contenu brut de l'image ou URL selon API
+        return trim($response); // Toujours trim au cas où il y a des espaces
     }
     
         
