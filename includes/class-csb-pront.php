@@ -1,12 +1,12 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-require_once 'PromptProviderInterface.php';
+require_once 'interface-csb-prompt-provider.php';
 
 
 class CSB_Prompts implements PromptProviderInterface {
 
-    public function structure($keyword, $depth) {
+    public function structure(string $keyword, int $depth): string{
         return "Tu es un expert en SEO abtimiser pour le référencement. Génère une structure hiérarchique de cocon sémantique en texte brut.
         Consignes :
         - Utilise des tirets `-` pour chaque point.
@@ -17,7 +17,7 @@ class CSB_Prompts implements PromptProviderInterface {
         Pas de commentaires, pas de balises, juste le texte hiérarchique.";
     }
 
-    public function intro($title, $structure) {
+    public function intro(string $title, string $structure): string{
         return "Tu es un rédacteur SEO professionnel expert de WordPress.
     
         Tu dois écrire une **INTRODUCTION HTML** pour un article intitulé « $title ».
@@ -36,12 +36,12 @@ class CSB_Prompts implements PromptProviderInterface {
         Ta seule mission : captiver le lecteur pour qu’il ait envie de lire les développements.";
     }
 
-    public function image($title) {
+    public function image(string $title): string{
         return "Donne une description très courte (moins de 10 mots) qui correspond à une image pour illustrer un article intitulé \"$title\". 
         La description doit être simple, réaliste et facile à comprendre.";
     }
 
-    public function development($title, $structure) {
+    public function development(string $title, string $structure): string{
         return "Tu es un expert en rédaction SEO sur WordPress.
 
         Tu dois écrire un bloc de DÉVELOPPEMENT HTML pour un article intitulé « $title ».
@@ -91,7 +91,7 @@ class CSB_Prompts implements PromptProviderInterface {
     }
 
 
-    public function conclusion($title, $structure) {
+    public function conclusion(string $title, string $structure): string{
         return "Tu es un rédacteur SEO confirmé.
     
         Tu dois écrire une CONCLUSION HTML pour l’article intitulé « $title ».

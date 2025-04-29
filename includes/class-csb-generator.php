@@ -328,8 +328,8 @@ class CSB_Generator {
     
         // Prompt et génération de l’intro
         $prompt_intro = $this->promptProvider->intro($title, $structure);
-        print_r($proprompt_intro);
-        $intro ="intro";//$this->call_api($prompt_intro);
+        //print_r($prompt_intro);
+        $intro =$this->call_api($prompt_intro);
     
         // Développements
         $developments_html = '';
@@ -339,8 +339,8 @@ class CSB_Generator {
                 if (!isset($map[$child_id])) continue;
                 $child = $map[$child_id];
                 $prompt_dev = $this->promptProvider->development($child['title'], $structure);
-                print_r($prompt_dev);
-                $dev_content ="";//$this->call_api($prompt_dev);
+                //print_r($prompt_dev);
+                $dev_content =$this->call_api($prompt_dev);
                 $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
         
                 $developments_html .= $dev_content . $child_link;
@@ -349,13 +349,13 @@ class CSB_Generator {
             // L'article est une feuille : on génère un développement complet artificiel
             $prompt_leaf = $this->promptProvider->leafDevelopment($title, $structure, $number);
             print_r($prompt_leaf);
-            $dev_content ="";//$this->call_api($prompt_leaf);
+            $dev_content =$this->call_api($prompt_leaf);
             $developments_html .= $dev_content;
         }
     
         // Prompt et génération de la conclusion
         $prompt_conclusion = $this->promptProvider->conclusion($title, $structure);
-        $conclusion ="";//$this->call_api($prompt_conclusion);
+        $conclusion =$this->call_api($prompt_conclusion);
         // Récupération de l'URL de l'image depuis Freepik
         $image = '';
 
@@ -363,7 +363,7 @@ class CSB_Generator {
             //$text_image_description = $this->normalize_keyword($title);
             $prompt_image = $this->promptProvider->image($title);
 
-            print_r($prompt_leaf);
+            //print_r($prompt_leaf);
             
             $text_image_description = $this->call_api($prompt_image);
             $image_url =$this->fetch_image_from_api($title,$text_image_description);
