@@ -31,7 +31,7 @@ class CSB_Prompts implements PromptProviderInterface {
         - Structure l’intro en 2 ou 3 paragraphes <p>, dans un <div class='csb-intro'>.
         - Utilise un ton engageant, accessible, et un vocabulaire fluide.
         - Pas de <h1>, <h2>, ni de résumé. Pas de liste.
-        - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
+        - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown SAUF CEUX UTILES AU RÉFÉRENCEMENT : GRAS ET SOULIGNÉ
         
         Ta seule mission : captiver le lecteur pour qu’il ait envie de lire les développements.";
     }

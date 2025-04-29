@@ -320,7 +320,7 @@ class CSB_Generator {
     
     
 
-    public function generate_full_content(int $post_id, array $map, int $number): string {
+    public function generateContent(int $post_id, array $map, int $number): string {
         
         $node = $map[$post_id];
         $title = $node['title'];

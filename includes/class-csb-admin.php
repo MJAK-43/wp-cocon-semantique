@@ -86,23 +86,22 @@ class CSB_Admin {
         echo '<table class="form-table">';
     
         echo '<tr><th><label for="csb_keyword">Mot-clé principal</label></th>';
-        echo '<td><input type="text" name="csb_keyword" value="' . esc_attr($keyword) . '" class="regular-text" required></td></tr>';
+        echo '<td><input type="text" id="csb_keyword" name="csb_keyword" value="' . esc_attr($keyword) . '" class="regular-text" required></td></tr>';
     
         echo '<tr><th><label for="csb_nb_nodes">Nombre de sous-niveaux</label></th>';
-        echo '<td><input type="number" name="csb_nb_nodes" value="' . esc_attr($nb) . '" class="regular-text" required></td></tr>';
+        echo '<td><input type="number" id="csb_nb_nodes" name="csb_nb_nodes" value="' . esc_attr($nb) . '" class="regular-text" required></td></tr>';
     
         echo '<tr><th><label for="use_existing_root">Utiliser un article racine existant</label></th>';
-        echo '<td><input type="checkbox" name="use_existing_root" value="1" ' . checked(1, $use_existing_root, false) . ' onchange="this.form.submit();"></td></tr>';
+        echo '<td><input type="checkbox" id="use_existing_root" name="use_existing_root" value="1" ' . checked(1, $use_existing_root, false) . '></td></tr>';
     
-        if ($use_existing_root) {
-            echo '<tr><th><label for="existing_root_url">URL de l’article racine</label></th>';
-            echo '<td><input type="url" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" class="regular-text"></td>';
-        }
+        echo '<tr><th><label for="existing_root_url">URL de l’article racine</label></th>';
+        echo '<td><input type="url" id="existing_root_url" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" class="regular-text"></td></tr>';
     
         echo '</table>';
         submit_button('Générer la structure', 'primary', 'submit');
         echo '</form>';
     }
+    
     
     
 
@@ -163,19 +162,11 @@ class CSB_Admin {
         $publisher = new CSB_Publisher();
         $linker = new CSB_Linker();
         $use_existing_root = isset($_POST['use_existing_root']) && $_POST['use_existing_root'] == '1';
-        $forced_link = isset($_POST['existing_root_url']) ? esc_url_raw($_POST['existing_root_url']) : null;    
+        $forced_link = null;
 
-        //echo '<div class="notice notice-info"><p>expected_children_count = ' . intval($this->generator->expected_children_count) . '</p></div>';
-        //Exemple d'utilisation :
-        // $file_url = 'https://app.posteria.fr/crons/freepikImageCoconSemantique/chatnoir/chatsurletoitdelamaison'; // Ton lien ici
-        // try {
-        //     $data = download_public_file($file_url);
-        //     file_put_contents('fichier_recupere.png', $data);
-        //     print_r($data);
-        // } catch (Exception $e) {
-        //     echo "❌ Erreur : " . $e->getMessage();
-        // }
-        //echo '<div class="notice notice-info"><p>expected_children_count = ' . intval($this->nb) . '</p></div>';
+        if ($use_existing_root && !empty($_POST['existing_root_url'])) {
+            $forced_link = esc_url_raw($_POST['existing_root_url']);
+        }
 
     
         // Étape 1 : Créer les articles
@@ -196,7 +187,7 @@ class CSB_Admin {
             if ($info['parent_id'] === null && !empty($forced_link)) {
                 continue;
             }
-            $html =$this->generator->generate_full_content($id, $this->mapIdPost, $this->nb);
+            $html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb);
             $html.=$linker->generate_structured_links($this->mapIdPost,$id);
             $publisher->fill_and_publish_content($id, $html);
         }
