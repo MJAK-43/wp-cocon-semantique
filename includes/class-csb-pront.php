@@ -36,10 +36,12 @@ class CSB_Prompts implements PromptProviderInterface {
         Ta seule mission : captiver le lecteur pour qu’il ait envie de lire les développements.";
     }
 
-    public function image(string $title): string{
-        return "Donne une description très courte (moins de 10 mots) qui correspond à une image pour illustrer un article intitulé \"$title\". 
-        La description doit être simple, réaliste et facile à comprendre.";
+    public function image(string $title): string {
+        return "Imagine une photographie réaliste correspondant au sujet suivant : \"$title\". 
+        Donne une description très concrète, contenant des éléments visuels simples et populaires, en moins de 10 mots. 
+        Utilise des mots que l'on trouverait facilement sur une banque d'images.";
     }
+    
 
     public function development(string $title, string $structure): string{
         return "Tu es un expert en rédaction SEO sur WordPress.
