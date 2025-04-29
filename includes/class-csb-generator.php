@@ -328,7 +328,7 @@ class CSB_Generator {
     
         // Prompt et génération de l’intro
         $prompt_intro = $this->getPromptIntro($title, $map);
-        $intro =$this->call_api($prompt_intro);
+        $intro ="INTRO";//$this->call_api($prompt_intro);
     
         // Développements
         $developments_html = '';
