@@ -212,113 +212,6 @@ class CSB_Generator {
     }
     
     
-    
-    // private function getPromptIntro(string $title, array $contextTree): string {
-    //     $structure = $this->to_bullet_tree($contextTree);
-    //     return "Tu es un rédacteur SEO professionnel expert de WordPress.
-    
-    //     Tu dois écrire une **INTRODUCTION HTML** pour un article intitulé « $title ».
-        
-    //     Voici la structure complète du cocon sémantique auquel cet article appartient :
-        
-    //     $structure
-        
-    //     Consignes :
-    //     - Ne commence pas par « Cet article va parler de… ».
-    //     - Structure l’intro en 2 ou 3 paragraphes <p>, dans un <div class='csb-intro'>.
-    //     - Utilise un ton engageant, accessible, et un vocabulaire fluide.
-    //     - Pas de <h1>, <h2>, ni de résumé. Pas de liste.
-    //     - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
-        
-    //     Ta seule mission : captiver le lecteur pour qu’il ait envie de lire les développements.";
-    // }
-    
-    
-
-    // private function getPromptDevelopment(string $title, array $contextTree): string {
-    //     $structure = $this->to_bullet_tree($contextTree);
-    //     return "Tu es un expert en rédaction SEO sur WordPress.
-    
-    //     Tu dois écrire un bloc de DÉVELOPPEMENT HTML pour un article intitulé « $title ».
-        
-    //     Voici la structure du cocon sémantique global :
-        
-    //     $structure
-        
-    //     Consignes :
-    //     - doit avoir un <h4>$title</h4> suivi de 1 ou 2 paragraphes <p>. 
-    //     - Si c’est pertinent, tu peux utiliser des <ul><li> pour lister des conseils, caractéristiques, etc.
-    //     - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
-    //     Structure le tout dans un <div class='csb-development'>.";
-    // }
-    // private function getPromptLeafDevelopment(string $title, array $contextTree,$number): string {
-    //     $structure = $this->to_bullet_tree($contextTree);
-    //     $children_count =$number;
-    
-    //     return "Tu es un expert en rédaction SEO sur WordPress.
-    
-    //     Tu dois écrire un DÉVELOPPEMENT HTML pour l'article intitulé « $title », qui est une feuille du cocon sémantique (pas d'enfants).
-    
-    //     Voici la structure globale du cocon sémantique :
-    //     $structure
-    
-    //     Consignes STRICTES :
-    //     - Crée exactement {$children_count} parties distinctes.
-    //     - Pour chaque partie :
-    //         - Ouvre un <div class='csb-development'>.
-    //         - Commence avec un seul et unique titre dans une balise <h4> (pas d'autres titres).
-    //         - Ajoute 1 ou 2 paragraphes <p> descriptifs et engageants.
-    //         - Si pertinent, ajoute une liste <ul><li>...</li></ul> entre les paragraphes.
-    //         - Ferme proprement le <div>.
-    
-    //     Règles :
-    //     - Il doit y avoir exactement {$children_count} blocs de développement au final.
-    //     - Ne dépasse jamais ce nombre.
-    //     - N'ajoute pas d'introduction globale ni de conclusion globale.
-    //     - Aucun lien externe ou interne.
-    
-    //     Interdictions :
-    //     - Ne pas utiliser de balises ```html ni de format Markdown.
-    //     - Ne pas générer plus ou moins de blocs que demandé.
-    
-    //     Style :
-    //     - Langage fluide, naturel et SEO-friendly.
-    //     - Chaque bloc doit être autonome et agréable à lire.";
-    // }
-    
-    
-    
-    
-    
-    
-    
-    
-    // private function getPromptConclusion(string $title, array $contextTree): string {
-    //     $structure = $this->to_bullet_tree($contextTree);
-    //     return "Tu es un rédacteur SEO confirmé.
-    
-    //     Tu dois écrire une CONCLUSION HTML pour l’article intitulé « $title ».
-        
-    //     Structure du cocon sémantique complet :
-        
-    //     $structure
-        
-    //     Consignes :
-    //     - Résume les points forts de l’article sans redites.
-    //     - Termine sur un message encourageant ou une réflexion.
-    //     - Utilise uniquement des balises HTML suivantes : <div class='csb-conclusion'>, <p>, <strong>.
-    //     - Ne mets pas de liens ni d’ouverture vers d’autres sujets.
-    //     - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
-        
-    //     Écris de manière naturelle, engageante, et claire.";
-    // }
-    
-    // private function getPromptImage(string $title): string {
-    //     return "Donne une description très courte (moins de 10 mots) qui correspond à une image pour illustrer un article intitulé \"$title\". 
-    //     La description doit être simple, réaliste et facile à comprendre.";
-    // }
-    
-    
 
     public function generateContent(int $post_id, array $map, int $number): string {
         
@@ -329,7 +222,9 @@ class CSB_Generator {
         // Prompt et génération de l’intro
         $prompt_intro = $this->promptProvider->intro($title, $structure);
         //print_r($prompt_intro);
-        $intro =$this->call_api($prompt_intro);
+
+        $intro ="";
+        //$intro =$this->call_api($prompt_intro);
     
         // Développements
         $developments_html = '';
@@ -340,7 +235,10 @@ class CSB_Generator {
                 $child = $map[$child_id];
                 $prompt_dev = $this->promptProvider->development($child['title'], $structure);
                 //print_r($prompt_dev);
-                $dev_content =$this->call_api($prompt_dev);
+
+                $dev_content ="";
+
+                //$dev_content =$this->call_api($prompt_dev);
                 $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
         
                 $developments_html .= $dev_content . $child_link;
@@ -355,39 +253,42 @@ class CSB_Generator {
     
         // Prompt et génération de la conclusion
         $prompt_conclusion = $this->promptProvider->conclusion($title, $structure);
-        $conclusion =$this->call_api($prompt_conclusion);
+        $conclusion ="";
+
+        //$conclusion =$this->call_api($prompt_conclusion);
+        
         // Récupération de l'URL de l'image depuis Freepik
         $image = '';
 
-        try {
-            //$text_image_description = $this->normalize_keyword($title);
-            $prompt_image = $this->promptProvider->image($title);
+        // try {
+        //     //$text_image_description = $this->normalize_keyword($title);
+        //     $prompt_image = $this->promptProvider->image($title);
 
-            //print_r($prompt_leaf);
+        //     //print_r($prompt_leaf);
             
-            $text_image_description = $this->call_api($prompt_image);
-            $image_url =$this->fetch_image_from_api($title,$text_image_description);
-            // echo "<br";
-            // print_r($image_description);
-            // echo "<br";
-            // print_r($image_url);
-            if (!str_starts_with($image_url, '❌')) {
-                //$image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($image_description) . "\" style=\"max-width:100%; height:auto;\" />";
-                // Définir comme image mise en avant
-                $publisher = new CSB_Publisher();
-                $publisher->set_featured_image($post_id, $image_url);
-            } 
-            else {
-                throw new Exception("URL image invalide.");
-            }
-        } catch (Exception $e) {
-            //Fallback vers l'image par défaut
-            $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
-            $image = "\n\n<img src=\"" . esc_url($default_image_url) . "\" alt=\"Image par défaut\" style=\"max-width:100%; height:auto;\" />";
+        //     $text_image_description = $this->call_api($prompt_image);
+        //     $image_url =$this->fetch_image_from_api($title,$text_image_description);
+        //     // echo "<br";
+        //     // print_r($image_description);
+        //     // echo "<br";
+        //     // print_r($image_url);
+        //     if (!str_starts_with($image_url, '❌')) {
+        //         //$image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($image_description) . "\" style=\"max-width:100%; height:auto;\" />";
+        //         // Définir comme image mise en avant
+        //         $publisher = new CSB_Publisher();
+        //         $publisher->set_featured_image($post_id, $image_url);
+        //     } 
+        //     else {
+        //         throw new Exception("URL image invalide.");
+        //     }
+        // } catch (Exception $e) {
+        //     //Fallback vers l'image par défaut
+        //     $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
+        //     $image = "\n\n<img src=\"" . esc_url($default_image_url) . "\" alt=\"Image par défaut\" style=\"max-width:100%; height:auto;\" />";
             
-            //Optionnel : log de l'erreur
-            error_log("Erreur lors de la récupération de l'image Freepik : " . $e->getMessage());
-        }
+        //     //Optionnel : log de l'erreur
+        //     error_log("Erreur lors de la récupération de l'image Freepik : " . $e->getMessage());
+        // }
         
 
     
