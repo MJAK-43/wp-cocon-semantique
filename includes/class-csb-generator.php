@@ -348,7 +348,7 @@ class CSB_Generator {
         } else {
             // L'article est une feuille : on génère un développement complet artificiel
             $prompt_leaf = $this->promptProvider->leafDevelopment($title, $structure, $number);
-            print_r($prompt_leaf);
+            //print_r($prompt_leaf);
             $dev_content =$this->call_api($prompt_leaf);
             $developments_html .= $dev_content;
         }
