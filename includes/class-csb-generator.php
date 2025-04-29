@@ -448,7 +448,11 @@ class CSB_Generator {
         // 🔥 Normalisation du titre et du texte
         $normalized_title = $this->normalize_keyword($title);
         $normalized_text = $this->normalize_keyword($text);
-    
+        echo "<br>";echo "<br>";
+        print_r($normalized_title);
+        echo "<br>";
+        print_r($normalized_text);
+        echo "<br>";echo "<br>";
         // Construction de l'URL
         $api_url = 'https://app.posteria.fr/crons/freepikImageCoconSemantique/' . rawurlencode($normalized_title) . '/' . rawurlencode($normalized_text);
     
