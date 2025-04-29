@@ -25,15 +25,16 @@ class CSB_Prompts implements PromptProviderInterface {
         Voici la structure complète du cocon sémantique auquel cet article appartient :
         
         $structure
-        
+    
         Consignes :
-        - Ne commence pas par « Cet article va parler de… ».
-        - Structure l’intro en 2 ou 3 paragraphes <p>, dans un <div class='csb-intro'>.
-        - Utilise un ton engageant, accessible, et un vocabulaire fluide.
-        - Pas de <h1>, <h2>, ni de résumé. Pas de liste.
-        - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown SAUF CEUX UTILES AU RÉFÉRENCEMENT : GRAS ET SOULIGNÉ
-        
-        Ta seule mission : captiver le lecteur pour qu’il ait envie de lire les développements.";
+        - Structure en 2 à 3 paragraphes <p>, tous dans un <div class='csb-intro'>.
+        - Utilise un ton engageant, accessible, fluide et vendeur.
+        - **Met en gras avec <strong> les mots ou expressions clés SEO** (liés au sujet).
+        - **Souligne les idées importantes** avec <u> si pertinent.
+        - Pas de titres <h1> ou <h2>.
+        - Ne commence jamais par « Cet article va parler de… ».
+        - Interdiction d'utiliser ```html ou blocs Markdown.
+        - Favoriser un vocabulaire riche, précis et sémantique SEO.";
     }
 
     public function image(string $title): string {
@@ -52,11 +53,20 @@ class CSB_Prompts implements PromptProviderInterface {
         
         $structure
         
+        
         Consignes :
-        - doit avoir un <h4>$title</h4> suivi de 1 ou 2 paragraphes <p>. 
-        - Si c’est pertinent, tu peux utiliser des <ul><li> pour lister des conseils, caractéristiques, etc.
-        - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
-        Structure le tout dans un <div class='csb-development'>.";
+        - Ouvre un <div class='csb-development'>.
+        - Ajoute un titre unique en <h4> : le sujet exact traité.
+        - Ajoute 1 ou 2 paragraphes <p> clairs et optimisés SEO.
+        - Mets en <strong> les mots-clés importants.
+        - Souligne <u> les éléments stratégiques si pertinent.
+        - Ajoute une <ul><li> si cela améliore la lisibilité (ex: avantages, conseils).
+        - Ferme proprement le <div>.
+        
+        Important :
+        - Langage naturel, agréable, optimisé.
+        - Pas de ```html ni Markdown.
+        - Vocabulaire riche, sémantiquement varié.";
     }
 
     public function leafDevelopment(string $title, string $structure, int $number): string{
@@ -67,28 +77,30 @@ class CSB_Prompts implements PromptProviderInterface {
         Voici la structure globale du cocon sémantique :
         $structure
     
-        Consignes STRICTES :
+        Consignes strictes :
         - Crée exactement {$number} parties distinctes.
         - Pour chaque partie :
             - Ouvre un <div class='csb-development'>.
-            - Commence avec un seul et unique titre dans une balise <h4> (pas d'autres titres).
-            - Ajoute 1 ou 2 paragraphes <p> descriptifs et engageants.
-            - Si pertinent, ajoute une liste <ul><li>...</li></ul> entre les paragraphes.
+            - Commence avec un titre unique dans une balise <h4> (pas d'autres titres).
+            - Ajoute 1 ou 2 paragraphes <p> descriptifs, naturels et engageants.
+            - Mets en gras <strong> les mots-clés importants.
+            - Si pertinent, souligne <u> les points stratégiques.
+            - Si nécessaire, ajoute une liste <ul><li> pour structurer les informations.
             - Ferme proprement le <div>.
-    
+
         Règles :
-        - Il doit y avoir exactement {$number} blocs de développement au final.
-        - Ne dépasse jamais ce nombre.
-        - N'ajoute pas d'introduction globale ni de conclusion globale.
-        - Aucun lien externe ou interne.
-    
+        - Il doit y avoir **exactement {$number} blocs** au final.
+        - Ne dépasse jamais ni ne réduis ce nombre.
+        - N'ajoute ni introduction globale, ni conclusion globale.
+        - Aucun lien interne ou externe.
+
         Interdictions :
-        - Ne pas utiliser de balises ```html ni de format Markdown.
-        - Ne pas générer plus ou moins de blocs que demandé.
-    
+        - N'utilise pas ```html ni de blocs Markdown.
+        - N'utilise que HTML pur dans les balises spécifiées.
+
         Style :
-        - Langage fluide, naturel et SEO-friendly.
-        - Chaque bloc doit être autonome et agréable à lire.";
+        - Langage fluide, naturel, riche sémantiquement.
+        - Optimisé pour le SEO sans être artificiel.";
     
     }
 
@@ -103,13 +115,13 @@ class CSB_Prompts implements PromptProviderInterface {
         $structure
         
         Consignes :
-        - Résume les points forts de l’article sans redites.
-        - Termine sur un message encourageant ou une réflexion.
-        - Utilise uniquement des balises HTML suivantes : <div class='csb-conclusion'>, <p>, <strong>.
-        - Ne mets pas de liens ni d’ouverture vers d’autres sujets.
-        - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
-        
-        Écris de manière naturelle, engageante, et claire.";
+        - Résume en 2 paragraphes maximum.
+        - Rappelle les mots-clés importants en <strong> pour renforcer l'optimisation SEO.
+        - Termine par une phrase inspirante ou engageante.
+        - Structure uniquement avec <div class='csb-conclusion'>, <p> et <strong>.
+        - Pas de liens ni d’ouverture vers d’autres articles.
+        - Style naturel, positif, dynamique.
+        - Aucune balise ```html ni Markdown.";
     }
 
 }
