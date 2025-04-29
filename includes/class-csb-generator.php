@@ -313,6 +313,11 @@ class CSB_Generator {
         Écris de manière naturelle, engageante, et claire.";
     }
     
+    private function getPromptImage(string $title): string {
+        return "Donne une description très courte (moins de 10 mots) qui correspond à une image pour illustrer un article intitulé \"$title\". 
+        La description doit être simple, réaliste et facile à comprendre.";
+    }
+    
     
 
     public function generate_full_content(int $post_id, array $map, int $number): string {
@@ -352,8 +357,10 @@ class CSB_Generator {
         $image = '';
 
         try {
-            $image_description = $this->normalize_keyword($title);
-            $image_url =$this->fetch_image_from_api($image_description, $intro); //$this->get_freepik_image($image_description);
+            //$text_image_description = $this->normalize_keyword($title);
+            $prompt_image = $this->getPromptImage($title);
+            $text_image_description = $this->call_api($prompt_image);
+            $image_url =$this->fetch_image_from_api($title,$text_image_description);
             // echo "<br";
             // print_r($image_description);
             // echo "<br";
