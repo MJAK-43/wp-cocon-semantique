@@ -10,7 +10,7 @@ class CSB_Admin {
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         //echo "DOG";
-        $this->generator= new CSB_Generator;
+        $this->generator= new CSB_Generator(new CSB_Prompts());
     }
 
     public function add_admin_menu() {
@@ -41,7 +41,7 @@ class CSB_Admin {
 
     
         if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
-            //$generator = new CSB_Generator();
+            
             //$this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
             $this->last_tree = $this->generator->generate_structure_array($keyword, $this->nb,true);
             
@@ -165,8 +165,6 @@ class CSB_Admin {
         $use_existing_root = isset($_POST['use_existing_root']) && $_POST['use_existing_root'] == '1';
         $forced_link = isset($_POST['existing_root_url']) ? esc_url_raw($_POST['existing_root_url']) : null;    
 
-
-        //$generator = new CSB_Generator();
         //echo '<div class="notice notice-info"><p>expected_children_count = ' . intval($this->generator->expected_children_count) . '</p></div>';
         //Exemple d'utilisation :
         // $file_url = 'https://app.posteria.fr/crons/freepikImageCoconSemantique/chatnoir/chatsurletoitdelamaison'; // Ton lien ici

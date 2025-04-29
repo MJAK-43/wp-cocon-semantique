@@ -7,8 +7,8 @@ class CSB_Generator {
     private $model;
     private $temperature;
     private $style;
-    private $image_description;
-    //public $expected_children_count;
+    //private $image_description;
+    private PromptProviderInterface $promptProvider;
     private $tokens_used = 0;
 
     public function get_tokens_used() {
@@ -16,28 +16,27 @@ class CSB_Generator {
     }
 
 
-    private function getPromptStructure($keyword, $depth) {
-        return "Tu es un expert en SEO abtimiser pour le référencement. Génère une structure hiérarchique de cocon sémantique en texte brut.
-        Consignes :
-        - Utilise des tirets `-` pour chaque point.
-        - Utilise **4 espaces** pour chaque niveau d’imbrication (indentation).
-        - Le mot-clé principal est : \"$keyword\"
-        - $depth sous-thèmes, chacun avec $depth sous-sous-thèmes.
-        - Chaque titre doit commencer par une majuscule à chaque mot
-        Pas de commentaires, pas de balises, juste le texte hiérarchique.";
-    }
+    // private function getPromptStructure($keyword, $depth) {
+    //     return "Tu es un expert en SEO abtimiser pour le référencement. Génère une structure hiérarchique de cocon sémantique en texte brut.
+    //     Consignes :
+    //     - Utilise des tirets `-` pour chaque point.
+    //     - Utilise **4 espaces** pour chaque niveau d’imbrication (indentation).
+    //     - Le mot-clé principal est : \"$keyword\"
+    //     - $depth sous-thèmes, chacun avec $depth sous-sous-thèmes.
+    //     - Chaque titre doit commencer par une majuscule à chaque mot
+    //     Pas de commentaires, pas de balises, juste le texte hiérarchique.";
+    // }
     
 
-    public function __construct($api_key = null, $freepik_api_key = null) {
+    public function __construct(PromptProviderInterface $promptProvider, $api_key = null, $freepik_api_key = null) {
+        $this->promptProvider = $promptProvider;
         $this->api_key = $api_key ?: get_option('csb_openai_api_key');
         $this->freepik_api_key = $freepik_api_key ?: get_option('csb_freepik_api_key');
-        // echo "<br>";
-        // print_r($this->freepik_api_key);
-        // echo "<br>";
         $this->model = get_option('csb_model', 'gpt-3.5-turbo');
         $this->temperature = floatval(get_option('csb_temperature', 0.7));
         $this->style = get_option('csb_writing_style', 'SEO');
     }
+    
 
     private function normalize_title($title) {
         return strtolower(trim(preg_replace('/\s+/', ' ', strip_tags($title))));
@@ -45,9 +44,10 @@ class CSB_Generator {
     
 
     public function generate_structure($keyword, $depth = 1) {
-         $prompt = $this->getPromptStructure($keyword, $depth); 
-         $raw = $this->call_api($prompt);
-         return $this->clean_generated_structure($raw);
+        $prompt = $this->promptProvider->structure($keyword, $depth);
+        print_r($prompt);
+        $raw = $this->call_api($prompt);
+        return $this->clean_generated_structure($raw);
     }
 
     public function generate_structure_array($keyword, $depth = 1, bool $use_fake = false) {
@@ -213,110 +213,110 @@ class CSB_Generator {
     
     
     
-    private function getPromptIntro(string $title, array $contextTree): string {
-        $structure = $this->to_bullet_tree($contextTree);
-        return "Tu es un rédacteur SEO professionnel expert de WordPress.
+    // private function getPromptIntro(string $title, array $contextTree): string {
+    //     $structure = $this->to_bullet_tree($contextTree);
+    //     return "Tu es un rédacteur SEO professionnel expert de WordPress.
     
-        Tu dois écrire une **INTRODUCTION HTML** pour un article intitulé « $title ».
+    //     Tu dois écrire une **INTRODUCTION HTML** pour un article intitulé « $title ».
         
-        Voici la structure complète du cocon sémantique auquel cet article appartient :
+    //     Voici la structure complète du cocon sémantique auquel cet article appartient :
         
-        $structure
+    //     $structure
         
-        Consignes :
-        - Ne commence pas par « Cet article va parler de… ».
-        - Structure l’intro en 2 ou 3 paragraphes <p>, dans un <div class='csb-intro'>.
-        - Utilise un ton engageant, accessible, et un vocabulaire fluide.
-        - Pas de <h1>, <h2>, ni de résumé. Pas de liste.
-        - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
+    //     Consignes :
+    //     - Ne commence pas par « Cet article va parler de… ».
+    //     - Structure l’intro en 2 ou 3 paragraphes <p>, dans un <div class='csb-intro'>.
+    //     - Utilise un ton engageant, accessible, et un vocabulaire fluide.
+    //     - Pas de <h1>, <h2>, ni de résumé. Pas de liste.
+    //     - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
         
-        Ta seule mission : captiver le lecteur pour qu’il ait envie de lire les développements.";
-    }
+    //     Ta seule mission : captiver le lecteur pour qu’il ait envie de lire les développements.";
+    // }
     
     
 
-    private function getPromptDevelopment(string $title, array $contextTree): string {
-        $structure = $this->to_bullet_tree($contextTree);
-        return "Tu es un expert en rédaction SEO sur WordPress.
+    // private function getPromptDevelopment(string $title, array $contextTree): string {
+    //     $structure = $this->to_bullet_tree($contextTree);
+    //     return "Tu es un expert en rédaction SEO sur WordPress.
     
-        Tu dois écrire un bloc de DÉVELOPPEMENT HTML pour un article intitulé « $title ».
+    //     Tu dois écrire un bloc de DÉVELOPPEMENT HTML pour un article intitulé « $title ».
         
-        Voici la structure du cocon sémantique global :
+    //     Voici la structure du cocon sémantique global :
         
-        $structure
+    //     $structure
         
-        Consignes :
-        - doit avoir un <h4>$title</h4> suivi de 1 ou 2 paragraphes <p>. 
-        - Si c’est pertinent, tu peux utiliser des <ul><li> pour lister des conseils, caractéristiques, etc.
-        - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
-        Structure le tout dans un <div class='csb-development'>.";
-    }
-    private function getPromptLeafDevelopment(string $title, array $contextTree,$number): string {
-        $structure = $this->to_bullet_tree($contextTree);
-        $children_count =$number;
+    //     Consignes :
+    //     - doit avoir un <h4>$title</h4> suivi de 1 ou 2 paragraphes <p>. 
+    //     - Si c’est pertinent, tu peux utiliser des <ul><li> pour lister des conseils, caractéristiques, etc.
+    //     - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
+    //     Structure le tout dans un <div class='csb-development'>.";
+    // }
+    // private function getPromptLeafDevelopment(string $title, array $contextTree,$number): string {
+    //     $structure = $this->to_bullet_tree($contextTree);
+    //     $children_count =$number;
     
-        return "Tu es un expert en rédaction SEO sur WordPress.
+    //     return "Tu es un expert en rédaction SEO sur WordPress.
     
-        Tu dois écrire un DÉVELOPPEMENT HTML pour l'article intitulé « $title », qui est une feuille du cocon sémantique (pas d'enfants).
+    //     Tu dois écrire un DÉVELOPPEMENT HTML pour l'article intitulé « $title », qui est une feuille du cocon sémantique (pas d'enfants).
     
-        Voici la structure globale du cocon sémantique :
-        $structure
+    //     Voici la structure globale du cocon sémantique :
+    //     $structure
     
-        Consignes STRICTES :
-        - Crée exactement {$children_count} parties distinctes.
-        - Pour chaque partie :
-            - Ouvre un <div class='csb-development'>.
-            - Commence avec un seul et unique titre dans une balise <h4> (pas d'autres titres).
-            - Ajoute 1 ou 2 paragraphes <p> descriptifs et engageants.
-            - Si pertinent, ajoute une liste <ul><li>...</li></ul> entre les paragraphes.
-            - Ferme proprement le <div>.
+    //     Consignes STRICTES :
+    //     - Crée exactement {$children_count} parties distinctes.
+    //     - Pour chaque partie :
+    //         - Ouvre un <div class='csb-development'>.
+    //         - Commence avec un seul et unique titre dans une balise <h4> (pas d'autres titres).
+    //         - Ajoute 1 ou 2 paragraphes <p> descriptifs et engageants.
+    //         - Si pertinent, ajoute une liste <ul><li>...</li></ul> entre les paragraphes.
+    //         - Ferme proprement le <div>.
     
-        Règles :
-        - Il doit y avoir exactement {$children_count} blocs de développement au final.
-        - Ne dépasse jamais ce nombre.
-        - N'ajoute pas d'introduction globale ni de conclusion globale.
-        - Aucun lien externe ou interne.
+    //     Règles :
+    //     - Il doit y avoir exactement {$children_count} blocs de développement au final.
+    //     - Ne dépasse jamais ce nombre.
+    //     - N'ajoute pas d'introduction globale ni de conclusion globale.
+    //     - Aucun lien externe ou interne.
     
-        Interdictions :
-        - Ne pas utiliser de balises ```html ni de format Markdown.
-        - Ne pas générer plus ou moins de blocs que demandé.
+    //     Interdictions :
+    //     - Ne pas utiliser de balises ```html ni de format Markdown.
+    //     - Ne pas générer plus ou moins de blocs que demandé.
     
-        Style :
-        - Langage fluide, naturel et SEO-friendly.
-        - Chaque bloc doit être autonome et agréable à lire.";
-    }
-    
-    
+    //     Style :
+    //     - Langage fluide, naturel et SEO-friendly.
+    //     - Chaque bloc doit être autonome et agréable à lire.";
+    // }
     
     
     
     
     
     
-    private function getPromptConclusion(string $title, array $contextTree): string {
-        $structure = $this->to_bullet_tree($contextTree);
-        return "Tu es un rédacteur SEO confirmé.
     
-        Tu dois écrire une CONCLUSION HTML pour l’article intitulé « $title ».
+    
+    // private function getPromptConclusion(string $title, array $contextTree): string {
+    //     $structure = $this->to_bullet_tree($contextTree);
+    //     return "Tu es un rédacteur SEO confirmé.
+    
+    //     Tu dois écrire une CONCLUSION HTML pour l’article intitulé « $title ».
         
-        Structure du cocon sémantique complet :
+    //     Structure du cocon sémantique complet :
         
-        $structure
+    //     $structure
         
-        Consignes :
-        - Résume les points forts de l’article sans redites.
-        - Termine sur un message encourageant ou une réflexion.
-        - Utilise uniquement des balises HTML suivantes : <div class='csb-conclusion'>, <p>, <strong>.
-        - Ne mets pas de liens ni d’ouverture vers d’autres sujets.
-        - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
+    //     Consignes :
+    //     - Résume les points forts de l’article sans redites.
+    //     - Termine sur un message encourageant ou une réflexion.
+    //     - Utilise uniquement des balises HTML suivantes : <div class='csb-conclusion'>, <p>, <strong>.
+    //     - Ne mets pas de liens ni d’ouverture vers d’autres sujets.
+    //     - N’utilise **jamais** de balise ```html ni aucun bloc de code Markdown
         
-        Écris de manière naturelle, engageante, et claire.";
-    }
+    //     Écris de manière naturelle, engageante, et claire.";
+    // }
     
-    private function getPromptImage(string $title): string {
-        return "Donne une description très courte (moins de 10 mots) qui correspond à une image pour illustrer un article intitulé \"$title\". 
-        La description doit être simple, réaliste et facile à comprendre.";
-    }
+    // private function getPromptImage(string $title): string {
+    //     return "Donne une description très courte (moins de 10 mots) qui correspond à une image pour illustrer un article intitulé \"$title\". 
+    //     La description doit être simple, réaliste et facile à comprendre.";
+    // }
     
     
 
@@ -327,8 +327,9 @@ class CSB_Generator {
         $structure = $this->to_bullet_tree($map);
     
         // Prompt et génération de l’intro
-        $prompt_intro = $this->getPromptIntro($title, $map);
-        $intro ="INTRO";//$this->call_api($prompt_intro);
+        $prompt_intro = $this->promptProvider->intro($title, $structure);
+        print_r($proprompt_intro);
+        $intro ="intro";//$this->call_api($prompt_intro);
     
         // Développements
         $developments_html = '';
@@ -337,7 +338,8 @@ class CSB_Generator {
             foreach ($node['children_ids'] as $child_id) {
                 if (!isset($map[$child_id])) continue;
                 $child = $map[$child_id];
-                $prompt_dev = $this->getPromptDevelopment($child['title'], $map);
+                $prompt_dev = $this->promptProvider->development($child['title'], $structure);
+                print_r($prompt_dev);
                 $dev_content ="";//$this->call_api($prompt_dev);
                 $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
         
@@ -345,20 +347,24 @@ class CSB_Generator {
             }
         } else {
             // L'article est une feuille : on génère un développement complet artificiel
-            $prompt_leaf = $this->getPromptLeafDevelopment($title, $map,$number);
+            $prompt_leaf = $this->promptProvider->leafDevelopment($title, $structure, $number);
+            print_r($prompt_leaf);
             $dev_content ="";//$this->call_api($prompt_leaf);
             $developments_html .= $dev_content;
         }
     
         // Prompt et génération de la conclusion
-        $prompt_conclusion = $this->getPromptConclusion($title, $map);
+        $prompt_conclusion = $this->promptProvider->conclusion($title, $structure);
         $conclusion ="";//$this->call_api($prompt_conclusion);
         // Récupération de l'URL de l'image depuis Freepik
         $image = '';
 
         try {
             //$text_image_description = $this->normalize_keyword($title);
-            $prompt_image = $this->getPromptImage($title);
+            $prompt_image = $this->promptProvider->image($title);
+
+            print_r($prompt_leaf);
+            
             $text_image_description = $this->call_api($prompt_image);
             $image_url =$this->fetch_image_from_api($title,$text_image_description);
             // echo "<br";
@@ -455,11 +461,11 @@ class CSB_Generator {
         // 🔥 Normalisation du titre et du texte
         $normalized_title = $this->normalize_keyword($title);
         $normalized_text = $this->normalize_keyword($text);
-        echo "<br>";echo "<br>";
-        print_r($normalized_title);
-        echo "<br>";
-        print_r($normalized_text);
-        echo "<br>";echo "<br>";
+        // echo "<br>";echo "<br>";
+        // print_r($normalized_title);
+        // echo "<br>";
+        // print_r($normalized_text);
+        // echo "<br>";echo "<br>";
         // Construction de l'URL
         $api_url = 'https://app.posteria.fr/crons/freepikImageCoconSemantique/' . rawurlencode($normalized_title) . '/' . rawurlencode($normalized_text);
     

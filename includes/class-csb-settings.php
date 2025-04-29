@@ -24,7 +24,7 @@ class CSB_Settings {
         register_setting('csb_settings_group', 'csb_temperature');
         register_setting('csb_settings_group', 'csb_writing_style');
 
-        // ✅ Nouvelle option : clé API Freepik
+        // Option : clé API Freepik
         register_setting('csb_settings_group', 'csb_freepik_api_key');
     }
 
@@ -36,7 +36,6 @@ class CSB_Settings {
                 <?php settings_fields('csb_settings_group'); ?>
                 <?php do_settings_sections('csb_settings_group'); ?>
                 <table class="form-table">
-                    <!-- OpenAI -->
                     <tr>
                         <th scope="row"><label for="csb_openai_api_key">Clé API OpenAI</label></th>
                         <td>
