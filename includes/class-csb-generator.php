@@ -45,7 +45,7 @@ class CSB_Generator {
 
     public function generate_structure($keyword, $depth = 1) {
         $prompt = $this->promptProvider->structure($keyword, $depth);
-        print_r($prompt);
+        //print_r($prompt);
         $raw = $this->call_api($prompt);
         return $this->clean_generated_structure($raw);
     }
