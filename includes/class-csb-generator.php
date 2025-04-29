@@ -248,7 +248,7 @@ class CSB_Generator {
             $prompt_leaf =$this->promptProvider->leafDevelopment($title, $structure, $number);
             //print_r($prompt_leaf);
             $dev_content ="";
-            $dev_content =$this->call_api($prompt_leaf);
+            //$dev_content =$this->call_api($prompt_leaf);
             $developments_html .= $dev_content;
         }
     
