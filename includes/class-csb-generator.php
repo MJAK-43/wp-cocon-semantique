@@ -329,7 +329,7 @@ class CSB_Generator {
         // Prompt et génération de l’intro
         $prompt_intro = $this->promptProvider->intro($title, $structure);
         //print_r($prompt_intro);
-        $intro =$this->call_api($prompt_intro);
+        $intro ="";//;$this->call_api($prompt_intro);
     
         // Développements
         $developments_html = '';
@@ -340,7 +340,7 @@ class CSB_Generator {
                 $child = $map[$child_id];
                 $prompt_dev = $this->promptProvider->development($child['title'], $structure);
                 //print_r($prompt_dev);
-                $dev_content =$this->call_api($prompt_dev);
+                $dev_content ="";//$this->call_api($prompt_dev);
                 $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
         
                 $developments_html .= $dev_content . $child_link;
@@ -349,13 +349,13 @@ class CSB_Generator {
             // L'article est une feuille : on génère un développement complet artificiel
             $prompt_leaf = $this->promptProvider->leafDevelopment($title, $structure, $number);
             //print_r($prompt_leaf);
-            $dev_content =$this->call_api($prompt_leaf);
+            $dev_content ="";//$this->call_api($prompt_leaf);
             $developments_html .= $dev_content;
         }
     
         // Prompt et génération de la conclusion
         $prompt_conclusion = $this->promptProvider->conclusion($title, $structure);
-        $conclusion =$this->call_api($prompt_conclusion);
+        $conclusion ="";//$this->call_api($prompt_conclusion);
         // Récupération de l'URL de l'image depuis Freepik
         $image = '';
 
@@ -372,8 +372,12 @@ class CSB_Generator {
             // echo "<br";
             // print_r($image_url);
             if (!str_starts_with($image_url, '❌')) {
-                $image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($image_description) . "\" style=\"max-width:100%; height:auto;\" />";
-            } else {
+                //$image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($image_description) . "\" style=\"max-width:100%; height:auto;\" />";
+                // Définir comme image mise en avant
+                $publisher = new CSB_Publisher();
+                $publisher->set_featured_image($post_id, $image_url);
+            } 
+            else {
                 throw new Exception("URL image invalide.");
             }
         } catch (Exception $e) {
@@ -413,7 +417,7 @@ class CSB_Generator {
      * Récupération Image
      */
     
-    public function get_freepik_image($keywords){
+    private function get_freepik_image($keywords){
         
         if (empty($keywords)) {
             throw new Exception("Aucun mot-clé généré.");
@@ -452,12 +456,12 @@ class CSB_Generator {
     }
 
 
-    public static function generate_slug($title){
+    private static function generate_slug($title){
         $slug = sanitize_title($title);
         return $slug;
     }
 
-    public function fetch_image_from_api(string $title, string $text): ?string {
+    private function fetch_image_from_api(string $title, string $text): ?string {
         // 🔥 Normalisation du titre et du texte
         $normalized_title = $this->normalize_keyword($title);
         $normalized_text = $this->normalize_keyword($text);

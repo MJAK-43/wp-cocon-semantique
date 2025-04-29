@@ -82,4 +82,38 @@ class CSB_Publisher {
         $img_html = '<div style="margin-top:2em;"><img src="' . esc_url($image_url) . '" alt="' . esc_attr($alt) . '" style="max-width:100%; height:auto;" /></div>';
         return $content . "\n\n" . $img_html;
     }
+
+    public function set_featured_image(int $post_id, string $image_url): void {
+        if (empty($image_url) || str_starts_with($image_url, '❌')) {
+            error_log("❌ Image invalide pour mise en avant : $image_url");
+            return;
+        }
+    
+        // Téléchargement de l'image
+        $tmp = download_url($image_url);
+    
+        if (is_wp_error($tmp)) {
+            error_log("❌ Erreur téléchargement image : " . $tmp->get_error_message());
+            return;
+        }
+    
+        // Prépare un tableau pour insérer le fichier dans la médiathèque
+        $file_array = [
+            'name'     => basename($image_url),
+            'tmp_name' => $tmp,
+        ];
+    
+        // Si media_handle_sideload() échoue, nettoyage manuel
+        $attachment_id = media_handle_sideload($file_array, $post_id);
+    
+        if (is_wp_error($attachment_id)) {
+            @unlink($tmp); // Nettoyer le fichier temporaire
+            error_log("❌ Erreur media_handle_sideload : " . $attachment_id->get_error_message());
+            return;
+        }
+    
+        // Définir comme image mise en avant
+        set_post_thumbnail($post_id, $attachment_id);
+    }
+    
 } 
