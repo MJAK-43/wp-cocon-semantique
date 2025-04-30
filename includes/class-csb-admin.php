@@ -122,8 +122,8 @@ class CSB_Admin {
         if (!empty($existing_root_url)) {
             echo '<input type="hidden" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" />';
         }
-
-        submit_button('Valider et publier', 'primary', 'csb_validate_publish');
+        if (!empty($this->last_tree)) 
+            submit_button('Valider et publier', 'primary', 'csb_validate_publish');
         echo '</form>';
     }
 
