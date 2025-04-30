@@ -87,7 +87,7 @@ class CSB_Admin {
         echo '<form method="post">';
         echo '<table class="form-table">';
     
-        echo '<tr><th><label for="csb_keyword">Mot-clé principal</label></th>';
+        echo '<tr><th><label for="csb_keyword">Mots Clés principaux</label></th>';
         echo '<td><input type="text" id="csb_keyword" name="csb_keyword" value="' . esc_attr($keyword) . '" class="regular-text" required></td></tr>';
     
         echo '<tr><th><label for="csb_nb_nodes">Nombre de sous-niveaux</label></th>';
