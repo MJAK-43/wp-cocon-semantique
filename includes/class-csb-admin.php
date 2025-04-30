@@ -80,8 +80,10 @@ class CSB_Admin {
 
     private function render_keyword_form($keyword, $nb) {
         $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
-        $existing_root_url = isset($_POST['existing_root_url']) ? esc_url($_POST['existing_root_url']) : '';
-    
+        $existing_root_url = isset($_POST['existing_root_url']) ? sanitize_text_field($_POST['existing_root_url']) : '';
+
+        $is_relative_url = (parse_url($existing_root_url, PHP_URL_SCHEME) === null && str_starts_with($existing_root_url, '/'));
+
         echo '<form method="post">';
         echo '<table class="form-table">';
     
@@ -95,7 +97,9 @@ class CSB_Admin {
         echo '<td><input type="checkbox" id="use_existing_root" name="use_existing_root" value="1" ' . checked(1, $use_existing_root, false) . '></td></tr>';
     
         echo '<tr><th><label for="existing_root_url">URL de l’article racine</label></th>';
-        echo '<td><input type="url" id="existing_root_url" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" class="regular-text"></td></tr>';
+        echo '<td><input type="text" id="existing_root_url" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" class="regular-text">';
+        echo '<p class="description">Vous pouvez entrer une URL relative (ex: /mon-article) ou absolue (ex: https://monsite.com/mon-article)</p>';
+        echo '</td></tr>';
     
         echo '</table>';
         submit_button('Générer la structure', 'primary', 'submit');
@@ -139,8 +143,8 @@ class CSB_Admin {
             echo '<div style="display: flex; align-items: center; gap: 6px;">';
             echo '<span style="min-width: 10px;">-</span>';
             echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" required />';
-            echo '<button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">🗑️</button>';
-            echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">➕ Sous-thème</button>';
+            //echo '<button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">🗑️</button>';
+            //echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">➕ Sous-thème</button>';
             echo '</div>';
     
             if (!empty($node['children'])) {
