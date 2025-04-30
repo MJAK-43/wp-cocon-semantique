@@ -169,7 +169,7 @@ class CSB_Admin {
         $forced_link = null;
 
         if ($use_existing_root && !empty($_POST['existing_root_url'])) {
-            $forced_link = esc_url_raw($_POST['existing_root_url']);
+            $forced_link = sanitize_text_field($_POST['existing_root_url']);
         }
 
     
