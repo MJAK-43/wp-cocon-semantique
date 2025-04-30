@@ -98,7 +98,7 @@ class CSB_Admin {
     
         echo '<tr><th><label for="existing_root_url">URL de l’article racine</label></th>';
         echo '<td><input type="text" id="existing_root_url" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" class="regular-text">';
-        echo '<p class="description">Vous pouvez entrer une URL relative (ex: /mon-article) ou absolue (ex: https://monsite.com/mon-article)</p>';
+        //echo '<p class="description">Vous pouvez entrer une URL relative (ex: /mon-article) ou absolue (ex: https://monsite.com/mon-article)</p>';
         echo '</td></tr>';
     
         echo '</table>';
