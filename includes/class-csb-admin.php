@@ -33,6 +33,7 @@ class CSB_Admin {
     }
 
     public function render_admin_page() {
+        $this->delete_all_posts_by_author();
         $keyword =$this->capitalize_each_word(isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '');
         $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
         $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
@@ -136,6 +137,35 @@ class CSB_Admin {
         if (!empty($this->last_tree)) 
             submit_button('Valider et publier', 'primary', 'csb_validate_publish');
         echo '</form>';
+    }
+    private function delete_all_posts_by_author($author_login = 'nicolas') {
+        global $wpdb;
+        echo "///////////////////////////////////////";
+        $author_id = $wpdb->get_var($wpdb->prepare(
+            "SELECT ID FROM $wpdb->users WHERE user_login = %s",
+            $author_login
+        ));
+    
+        if (!$author_id) {
+            echo '<div class="notice notice-error"><p>❌ Aucun utilisateur trouvé avec le login "' . esc_html($author_login) . '".</p></div>';
+            return;
+        }
+    
+        $post_ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT ID FROM $wpdb->posts WHERE post_type = 'post' AND post_author = %d",
+            $author_id
+        ));
+    
+        if (empty($post_ids)) {
+            echo '<div class="notice notice-info"><p>ℹ️ Aucun article trouvé pour l’auteur "' . esc_html($author_login) . '".</p></div>';
+            return;
+        }
+    
+        foreach ($post_ids as $post_id) {
+            wp_delete_post($post_id, true); // suppression définitive
+        }
+    
+        echo '<div class="notice notice-success"><p>✅ ' . count($post_ids) . ' article(s) de "' . esc_html($author_login) . '" supprimé(s) avec succès.</p></div>';
     }
 
 
