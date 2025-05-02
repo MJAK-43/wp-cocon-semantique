@@ -145,6 +145,8 @@ class CSB_Admin {
             "SELECT ID FROM $wpdb->users WHERE user_login = %s",
             $author_login
         ));
+        print_r($wpdb->get_var($wpdb->prepare(
+            "SELECT * FROM $wpdb->users")));
     
         if (!$author_id) {
             echo '<div class="notice notice-error"><p>❌ Aucun utilisateur trouvé avec le login "' . esc_html($author_login) . '".</p></div>';
