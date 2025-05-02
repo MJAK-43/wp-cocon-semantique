@@ -148,10 +148,10 @@ class CSB_Admin {
         print_r($wpdb->get_var($wpdb->prepare(
             "SELECT * FROM $wpdb->users")));
     
-        if (!$author_id) {
-            echo '<div class="notice notice-error"><p>❌ Aucun utilisateur trouvé avec le login "' . esc_html($author_login) . '".</p></div>';
-            return;
-        }
+        // if (!$author_id) {
+        //     echo '<div class="notice notice-error"><p>❌ Aucun utilisateur trouvé avec le login "' . esc_html($author_login) . '".</p></div>';
+        //     return;
+        // }
     
         $post_ids = $wpdb->get_col($wpdb->prepare(
             "SELECT ID FROM $wpdb->posts WHERE post_type = 'post' AND post_author = %d",
