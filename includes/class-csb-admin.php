@@ -78,36 +78,82 @@ class CSB_Admin {
             echo '</ul></div>';
         }
     }
+    private function render_keyword_form($keyword, $nb) {
+        $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
     
-
+        $original_url = isset($_POST['existing_root_url']) ? sanitize_text_field($_POST['existing_root_url']) : '';
+        $existing_root_url = $this->sanitize_to_relative_url($original_url); // <-- Conversion ici
+    
+        echo '<form method="post">';
+        echo '<table class="form-table">';
+        
+        // Champ mot-clé
+        echo '<tr><th><label for="csb_keyword">Mots Clés principaux</label></th>';
+        echo '<td><input type="text" id="csb_keyword" name="csb_keyword" value="' . esc_attr($keyword) . '" class="regular-text" required></td></tr>';
+        
+        // Champ nombre de niveaux
+        echo '<tr><th><label for="csb_nb_nodes">Nombre de sous-niveaux</label></th>';
+        echo '<td><input type="number" id="csb_nb_nodes" name="csb_nb_nodes" value="' . esc_attr($nb) . '" class="regular-text" required></td></tr>';
+    
+        // Case à cocher
+        echo '<tr><th><label for="use_existing_root">Utiliser un article racine existant</label></th>';
+        echo '<td><input type="checkbox" id="use_existing_root" name="use_existing_root" value="1" ' . checked(1, $use_existing_root, false) . '></td></tr>';
+    
+        // Champ URL
+        echo '<tr><th><label for="existing_root_url">URL de l’article racine</label></th>';
+        echo '<td><input type="text" id="existing_root_url" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" class="regular-text">';
+        echo '<p class="description">Uniquement une URL relative (ex: /mon-article)</p>';
+    
+        if (!empty($original_url) && str_starts_with($original_url, 'http')) {
+            echo '<p style="color: red;">❗ L’URL absolue a été automatiquement convertie en lien relatif : <code>' . esc_html($existing_root_url) . '</code></p>';
+        }
+    
+        echo '</td></tr>';
+        echo '</table>';
+        submit_button('Générer la structure', 'primary', 'submit');
+        echo '</form>';
+    }
+    
+/*
     private function render_keyword_form($keyword, $nb) {
         $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
         $existing_root_url = isset($_POST['existing_root_url']) ? sanitize_text_field($_POST['existing_root_url']) : '';
 
-        //$is_relative_url = (parse_url($existing_root_url, PHP_URL_SCHEME) === null && str_starts_with($existing_root_url, '/'));
+        $is_relative_url = (parse_url($existing_root_url, PHP_URL_SCHEME) === null && str_starts_with($existing_root_url, '/'));
 
         echo '<form method="post">';
         echo '<table class="form-table">';
-    
+        
+        // Champ mot-clé
         echo '<tr><th><label for="csb_keyword">Mots Clés principaux</label></th>';
         echo '<td><input type="text" id="csb_keyword" name="csb_keyword" value="' . esc_attr($keyword) . '" class="regular-text" required></td></tr>';
-    
+        
+
+        // Champ nombre de niveaux
         echo '<tr><th><label for="csb_nb_nodes">Nombre de sous-niveaux</label></th>';
         echo '<td><input type="number" id="csb_nb_nodes" name="csb_nb_nodes" value="' . esc_attr($nb) . '" class="regular-text" required></td></tr>';
     
+        // Case à cocher : utiliser article racine
         echo '<tr><th><label for="use_existing_root">Utiliser un article racine existant</label></th>';
         echo '<td><input type="checkbox" id="use_existing_root" name="use_existing_root" value="1" ' . checked(1, $use_existing_root, false) . '></td></tr>';
-    
+        
+        // Champ URL
         echo '<tr><th><label for="existing_root_url">URL de l’article racine</label></th>';
         echo '<td><input type="text" id="existing_root_url" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" class="regular-text">';
         echo '<p class="description">Vous pouvez entrer une URL relative (ex: /mon-article) ou absolue (ex: https://monsite.com/mon-article)</p>';
+        
+        // Avertir si l'utilisateur avait saisi une URL absolue
+        if (!empty($existing_root_url) && str_starts_with($existing_root_url, 'http')) {
+            echo '<p style="color: red;">❗ Les URLs absolues sont automatiquement converties en lien relatif.</p>';
+        }
+        
         echo '</td></tr>';
     
         echo '</table>';
         submit_button('Générer la structure', 'primary', 'submit');
         echo '</form>';
     }
-    
+ */   
     
     
 
