@@ -82,7 +82,7 @@ class CSB_Admin {
         $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
         $existing_root_url = isset($_POST['existing_root_url']) ? sanitize_text_field($_POST['existing_root_url']) : '';
 
-        $is_relative_url = (parse_url($existing_root_url, PHP_URL_SCHEME) === null && str_starts_with($existing_root_url, '/'));
+        //$is_relative_url = (parse_url($existing_root_url, PHP_URL_SCHEME) === null && str_starts_with($existing_root_url, '/'));
 
         echo '<form method="post">';
         echo '<table class="form-table">';
