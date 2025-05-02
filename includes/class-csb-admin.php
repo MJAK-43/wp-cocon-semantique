@@ -159,8 +159,6 @@ class CSB_Admin {
     
         if (empty($post_ids)) {
             echo '<div class="notice notice-info"><p>ℹ️ Aucun article trouvé pour l’auteur "' . esc_html($author_login) . '".</p></div>';
-            print_r($wpdb->get_var($wpdb->prepare(
-                "SELECT * FROM $wpdb->posts")));
             return;
         }
     
