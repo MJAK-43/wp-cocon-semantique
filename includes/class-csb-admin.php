@@ -27,8 +27,8 @@ class CSB_Admin {
     }
 
     private function capitalize_each_word($text) {
-        $text = strtolower($text);    // On met tout en minuscule d'abord
-        $text = ucwords($text);       // Puis on met en majuscule chaque mot
+        $text = strtolower($text);    
+        $text = ucwords($text);     
         return $text;
     }
 
@@ -45,7 +45,7 @@ class CSB_Admin {
         if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
             
             //$this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
-            $this->last_tree = $this->generator->generate_structure_array($keyword, $this->nb,true);
+            $this->last_tree = $this->generator->generate_structure_array($keyword, $this->nb,false);
             
             // echo "<br>";echo "<br>";echo "<br>";
             //     print_r($this->last_tree);
