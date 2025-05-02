@@ -105,7 +105,7 @@ class CSB_Admin {
         echo '<p class="description">Uniquement une URL relative (ex: /mon-article)</p>';
     
         if (!empty($original_url) && str_starts_with($original_url, 'http')) {
-            echo '<p style="color: red;">❗ L’URL absolue a été automatiquement convertie en lien relatif : <code>' . esc_html($existing_root_url) . '</code></p>';
+            echo '<p style="color: red;">❗ L’URL absolue a été automatiquement convertie en lien relatif';
         }
     
         echo '</td></tr>';
