@@ -140,7 +140,7 @@ class CSB_Admin {
     }
     private function delete_all_posts_by_author($author_login = 'nicolas') {
         global $wpdb;
-        echo "///////////////////////////////////////";
+        //echo "///////////////////////////////////////";
         $author_id = $wpdb->get_var($wpdb->prepare(
             "SELECT ID FROM $wpdb->users WHERE user_login = %s",
             $author_login
