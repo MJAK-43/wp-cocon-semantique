@@ -67,7 +67,7 @@ class CSB_Settings {
                         </td>
                     </tr>
 
-                    <!-- ✅ Champ pour l'API Freepik -->
+                    <!-- Champ pour l'API Freepik -->
                     <tr>
                         <th scope="row"><label for="csb_freepik_api_key">Clé API Freepik</label></th>
                         <td>

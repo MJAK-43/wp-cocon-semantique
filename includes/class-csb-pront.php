@@ -66,7 +66,11 @@ class CSB_Prompts implements PromptProviderInterface {
         Important :
         - Langage naturel, agréable, optimisé.
         - Pas de ```html ni Markdown.
-        - Vocabulaire riche, sémantiquement varié.";
+        - Vocabulaire riche, sémantiquement varié.;
+
+        Interdictions :
+        - N'utilise pas ```html ni de blocs Markdown.
+        - N'utilise que HTML pur dans les balises spécifiées";
     }
 
     public function leafDevelopment(string $title, string $structure, int $number): string{
