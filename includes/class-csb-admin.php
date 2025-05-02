@@ -36,7 +36,9 @@ class CSB_Admin {
         $keyword =$this->capitalize_each_word(isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '');
         $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
         $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
-        $existing_root_url = isset($_POST['existing_root_url']) ? esc_url($_POST['existing_root_url']) : '';
+        $existing_root_url = isset($_POST['existing_root_url']) ? $_POST['existing_root_url'] : '';
+        $existing_root_url = $this->sanitize_to_relative_url($existing_root_url);
+
 
 
     
@@ -208,6 +210,28 @@ class CSB_Admin {
         // }
         // else 
         //     echo '<p> Pas de lien fornie</p>';
+    }
+    
+    private function sanitize_to_relative_url(string $url): string {
+        $parsed = parse_url($url);
+    
+        if (!isset($parsed['path'])) {
+            return '';
+        }
+    
+        $relative_url = $parsed['path'];
+    
+        // Ajoute la query string si elle existe
+        if (isset($parsed['query'])) {
+            $relative_url .= '?' . $parsed['query'];
+        }
+    
+        // Ajoute le fragment si nécessaire
+        if (isset($parsed['fragment'])) {
+            $relative_url .= '#' . $parsed['fragment'];
+        }
+    
+        return $relative_url;
     }
     
 

@@ -238,7 +238,7 @@ class CSB_Generator {
                 //print_r($prompt_dev);
 
                 $dev_content ="";
-                $dev_content =$this->call_api($prompt_dev);
+                //$dev_content =$this->call_api($prompt_dev);
 
                 $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
         
