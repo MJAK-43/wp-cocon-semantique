@@ -224,7 +224,7 @@ class CSB_Generator {
         //print_r($prompt_intro);
 
         $intro ="";
-        $intro =$this->call_api($prompt_intro);
+        //$intro =$this->call_api($prompt_intro);
     
         // Développements
         $developments_html = '';
