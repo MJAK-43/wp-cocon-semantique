@@ -19,7 +19,7 @@ class CSB_Admin {
             'Cocon Sémantique',
             'Cocon Sémantique',
             'manage_options',
-            'csb_admin', // <-- slug ici
+            'csb_admin',
             [$this, 'render_admin_page'],
             'dashicons-networking',
             30
@@ -143,47 +143,6 @@ class CSB_Admin {
         echo '</form>';
     }
 
-    
-    // public function maybe_delete_author_posts() {
-    //     if (isset($_POST['delete_author_posts']) && current_user_can('manage_options')) {
-    //         $this->delete_all_posts_by_author();
-    //     }
-    // }
-    
-    private function delete_all_posts_by_author($author_login=83) {
-        return;
-        // global $wpdb;
-        // //echo "///////////////////////////////////////";
-        // $author_id = $wpdb->get_var($wpdb->prepare(
-        //     "SELECT ID FROM $wpdb->users WHERE ID = %d",
-        //     $author_login
-        // ));
-        
-        
-    
-        // if (!$author_id) {
-        //     echo '<div class="notice notice-error"><p>❌ Aucun utilisateur trouvé avec le login "' . esc_html($author_login) . '".</p></div>';
-        //     return;
-        // }
-    
-        // $post_ids = $wpdb->get_col($wpdb->prepare(
-        //     "SELECT ID FROM $wpdb->posts WHERE post_type = 'post' AND post_author = %d",
-        //     $author_id
-        // ));
-
-    
-        // if (empty($post_ids)) {
-        //     echo '<div class="notice notice-info"><p>ℹ️ Aucun article trouvé pour l’auteur "' . esc_html($author_login) . '".</p></div>';
-        //     return;
-        // }
-    
-        // foreach ($post_ids as $post_id) {
-        //     wp_delete_post($post_id, true); // suppression définitive
-        // }
-    
-        // echo '<div class="notice notice-success"><p>✅ ' . count($post_ids) . ' article(s) de "' . esc_html($author_login) . '" supprimé(s) avec succès.</p></div>';
-    }
-
 
     private function render_structure_fields($tree, $prefix, $level) {
         echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . (($level+20)) . 'px;">';
@@ -251,17 +210,12 @@ class CSB_Admin {
     
         // 🔥 Après publication, récupérer les tokens utilisés
         $total_tokens = $this->generator->get_tokens_used();
-        //curl('https://isoluce.slack.com/archives/D08MREPLUGG/p1745596328927739');
 
         $published_count = $publisher->getPublishedCount();
         echo '<div class="notice notice-success is-dismissible"><p>✅ ' . $published_count . ' article(s) ont été publiés avec succès.</p></div>';        
         echo '<div class="notice notice-info is-dismissible"><p>🧠 Nombre total de tokens utilisés : <strong>' . intval($total_tokens) . '</strong> tokens.</p></div>';
         
-        // if (!empty($_POST['existing_root_url'])) {
-        //     echo '<p>🔗 Lien fourni par l\'utilisateur : ' . esc_url($_POST['existing_root_url']) . '</p>';
-        // }
-        // else 
-        //     echo '<p> Pas de lien fornie</p>';
+        
     }
     
     private function sanitize_to_relative_url(string $url): string {

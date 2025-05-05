@@ -21,6 +21,8 @@ require_once CSB_PATH . 'includes/class-csb-generator.php';
 
 
 
-// Initialiser l'admin
-new CSB_Admin();
-new CSB_Settings();
+// Initialisation différée
+add_action('plugins_loaded', function () {
+    new CSB_Admin();
+    new CSB_Settings();
+});
