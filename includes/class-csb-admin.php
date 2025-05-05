@@ -156,6 +156,7 @@ class CSB_Admin {
         $author_id = $wpdb->get_var($wpdb->prepare(
             "SELECT ID FROM $wpdb->users WHERE user_login = 83"
         ));
+        print_r($author_id);
         
     
         // if (!$author_id) {
