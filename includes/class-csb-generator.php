@@ -187,7 +187,6 @@ class CSB_Generator {
 
     
     
-    
 
     private function clean_generated_structure($text) {
         return preg_replace('/^```.*$\n?|```$/m', '', $text);

@@ -10,6 +10,7 @@ class CSB_Admin {
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         //echo "DOG";
+        add_action('admin_init', [$this, 'maybe_delete_author_posts']);
         $this->generator= new CSB_Generator(new CSB_Prompts());
     }
 
@@ -33,7 +34,10 @@ class CSB_Admin {
     }
 
     public function render_admin_page() {
-        $this->delete_all_posts_by_author();
+        echo '<form method="post">';
+        submit_button('❌ Supprimer les articles de Nicolas', 'delete', 'delete_author_posts');
+        echo '</form>';
+
         $keyword =$this->capitalize_each_word(isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '');
         $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
         $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
@@ -138,6 +142,14 @@ class CSB_Admin {
             submit_button('Valider et publier', 'primary', 'csb_validate_publish');
         echo '</form>';
     }
+
+    
+    public function maybe_delete_author_posts() {
+        if (isset($_POST['delete_author_posts']) && current_user_can('manage_options')) {
+            $this->delete_all_posts_by_author('Ndarietto');
+        }
+    }
+    
     private function delete_all_posts_by_author($author_login = 'nicolas') {
         global $wpdb;
         //echo "///////////////////////////////////////";
