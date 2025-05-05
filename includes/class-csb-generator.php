@@ -269,10 +269,11 @@ class CSB_Generator {
             
             $text_image_description = $this->call_api($prompt_image);
             $image_url =$this->fetch_image_from_api($title,$text_image_description);
-            // echo "<br";
-            // print_r($image_description);
-            // echo "<br";
-            // print_r($image_url);
+
+            echo "<br>";
+            print_r($image_description);
+            echo "<br>";
+            print_r($image_url);
             if (!str_starts_with($image_url, '❌')) {
                 $image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($image_description) . "\" style=\"max-width:100%; height:auto;\" />";
                 //print_r($image_url);
@@ -281,6 +282,7 @@ class CSB_Generator {
                 $publisher->set_featured_image($post_id, $image_url);
             } 
             else {
+                print_r("//////////////////");
                 throw new Exception("URL image invalide.");
             }
         } catch (Exception $e) {
