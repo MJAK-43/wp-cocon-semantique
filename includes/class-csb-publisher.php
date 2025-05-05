@@ -21,7 +21,7 @@ class CSB_Publisher {
     
 
     public function fill_and_publish_content(int $post_id, string $html_content): void {
-        $this->published_count++; 
+        $this->publishedCount++; 
         $updated = wp_update_post([
             'ID'           => $post_id,
             'post_content' => $html_content,
