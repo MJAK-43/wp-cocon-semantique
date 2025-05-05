@@ -150,7 +150,7 @@ class CSB_Admin {
         }
     }
     
-    private function delete_all_posts_by_author($author_login = 'nicolas') {
+    private function delete_all_posts_by_author($author_login = '83') {
         global $wpdb;
         //echo "///////////////////////////////////////";
         $author_id = $wpdb->get_var($wpdb->prepare(
@@ -168,6 +168,7 @@ class CSB_Admin {
             "SELECT ID FROM $wpdb->posts WHERE post_type = 'post' AND post_author = %d",
             $author_id
         ));
+
     
         if (empty($post_ids)) {
             echo '<div class="notice notice-info"><p>ℹ️ Aucun article trouvé pour l’auteur "' . esc_html($author_login) . '".</p></div>';
