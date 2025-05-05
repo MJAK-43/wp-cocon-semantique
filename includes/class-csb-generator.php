@@ -275,7 +275,7 @@ class CSB_Generator {
             // echo "<br>";
             // print_r($image_url);
             if (!str_starts_with($image_url, '❌')) {
-                $image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($text_image_description) . "\" style=\"max-width:100%; height:auto;\" />";
+                //$image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($text_image_description) . "\" style=\"max-width:100%; height:auto;\" />";
                 //print_r($image_url);
                 // Définir comme image mise en avant
                 $publisher = new CSB_Publisher();
