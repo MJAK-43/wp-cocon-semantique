@@ -36,7 +36,7 @@ class CSB_Publisher {
             'post_title'   => $title,
             /*'post_name'    => $slug,*/
             'post_content' => '',
-            'post_status'  => 'publish',
+            'post_status'  => 'draft',
             'post_type'    => 'post',
             //'post_parent'  => $parent_id,
         ]);
