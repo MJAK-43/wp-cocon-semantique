@@ -150,7 +150,7 @@ class CSB_Admin {
         }
     }
     
-    private function delete_all_posts_by_author($author_login) {
+    private function delete_all_posts_by_author($author_login=83) {
         global $wpdb;
         //echo "///////////////////////////////////////";
         $author_id = $wpdb->get_var($wpdb->prepare(
@@ -159,10 +159,10 @@ class CSB_Admin {
         ));
         
     
-        // if (!$author_id) {
-        //     echo '<div class="notice notice-error"><p>❌ Aucun utilisateur trouvé avec le login "' . esc_html($author_login) . '".</p></div>';
-        //     return;
-        // }
+        if (!$author_id) {
+            echo '<div class="notice notice-error"><p>❌ Aucun utilisateur trouvé avec le login "' . esc_html($author_login) . '".</p></div>';
+            return;
+        }
     
         $post_ids = $wpdb->get_col($wpdb->prepare(
             "SELECT ID FROM $wpdb->posts WHERE post_type = 'post' AND post_author = %d",
