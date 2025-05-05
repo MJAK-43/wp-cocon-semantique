@@ -253,7 +253,8 @@ class CSB_Admin {
         $total_tokens = $this->generator->get_tokens_used();
         //curl('https://isoluce.slack.com/archives/D08MREPLUGG/p1745596328927739');
 
-        echo '<div class="notice notice-success is-dismissible"><p>✅ Tous les articles ont été mis à jour avec leur contenu complet.</p></div>';
+        $published_count = $publisher->getPublishedCount();
+        echo '<div class="notice notice-success is-dismissible"><p>✅ ' . $published_count . ' article(s) ont été publiés avec succès.</p></div>';        
         echo '<div class="notice notice-info is-dismissible"><p>🧠 Nombre total de tokens utilisés : <strong>' . intval($total_tokens) . '</strong> tokens.</p></div>';
         
         // if (!empty($_POST['existing_root_url'])) {

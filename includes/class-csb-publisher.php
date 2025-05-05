@@ -2,6 +2,12 @@
 if (!defined('ABSPATH')) exit;
 
 class CSB_Publisher {
+    private int $publishedCount = 0;
+    public function getPublishedCount(): int {
+        return $this->publishedCount;
+    }
+
+
     public function registerAllPost(array &$tree) {
         foreach ($tree as $slug => &$node) {
             $post_id = $this->createPostDraft($node['title']);
@@ -15,6 +21,7 @@ class CSB_Publisher {
     
 
     public function fill_and_publish_content(int $post_id, string $html_content): void {
+        $this->published_count++; 
         $updated = wp_update_post([
             'ID'           => $post_id,
             'post_content' => $html_content,
