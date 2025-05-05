@@ -223,7 +223,7 @@ class CSB_Generator {
         //print_r($prompt_intro);
 
         $intro ="";
-        $intro =$this->call_api($prompt_intro);
+        //$intro =$this->call_api($prompt_intro);
     
         // Développements
         $developments_html = '';
@@ -237,7 +237,7 @@ class CSB_Generator {
                 //print_r($prompt_dev);
 
                 $dev_content ="";
-                $dev_content =$this->call_api($prompt_dev);
+                //$dev_content =$this->call_api($prompt_dev);
 
                 $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
         
@@ -248,7 +248,7 @@ class CSB_Generator {
             $prompt_leaf =$this->promptProvider->leafDevelopment($title, $structure, $number);
             //print_r($prompt_leaf);
             $dev_content ="";
-            $dev_content =$this->call_api($prompt_leaf);
+            //$dev_content =$this->call_api($prompt_leaf);
             $developments_html .= $dev_content;
         }
     
@@ -256,7 +256,7 @@ class CSB_Generator {
         $prompt_conclusion = $this->promptProvider->conclusion($title, $structure);
         $conclusion ="";
 
-        $conclusion =$this->call_api($prompt_conclusion);
+        //$conclusion =$this->call_api($prompt_conclusion);
         
         // Récupération de l'URL de l'image depuis Freepik
         $image = '';
@@ -275,7 +275,7 @@ class CSB_Generator {
             // print_r($image_url);
             if (!str_starts_with($image_url, '❌')) {
                 $image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($image_description) . "\" style=\"max-width:100%; height:auto;\" />";
-                print_r($image_url);
+                //print_r($image_url);
                 // Définir comme image mise en avant
                 $publisher = new CSB_Publisher();
                 $publisher->set_featured_image($post_id, $image_url);
