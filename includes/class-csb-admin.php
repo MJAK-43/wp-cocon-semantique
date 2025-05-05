@@ -10,7 +10,7 @@ class CSB_Admin {
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         //echo "DOG";
-        add_action('admin_init', [$this, 'maybe_delete_author_posts']);
+        // add_action('admin_init', [$this, 'maybe_delete_author_posts']);
         $this->generator= new CSB_Generator(new CSB_Prompts());
     }
 
@@ -34,9 +34,9 @@ class CSB_Admin {
     }
 
     public function render_admin_page() {
-        echo '<form method="post">';
-        submit_button('❌ Supprimer les articles de Nicolas', 'delete', 'delete_author_posts');
-        echo '</form>';
+        // echo '<form method="post">';
+        // submit_button('❌ Supprimer les articles de Nicolas', 'delete', 'delete_author_posts');
+        // echo '</form>';
 
         $keyword =$this->capitalize_each_word(isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '');
         $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
@@ -144,43 +144,44 @@ class CSB_Admin {
     }
 
     
-    public function maybe_delete_author_posts() {
-        if (isset($_POST['delete_author_posts']) && current_user_can('manage_options')) {
-            $this->delete_all_posts_by_author();
-        }
-    }
+    // public function maybe_delete_author_posts() {
+    //     if (isset($_POST['delete_author_posts']) && current_user_can('manage_options')) {
+    //         $this->delete_all_posts_by_author();
+    //     }
+    // }
     
     private function delete_all_posts_by_author($author_login=83) {
-        global $wpdb;
-        //echo "///////////////////////////////////////";
-        $author_id = $wpdb->get_var($wpdb->prepare(
-            "SELECT ID FROM $wpdb->users WHERE ID = %d",
-            $author_login
-        ));
+        return;
+        // global $wpdb;
+        // //echo "///////////////////////////////////////";
+        // $author_id = $wpdb->get_var($wpdb->prepare(
+        //     "SELECT ID FROM $wpdb->users WHERE ID = %d",
+        //     $author_login
+        // ));
         
         
     
-        if (!$author_id) {
-            echo '<div class="notice notice-error"><p>❌ Aucun utilisateur trouvé avec le login "' . esc_html($author_login) . '".</p></div>';
-            return;
-        }
+        // if (!$author_id) {
+        //     echo '<div class="notice notice-error"><p>❌ Aucun utilisateur trouvé avec le login "' . esc_html($author_login) . '".</p></div>';
+        //     return;
+        // }
     
-        $post_ids = $wpdb->get_col($wpdb->prepare(
-            "SELECT ID FROM $wpdb->posts WHERE post_type = 'post' AND post_author = %d",
-            $author_id
-        ));
+        // $post_ids = $wpdb->get_col($wpdb->prepare(
+        //     "SELECT ID FROM $wpdb->posts WHERE post_type = 'post' AND post_author = %d",
+        //     $author_id
+        // ));
 
     
-        if (empty($post_ids)) {
-            echo '<div class="notice notice-info"><p>ℹ️ Aucun article trouvé pour l’auteur "' . esc_html($author_login) . '".</p></div>';
-            return;
-        }
+        // if (empty($post_ids)) {
+        //     echo '<div class="notice notice-info"><p>ℹ️ Aucun article trouvé pour l’auteur "' . esc_html($author_login) . '".</p></div>';
+        //     return;
+        // }
     
-        foreach ($post_ids as $post_id) {
-            wp_delete_post($post_id, true); // suppression définitive
-        }
+        // foreach ($post_ids as $post_id) {
+        //     wp_delete_post($post_id, true); // suppression définitive
+        // }
     
-        echo '<div class="notice notice-success"><p>✅ ' . count($post_ids) . ' article(s) de "' . esc_html($author_login) . '" supprimé(s) avec succès.</p></div>';
+        // echo '<div class="notice notice-success"><p>✅ ' . count($post_ids) . ' article(s) de "' . esc_html($author_login) . '" supprimé(s) avec succès.</p></div>';
     }
 
 
