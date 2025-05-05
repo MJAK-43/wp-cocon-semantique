@@ -14,7 +14,7 @@ class CSB_Prompts implements PromptProviderInterface {
         - Le mot-clé principal est : \"$keyword\"
         - $depth sous-thèmes, chacun avec $depth sous-sous-thèmes.
         - Chaque titre doit commencer par une majuscule à chaque mot
-        Pas de commentaires, pas de balises, juste le texte hiérarchique.";
+        Pas de commentaires, pas de balises ,Pas de / ou \ , juste le texte hiérarchique.";
     }
 
     public function intro(string $title, string $structure): string{
