@@ -146,7 +146,7 @@ class CSB_Admin {
     
     public function maybe_delete_author_posts() {
         if (isset($_POST['delete_author_posts']) && current_user_can('manage_options')) {
-            $this->delete_all_posts_by_author('Ndarietto');
+            $this->delete_all_posts_by_author();
         }
     }
     
