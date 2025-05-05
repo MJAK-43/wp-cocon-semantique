@@ -150,13 +150,13 @@ class CSB_Admin {
         }
     }
     
-    private function delete_all_posts_by_author($author_login = '83') {
+    private function delete_all_posts_by_author($author_login) {
         global $wpdb;
         //echo "///////////////////////////////////////";
         $author_id = $wpdb->get_var($wpdb->prepare(
-            "SELECT ID FROM $wpdb->users WHERE user_login = 83"
+            "SELECT ID FROM $wpdb->users WHERE user_login = s%",
+            $author_login
         ));
-        print_r($author_id);
         
     
         // if (!$author_id) {
