@@ -154,9 +154,10 @@ class CSB_Admin {
         global $wpdb;
         //echo "///////////////////////////////////////";
         $author_id = $wpdb->get_var($wpdb->prepare(
-            "SELECT ID FROM $wpdb->users WHERE ID = s%",
+            "SELECT ID FROM $wpdb->users WHERE ID = %d",
             $author_login
         ));
+        
         
     
         if (!$author_id) {
