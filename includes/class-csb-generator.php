@@ -16,16 +16,6 @@ class CSB_Generator {
     }
 
 
-    // private function getPromptStructure($keyword, $depth) {
-    //     return "Tu es un expert en SEO abtimiser pour le référencement. Génère une structure hiérarchique de cocon sémantique en texte brut.
-    //     Consignes :
-    //     - Utilise des tirets `-` pour chaque point.
-    //     - Utilise **4 espaces** pour chaque niveau d’imbrication (indentation).
-    //     - Le mot-clé principal est : \"$keyword\"
-    //     - $depth sous-thèmes, chacun avec $depth sous-sous-thèmes.
-    //     - Chaque titre doit commencer par une majuscule à chaque mot
-    //     Pas de commentaires, pas de balises, juste le texte hiérarchique.";
-    // }
     
 
     public function __construct(PromptProviderInterface $promptProvider, $api_key = null, $freepik_api_key = null) {
@@ -43,36 +33,11 @@ class CSB_Generator {
     }
     
 
-    public function generate_structure($keyword, $depth = 1) {
-        $prompt = $this->promptProvider->structure($keyword, $depth);
-        //print_r($prompt);
-        $raw = $this->call_api($prompt);
-        return $this->clean_generated_structure($raw);
+    public function generateStructure($keyword, $depth = 1) {
+        return $this->generateStaticStructure();
     }
 
-    public function generate_structure_array($keyword, $depth = 1, bool $use_fake = false) {
-
-        
-        if($use_fake){
-            //$this->expected_children_count=2;
-            return $this->generate_fake_structure_array();
-        }
-        // else
-        //     $this->expected_children_count=$depth;
-
-        // echo "<br>";echo "<br>";
-        // print_r("expected_children_count = ");
-        // print_r($this->generator->expected_children_count);
-        // echo "<br>";echo "<br>"; 
-
-        $markdown = $this->generate_structure($keyword, $depth);
-        $tree = $this->parse_markdown_structure($markdown);
-        //var_dump($tree);
-        //$this->assign_slugs_recursively($tree);
-        //var_dump($tree);
-        return $this->tree_to_slug_map($tree);
-
-    }
+    
 
     private function normalize_keyword($title) {
         // Convertir les accents
@@ -83,58 +48,22 @@ class CSB_Generator {
         return strtolower(trim($clean));
     }
 
-    private function parse_markdown_structure($text) {
-        $lines = explode("\n", trim($text));
-        $stack = [];
-        $root = [];
     
-        foreach ($lines as $line) {
-            if (trim($line) === '') continue;
-    
-            // Match le titre avec indentation (espaces) et tiret
-            if (preg_match('/^(\s*)-\s*(.+)$/', $line, $matches)) {
-                $indent = strlen($matches[1]); // nombre d'espaces
-                $title = trim($matches[2]);
-    
-                $level = intval($indent / 4); // 4 espaces = 1 niveau
-    
-                $node = ['title' => $title, 'children' => []];
-    
-                if ($level === 0) {
-                    $root[] = $node;
-                    $stack = [&$root[array_key_last($root)]];
-                } else {
-                    // Trouve le bon parent selon le niveau
-                    $parent = &$stack[$level - 1]['children'];
-                    $parent[] = $node;
-                    $stack[$level] = &$parent[array_key_last($parent)];
-                }
-            }
-        }
-    
-        return $root;
+    private function generateStaticStructure(): string {
+        return "- Chat\n"
+             . "    - Alimentation Du Chat\n"
+             . "        - Croquettes Pour Chatons\n"
+             . "        - Nourriture Maison Équilibrée\n"
+             . "        - Aliments Interdits\n"
+             . "    - Santé Du Chat\n"
+             . "        - Vaccins Essentiels\n"
+             . "        - Prévention Des Parasites\n"
+             . "        - Visites Chez Le Vétérinaire\n";
     }
-
+    
+    
     
 
-    private function tree_to_slug_map(array $tree) {
-        $map = [];
-    
-        foreach ($tree as $node) {
-            $slug = $this->generate_slug($node['title']);
-            $entry = [
-                'title' => $node['title'],
-            ];
-    
-            if (!empty($node['children'])) {
-                $entry['children'] = $this->tree_to_slug_map($node['children']);
-            }
-    
-            $map[$slug] = $entry;
-        }
-    
-        return $map;
-    }
 
     /**Utilise uniquement du texte brut sans mise en forme Markdown
      * Envoie une requête à l'API ChatGPT avec le prompt donne
@@ -189,7 +118,6 @@ class CSB_Generator {
     private function clean_generated_structure($text) {
         return preg_replace('/^```.*$\n?|```$/m', '', $text);
     }
-
 
     public function to_bullet_tree(array $map, int $current_id = null, int $indent = 0): string {
         $out = '';
@@ -296,20 +224,6 @@ class CSB_Generator {
         return $intro .$developments_html. $conclusion.$image;
     }
     
-
-    private function extract_subtree_context($slug, $tree) {
-        foreach ($tree as $key => $node) {
-            if ($key === $slug) return [$key => $node];
-    
-            if (!empty($node['children'])) {
-                $found = $this->extract_subtree_context($slug, $node['children']);
-                if ($found !== null) {
-                    return [$key => array_merge($node, ['children' => $found])];
-                }
-            }
-        }
-        return null;
-    }
     
     /***
      * 
@@ -390,48 +304,6 @@ class CSB_Generator {
     }
     
         
-    private function generate_fake_structure_array() {
-        return [
-            'chat' => [
-                'title' => 'Chat',
-                'slug' => 'chat',
-                'children' => [
-                    'alimentation-chat' => [
-                        'title' => 'Alimentation du chat',
-                        'slug' => 'alimentation-chat',
-                        'children' => [
-                            'croquettes' => [
-                                'title' => 'Croquettes pour chat',
-                                'slug' => 'croquettes',
-                                'children' => []
-                            ],
-                            'patee' => [
-                                'title' => 'Pâtée pour chat',
-                                'slug' => 'patee',
-                                'children' => []
-                            ],
-                        ]
-                    ],
-                    'sante-chat' => [
-                        'title' => 'Santé du chat',
-                        'slug' => 'sante-chat',
-                        'children' => [
-                            'vaccins' => [
-                                'title' => 'Vaccins pour chat',
-                                'slug' => 'vaccins',
-                                'children' => []
-                            ],
-                            'vermifuge' => [
-                                'title' => 'Vermifuge pour chat',
-                                'slug' => 'vermifuge',
-                                'children' => []
-                            ],
-                        ]
-                    ]
-                ]
-            ]
-        ];
-    }
 
     
     

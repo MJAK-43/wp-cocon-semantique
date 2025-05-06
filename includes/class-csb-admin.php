@@ -49,14 +49,12 @@ class CSB_Admin {
     
         if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
             
-            //$this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
-            $this->last_tree = $this->generator->generate_structure($keyword, $this->nb);
-            echo "<br>";echo "<br>";
-            print_r($this->generator->generate_structure($keyword, $this->nb));
-            echo "<br>";echo "<br>";
-            // echo "<br>";echo "<br>";echo "<br>";
-            //     print_r($this->last_tree);
-            //     echo "<br>";echo "<br>";echo "<br>";
+            //$this->generator->setKeyword($keyword);
+            $raw = $this->generator->generateStructure($this->nb);
+            $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
+            echo "<br>";echo "<br>";echo "<br>";
+            print_r($this->mapIdPost);
+            echo "<br>";echo "<br>";echo "<br>";
         }
     
         if (isset($_POST['structure'])) {
@@ -177,6 +175,10 @@ class CSB_Admin {
     
 
     private function process_structure() {
+        echo "<br>";echo "<br>";
+        print_r($this->mapIdPost);
+        echo "<br>";echo "<br>";
+        /*
         $publisher = new CSB_Publisher();
         $linker = new CSB_Linker();
         $use_existing_root = isset($_POST['use_existing_root']) && $_POST['use_existing_root'] == '1';
@@ -217,7 +219,7 @@ class CSB_Admin {
         echo '<div class="notice notice-success is-dismissible"><p>✅ ' . $published_count . ' article(s) ont été publiés avec succès.</p></div>';        
         echo '<div class="notice notice-info is-dismissible"><p>🧠 Nombre total de tokens utilisés : <strong>' . intval($total_tokens) . '</strong> tokens.</p></div>';
         
-        
+        */
     }
     
     private function sanitize_to_relative_url(string $url): string {
@@ -241,34 +243,54 @@ class CSB_Admin {
     
         return $relative_url;
     }
-    
 
 
-    private function debug_display_tree(array $tree, int $indent = 0) {
-        foreach ($tree as $slug => $node) {
-            $prefix = str_repeat('— ', $indent);
-            $title = $node['title'] ?? $slug;
-            $post_id = isset($node['post_id']) ? " (ID: {$node['post_id']})" : '';
-            echo "{$prefix}<strong>{$title}</strong>{$post_id}<br>";
+    private function createMapEntry(string $title, ?int $parent_id, ?string $forced_link = null): array {
+        $publisher = new CSB_Publisher();
+        $post_id = $publisher->createPostDraft($title);
     
-            if (!empty($node['children'])) {
-                $this->debug_display_tree($node['children'], $indent + 1);
-            }
-        }
+        return [
+            'post_id'      => $post_id,
+            'title'        => $title,
+            'link'         => $forced_link ?? wp_make_link_relative(get_permalink($post_id)),
+            'parent_id'    => $parent_id,
+            'children_ids' => []
+        ];
     }
     
-
-    public static function debug_display_links(array $tree, $indent = 0) {
-        foreach ($tree as $slug => $node) {
-            $title = $node['title'] ?? $slug;
-            $link = $node['link'] ?? '❌ Aucun lien';
-            echo str_repeat('—', $indent) . " <strong>{$title}</strong> → <a href='{$link}' target='_blank'>{$link}</a><br>";
     
-            if (!empty($node['children'])) {
-                self::debug_display_links($node['children'], $indent + 1);
+
+
+    private function convertStructureToMap(string $raw, ?string $forced_link = null): array {
+        $lines = explode("\n", trim($raw));
+        $stack = [];
+        $map = [];
+    
+        foreach ($lines as $line) {
+            if (trim($line) === '') continue;
+    
+            if (preg_match('/^(\s*)-\s*(.+)$/', $line, $matches)) {
+                $indent = strlen($matches[1]);
+                $title = trim($matches[2]);
+                $level = intval($indent / 4);
+    
+                $parent_id = $level === 0 ? null : $stack[$level - 1]['post_id'];
+                $entry = $this->createMapEntry($title, $parent_id, $level === 0 ? $forced_link : null);
+                $post_id = $entry['post_id'];
+    
+                $map[$post_id] = $entry;
+                $stack[$level] = &$map[$post_id];
+    
+                // Ajout dans les enfants du parent
+                if ($level > 0) {
+                    $map[$parent_id]['children_ids'][] = $post_id;
+                }
             }
         }
+    
+        return $map;
     }
+    
 
     private function build_node_map(array $node, ?string $parent_id = null, ?string $forced_link = null): array {
         $map = [];

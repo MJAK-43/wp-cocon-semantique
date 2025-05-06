@@ -30,7 +30,7 @@ class CSB_Publisher {
     }
     
 
-    private function createPostDraft($title) {
+    public function createPostDraft($title) {
         /*$slug = $this->generate_unique_slug($title);*/
         $post= wp_insert_post([
             'post_title'   => $title,
