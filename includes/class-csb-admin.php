@@ -50,8 +50,10 @@ class CSB_Admin {
         if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
             
             //$this->last_tree = $generator->generate_structure_array($keyword, $this->nb);
-            $this->last_tree = $this->generator->generate_structure_array($keyword, $this->nb,false);
-            
+            $this->last_tree = $this->generator->generate_structure($keyword, $this->nb);
+            echo "<br>";echo "<br>";
+            print_r($this->generator->generate_structure($keyword, $this->nb));
+            echo "<br>";echo "<br>";
             // echo "<br>";echo "<br>";echo "<br>";
             //     print_r($this->last_tree);
             //     echo "<br>";echo "<br>";echo "<br>";
@@ -294,7 +296,7 @@ class CSB_Admin {
     
             $map[$node['post_id']] = $entry;
     
-            // Ensuite, on descend récursivement
+            // Appel récursif
             if (!empty($node['children'])) {
                 foreach ($node['children'] as $child) {
                     $map += $this->build_node_map($child, $node['post_id']);

@@ -186,12 +186,9 @@ class CSB_Generator {
     }
 
     
-    
-
     private function clean_generated_structure($text) {
         return preg_replace('/^```.*$\n?|```$/m', '', $text);
     }
-
 
 
     public function to_bullet_tree(array $map, int $current_id = null, int $indent = 0): string {
@@ -209,7 +206,6 @@ class CSB_Generator {
         //print_r($out);
         return $out;
     }
-    
     
 
     public function generateContent(int $post_id, array $map, int $number): string {
@@ -299,8 +295,6 @@ class CSB_Generator {
         // Concatène toutes les parties
         return $intro .$developments_html. $conclusion.$image;
     }
-    
-    
     
 
     private function extract_subtree_context($slug, $tree) {
