@@ -399,11 +399,14 @@ class CSB_Admin {
         $map[$new_post_id] = $entry;
         $map[$parent_post_id]['children_ids'][] = $new_post_id;
     }
+
+
+    
     
     private function deleteNode(&$map, $post_id) {
         // Supprimer les enfants récursivement
         foreach ($map[$post_id]['children_ids'] as $child_id) {
-            $this->delete_node_recursive($map, $child_id);
+            $this->deleteNode($map, $child_id); 
         }
     
         // Supprimer la référence dans le parent
@@ -415,7 +418,7 @@ class CSB_Admin {
             );
         }
     
-        // Enfin, supprimer ce nœud
+        // Supprimer ce nœud
         unset($map[$post_id]);
     }
     
