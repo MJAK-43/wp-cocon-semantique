@@ -88,7 +88,7 @@ class CSB_Admin {
             if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
 
                 //$this->generator->setKeyword($keyword);
-                $raw = $this->generator->generateStructure($keyword,$this->nb,true);
+                $raw = $this->generator->generateStructure($keyword,$this->nb);
                 $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
                 update_option('csb_structure_map', $this->mapIdPost);
             }
@@ -240,7 +240,7 @@ class CSB_Admin {
         // 📝 Publication de chaque nœud
         foreach ($this->mapIdPost as $id => $info) {
             if ($info['parent_id'] != null || empty($forced_link)) {
-                $html ="temp" ;//$this->generator->generateContent($id, $this->mapIdPost, $this->nb);
+                $html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb);
                 $html .= $linker->generate_structured_links($this->mapIdPost, $id);
                 $publisher->fill_and_publish_content($id, $html);
             }
