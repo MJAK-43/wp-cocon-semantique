@@ -2,7 +2,6 @@
 if (!defined('ABSPATH')) exit;
 
 class CSB_Admin {
-    //private $last_tree = [];
     private int $nb;
     private $mapIdPost=[];
     private $generator;
