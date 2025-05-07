@@ -2,7 +2,7 @@
 if (!defined('ABSPATH')) exit;
 
 class CSB_Admin {
-    private $last_tree = [];
+    //private $last_tree = [];
     private int $nb;
     private $mapIdPost=[];
     private $generator;
@@ -34,10 +34,7 @@ class CSB_Admin {
     }
 
     public function render_admin_page() {
-        // echo '<form method="post">';
-        // submit_button('❌ Supprimer les articles de Nicolas', 'delete', 'delete_author_posts');
-        // echo '</form>';
-
+    
         $keyword =$this->capitalize_each_word(isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '');
         $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
         $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
@@ -45,22 +42,22 @@ class CSB_Admin {
         $existing_root_url = $this->sanitize_to_relative_url($existing_root_url);
 
 
-
+        if (empty($this->mapIdPost)) {
+            $this->mapIdPost = get_option('csb_structure_map', []);
+        }
     
         if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
             
             //$this->generator->setKeyword($keyword);
             $raw = $this->generator->generateStructure($this->nb);
             $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
-            echo "<br>";echo "<br>";echo "<br>";
-            print_r($this->mapIdPost);
-            echo "<br>";echo "<br>";echo "<br>";
+            update_option('csb_structure_map', $this->mapIdPost);
         }
     
         if (isset($_POST['structure'])) {
-            $this->last_tree = $_POST['structure'];
-            $this->handle_structure_actions($this->last_tree); 
-            
+            //$this->last_tree = $_POST['structure'];
+            $this->handleStructureActionsMap($this->mapIdPost); 
+    
             if (isset($_POST['csb_validate_publish'])) {
                 $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
                 $this->process_structure();   
@@ -70,7 +67,7 @@ class CSB_Admin {
         echo '<div class="wrap">';
         echo '<h1>Générateur de Cocon Sémantique</h1>';
         $this->render_keyword_form($keyword, $this->nb);
-        $this->render_structure_form($this->last_tree, 'structure', 0, $use_existing_root, $existing_root_url);
+        $this->render_structure_form('structure', 0, $use_existing_root, $existing_root_url);
         echo '</div>';
     
         echo '<div style="margin: 1em 0; padding: 1em; border-left: 4px solid #0073aa; background: #f1f1f1;">';
@@ -83,6 +80,30 @@ class CSB_Admin {
             echo '</ul></div>';
         }
     }
+
+    private function render_structure_form($prefix = 'structure', $level = 0, $use_existing_root = 0, $existing_root_url = ''){
+        echo '<form method="post">';
+        echo '<input type="hidden" name="csb_nb_nodes" value="' . intval($this->nb) . '" />';
+
+        echo '<fieldset style="padding: 1em; border: 1px solid #ccd0d4; background: #fff; margin-bottom: 1em;">';
+        echo '<legend style="font-weight: bold;">Structure générée</legend>';
+
+        // Affichage à partir de la racine (parent_id null)
+        $this->render_structure_fields(null, $prefix, 0);
+
+        echo '</fieldset>';
+
+        if ($use_existing_root) {
+            echo '<input type="hidden" name="use_existing_root" value="1" />';
+        }
+        if (!empty($existing_root_url)) {
+            echo '<input type="hidden" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" />';
+        }
+
+        submit_button('Valider et publier', 'primary', 'csb_validate_publish');
+        echo '</form>';
+    }
+
     private function render_keyword_form($keyword, $nb) {
         $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
     
@@ -118,60 +139,32 @@ class CSB_Admin {
         submit_button('Générer la structure', 'primary', 'submit');
         echo '</form>';
     }
+
+    private function render_structure_fields(?int $parent_id, string $prefix, int $level) {
+        echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . ($level * 20) . 'px;">';
     
+        foreach ($this->mapIdPost as $id => $node) {
+            if ($node['parent_id'] !== $parent_id) continue;
     
-
-    private function render_structure_form($tree, $prefix = 'structure', $level = 0, $use_existing_root = 0, $existing_root_url = ''){
-        echo '<form method="post">';
-        echo '<input type="hidden" name="csb_nb_nodes" value="' . intval($this->nb) . '" />';
-
-        echo '<fieldset style="padding: 1em; border: 1px solid #ccd0d4; background: #fff; margin-bottom: 1em;">';
-        echo '<legend style="font-weight: bold;">Structure générée</legend>';
-
-        $this->render_structure_fields($tree, $prefix, $level);
-
-        echo '</fieldset>';
-
-        if ($use_existing_root) {
-            echo '<input type="hidden" name="use_existing_root" value="1" />';
-        }
-        if (!empty($existing_root_url)) {
-            echo '<input type="hidden" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" />';
-        }
-        if (!empty($this->last_tree)) 
-            submit_button('Valider et publier', 'primary', 'csb_validate_publish');
-        echo '</form>';
-    }
-
-
-    private function render_structure_fields($tree, $prefix, $level) {
-        echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . (($level+20)) . 'px;">';
-        //print_r($level);
+            $node_prefix = $prefix . "[$id]";
     
-        foreach ($tree as $index => $node) {
-            $node_prefix = $prefix . "[$index]";
             echo '<li style="margin-bottom: 10px;">';
-            
             echo '<div style="display: flex; align-items: center; gap: 6px;">';
             echo '<span style="min-width: 10px;">-</span>';
             echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" required />';
-            //echo '<button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">🗑️</button>';
-            //echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">➕ Sous-thème</button>';
+            echo '<button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">🗑️</button>';
+            echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">➕ Sous-thème</button>';
             echo '</div>';
     
-            if (!empty($node['children'])) {
-                //echo "DOG";
-                $this->render_structure_fields($node['children'], $node_prefix . '[children]', $level + 30 );
+            if (!empty($node['children_ids'])) {
+                $this->render_structure_fields($id, $prefix, $level + 1);
             }
-            // else
-            //     echo "cat";
     
             echo '</li>';
         }
     
         echo '</ul>';
     }
-    
     
 
     private function process_structure() {
@@ -258,8 +251,6 @@ class CSB_Admin {
         ];
     }
     
-    
-
 
     private function convertStructureToMap(string $raw, ?string $forced_link = null): array {
         $lines = explode("\n", trim($raw));
@@ -330,88 +321,59 @@ class CSB_Admin {
     }
     
 
-    private function generate_slug($title) {
-        global $wpdb;
-        $base_slug = sanitize_title($title);
-        $slug = $base_slug;
-        $i = 1;
 
-        while ($wpdb->get_var($wpdb->prepare(
-            "SELECT ID FROM $wpdb->posts WHERE post_name = %s AND post_type = 'post'",
-            $slug
-        ))) {
-            $slug = $base_slug . '-' . $i;
-            $i++;
-        }
-
-        return $slug;
-    }
-    private function &get_node_by_path(&$tree, $path_array) {
-        $ref = &$tree;
-        foreach ($path_array as $index) {
-            if (!isset($ref[$index]['children'])) {
-                $ref[$index]['children'] = [];
-            }
-            $ref = &$ref[$index]['children'];
-        }
-        return $ref;
-    }
-    
-
-    private function handle_structure_actions(&$tree) {
-        //return;
-        // Ajout d'un enfant
+    private function handleStructureActionsMap(&$map) {
+        // ➕ Ajouter un enfant
         if (isset($_POST['add_child'])) {
-            $path = str_replace(['structure[', ']'], '', $_POST['add_child']);
-            $segments = explode('[', $path);
-            $current = array_filter($segments, fn($v) => $v !== 'children');
-            $last = array_pop($current);
+            $parent_path = str_replace(['structure[', ']'], '', $_POST['add_child']);
+            $segments = explode('[', $parent_path);
+            $parent_post_id = intval($segments[0]);
     
-            // Accéder au parent via le chemin
-            $parent = &$this->get_node_by_path($tree, $current);
-    
-            if (!isset($parent[$last]['children'])) {
-                $parent[$last]['children'] = [];
-            }
-    
-            $title = 'Nouveau sous-thème';
-            $slug = $this->generate_slug($title);
-    
-            // Utiliser le slug comme clé
-            $parent[$last]['children'][$slug] = [
-                'title' => $title,
-                'slug' => $slug,
-                'children' => []
-            ];
+            $this->addChildToNode($map, $parent_post_id);
         }
     
-        // Suppression d'un nœud
+        // ❌ Supprimer un nœud (et ses enfants récursivement)
         if (isset($_POST['delete_node'])) {
-            $raw_path = explode('[', str_replace(']', '', str_replace('structure[', '', $_POST['delete_node'])));
-            $path = array_filter($raw_path, fn($v) => $v !== 'children');
-            $path = array_values($path); // réindexer
-            $this->delete_node_at_path($tree, $path);
+            $path = str_replace(['structure[', ']'], '', $_POST['delete_node']);
+            $segments = explode('[', $path);
+            $post_id = intval($segments[0]);
+    
+            if (isset($map[$post_id])) {
+                $this->deleteNode($map, $post_id);
+            }
         }
     }
-    
-    
-    
-    private function delete_node_at_path(&$tree, $path) {
-        $ref = &$tree;
-    
-        while (count($path) > 1) {
-            $key = array_shift($path); // pas de intval : on travaille avec des slugs
-            if (!isset($ref[$key]['children'])) return;
-            $ref = &$ref[$key]['children'];
-        }
-    
-        $final_key = array_shift($path);
-        if (isset($ref[$final_key])) {
-            unset($ref[$final_key]);
-        }
-    }
-       
 
+    private function addChildToNode(&$map, int $parent_post_id): void {
+        if (!isset($map[$parent_post_id])) return;
+    
+        $title = 'Nouveau sous-thème';
+        $entry = $this->createMapEntry($title, $parent_post_id);
+    
+        $new_post_id = $entry['post_id'];
+        $map[$new_post_id] = $entry;
+        $map[$parent_post_id]['children_ids'][] = $new_post_id;
+    }
+    
+    private function deleteNode(&$map, $post_id) {
+        // Supprimer les enfants récursivement
+        foreach ($map[$post_id]['children_ids'] as $child_id) {
+            $this->delete_node_recursive($map, $child_id);
+        }
+    
+        // Supprimer la référence dans le parent
+        $parent_id = $map[$post_id]['parent_id'];
+        if ($parent_id !== null && isset($map[$parent_id])) {
+            $map[$parent_id]['children_ids'] = array_filter(
+                $map[$parent_id]['children_ids'],
+                fn($id) => $id !== $post_id
+            );
+        }
+    
+        // Enfin, supprimer ce nœud
+        unset($map[$post_id]);
+    }
+    
     private function render_links_to_articles($parent_id = null, $level = 0) {
         echo '<ul style="padding-left: ' . (20 * $level) . 'px;">';
     
@@ -440,23 +402,4 @@ class CSB_Admin {
     }
       
 }
-
-function download_public_file($file_url) {
-    $ch = curl_init();
-
-    curl_setopt($ch, CURLOPT_URL, $file_url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Pour suivre les redirections (important pour Slack)
-
-    $response = curl_exec($ch);
-    $err = curl_error($ch);
-    curl_close($ch);
-
-    if ($err) {
-        throw new Exception("Erreur cURL : " . $err);
-    }
-
-    return $response; // C'est du contenu brut (image, fichier...)
-}
-
 

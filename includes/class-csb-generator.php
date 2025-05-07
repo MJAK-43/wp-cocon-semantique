@@ -54,11 +54,9 @@ class CSB_Generator {
              . "    - Alimentation Du Chat\n"
              . "        - Croquettes Pour Chatons\n"
              . "        - Nourriture Maison Équilibrée\n"
-             . "        - Aliments Interdits\n"
              . "    - Santé Du Chat\n"
              . "        - Vaccins Essentiels\n"
-             . "        - Prévention Des Parasites\n"
-             . "        - Visites Chez Le Vétérinaire\n";
+             . "        - Prévention Des Parasites\n";
     }
     
     
