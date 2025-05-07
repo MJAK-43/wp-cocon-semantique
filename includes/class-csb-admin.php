@@ -7,12 +7,52 @@ class CSB_Admin {
     private $mapIdPost=[];
     private $generator;
 
+    private static $minExecutionTime=600;
+    private static $minInputTime=60;
+    private static $minSize=32;
+
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         //echo "DOG";
         // add_action('admin_init', [$this, 'maybe_delete_author_posts']);
         $this->generator= new CSB_Generator(new CSB_Prompts());
     }
+
+    private static function convertBytes($size) {
+        $unit = strtoupper(substr($size, -1));
+        $value = (int) $size;
+    
+        switch($unit) {
+            case 'G': return $value * 1024 * 1024 * 1024;
+            case 'M': return $value * 1024 * 1024;
+            case 'K': return $value * 1024;
+            default:  return (int) $size;
+        }
+    }
+    private static function checkServerRequirements(): array {
+        $errors = [];
+    
+        $maxExecutionTime = (int) ini_get('max_execution_time');
+        $maxInputTime = (int) ini_get('max_input_time');
+        $postMaxSizeRaw = ini_get('post_max_size');
+        $postMaxSize = self::convertBytes($postMaxSizeRaw);
+    
+        // Comparaisons
+        if ($maxExecutionTime < self::$minExecutionTime) {
+            $errors[] = "⏱️ `max_execution_time` est trop bas : $maxExecutionTime (minimum requis : " . self::$minExecutionTime . ")";
+        }
+    
+        if ($maxInputTime < self::$minInputTime) {
+            $errors[] = "📥 `max_input_time` est trop bas : $maxInputTime (minimum requis : " . self::$minInputTime . ")";
+        }
+    
+        if ($postMaxSize < self::$minSize * 1024 * 1024) { // minSize est en Mo
+            $errors[] = "📦 `post_max_size` est trop petit : $postMaxSizeRaw (minimum requis : " . self::$minSize . "M)";
+        }
+    
+        return $errors;
+    }
+    
 
     public function add_admin_menu() {
         add_menu_page(
@@ -75,8 +115,21 @@ class CSB_Admin {
         
         echo '<div class="wrap">';
         echo '<h1>Générateur de Cocon Sémantique</h1>';
-        $this->render_keyword_form($keyword, $this->nb);
-        $this->render_structure_form('structure', 0, $use_existing_root, $existing_root_url);
+        // Vérification des paramètres système
+        $errors = $this->checkServerRequirements();
+        
+        if(!empty($errors)){
+            echo '<div class="notice notice-error"><ul>';
+            foreach ($errors as $error) {
+                echo '<li>' . esc_html($error) . '</li>';
+            }
+            echo '</ul></div>';
+        }
+        else{
+            $this->render_keyword_form($keyword, $this->nb);
+            $this->render_structure_form('structure', 0, $use_existing_root, $existing_root_url);
+        }
+
         echo '</div>';
     
         echo '<div style="margin: 1em 0; padding: 1em; border-left: 4px solid #0073aa; background: #f1f1f1;">';
