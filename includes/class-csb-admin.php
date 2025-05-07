@@ -105,6 +105,9 @@ class CSB_Admin {
                 if (isset($_POST['csb_validate_publish'])) {
                     $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
                     $this->process_structure();   
+                    echo '<div class="wrap"><h2>🔗 Articles publiés</h2><ul>';
+                    $this->render_links_to_articles();
+                    echo '</ul></div>';
                 }
             }
             $total_tokens = $this->generator->get_tokens_used();
@@ -134,12 +137,6 @@ class CSB_Admin {
         echo '<div style="margin: 1em 0; padding: 1em; border-left: 4px solid #0073aa; background: #f1f1f1;">';
         echo '<p><strong>🔐 Clé API :</strong> <a href="' . admin_url('admin.php?page=csb_settings') . '">Configurer ici</a></p>';
         echo '</div>';
-    
-        if (!empty($this->mapIdPost)) {
-            echo '<div class="wrap"><h2>🔗 Articles publiés</h2><ul>';
-            $this->render_links_to_articles();
-            echo '</ul></div>';
-        }
     }
 
     private function render_structure_form($prefix = 'structure', $level = 0, $use_existing_root = 0, $existing_root_url = ''){
