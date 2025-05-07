@@ -45,25 +45,34 @@ class CSB_Admin {
         if (empty($this->mapIdPost)) {
             $this->mapIdPost = get_option('csb_structure_map', []);
         }
-    
-        if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
+        if((!empty($keyword) && !empty($this->nb) && isset($_POST['submit']))||(isset($_POST['structure']))){
+            if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
             
-            //$this->generator->setKeyword($keyword);
-            $raw = $this->generator->generateStructure($this->nb);
-            $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
-            update_option('csb_structure_map', $this->mapIdPost);
-        }
-    
-        if (isset($_POST['structure'])) {
-            //$this->last_tree = $_POST['structure'];
-            $this->handleStructureActionsMap($this->mapIdPost); 
-    
-            if (isset($_POST['csb_validate_publish'])) {
-                $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
-                $this->process_structure();   
+                //$this->generator->setKeyword($keyword);
+                $raw = $this->generator->generateStructure($keyword,$this->nb);
+                $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
+                update_option('csb_structure_map', $this->mapIdPost);
             }
+        
+            if (isset($_POST['structure'])) {
+                $this->handleStructureActionsMap($this->mapIdPost); 
+    
+                 // Synchronise les modifications utilisateur (titres)
+                if (isset($_POST['structure']) && is_array($_POST['structure'])) {
+                    $this->updateMapFromPost($this->mapIdPost, $_POST['structure']);
+                    update_option('csb_structure_map', $this->mapIdPost);
+                }
+        
+                if (isset($_POST['csb_validate_publish'])) {
+                    $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
+                    $this->process_structure();   
+                }
+            }
+            $total_tokens = $this->generator->get_tokens_used();
+            echo '<div class="notice notice-info is-dismissible"><p>Nombre total de tokens utilisés : <strong>' . intval($total_tokens) . '</strong> tokens.</p></div>';
         }
     
+        
         echo '<div class="wrap">';
         echo '<h1>Générateur de Cocon Sémantique</h1>';
         $this->render_keyword_form($keyword, $this->nb);
@@ -74,7 +83,7 @@ class CSB_Admin {
         echo '<p><strong>🔐 Clé API :</strong> <a href="' . admin_url('admin.php?page=csb_settings') . '">Configurer ici</a></p>';
         echo '</div>';
     
-        if (!empty($this->last_tree)) {
+        if (!empty($this->mapIdPost)) {
             echo '<div class="wrap"><h2>🔗 Articles publiés</h2><ul>';
             $this->render_links_to_articles();
             echo '</ul></div>';
@@ -165,55 +174,36 @@ class CSB_Admin {
     
         echo '</ul>';
     }
-    
-
     private function process_structure() {
-        echo "<br>";echo "<br>";
-        print_r($this->mapIdPost);
-        echo "<br>";echo "<br>";
-        /*
         $publisher = new CSB_Publisher();
         $linker = new CSB_Linker();
+    
         $use_existing_root = isset($_POST['use_existing_root']) && $_POST['use_existing_root'] == '1';
         $forced_link = null;
-
+    
         if ($use_existing_root && !empty($_POST['existing_root_url'])) {
             $forced_link = sanitize_text_field($_POST['existing_root_url']);
         }
-
     
-        // Étape 1 : Créer les articles
-        $publisher->registerAllPost($this->last_tree);
+        // 💾 Mise à jour de la map persistée avant publication
+        update_option('csb_structure_map', $this->mapIdPost);
     
-        // Étape 2 : Construire la map des articles
-        $root = reset($this->last_tree); 
-        $this->mapIdPost = $this->build_node_map($root, null, $forced_link);
-
-        // if (!empty($forced_link)) {
-        //     echo '<div class="notice notice-info is-dismissible"><p>🔗 Lien utilisateur : <a href="' . esc_url($forced_link) . '" target="_blank">' . esc_html($forced_link) . '</a></p></div>';
-        // }
-        // else
-        //     echo '<div class="notice notice-info is-dismissible"><p>🔗 Lien utilisateur absent</p></div>';
-
-        // Étape 3 : Générer et publier chaque article individuellement
+        // 📝 Publication de chaque nœud
         foreach ($this->mapIdPost as $id => $info) {
-            if ($info['parent_id'] === null && !empty($forced_link)) {
-                continue;
+            if ($info['parent_id'] != null || empty($forced_link)) {
+                $html = $this->generator->generateContent($id, $this->mapIdPost, $this->nb);
+                $html .= $linker->generate_structured_links($this->mapIdPost, $id);
+                $publisher->fill_and_publish_content($id, $html);
             }
-            $html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb);
-            $html.=$linker->generate_structured_links($this->mapIdPost,$id);
-            $publisher->fill_and_publish_content($id, $html);
         }
     
-        // 🔥 Après publication, récupérer les tokens utilisés
-        $total_tokens = $this->generator->get_tokens_used();
 
         $published_count = $publisher->getPublishedCount();
+    
         echo '<div class="notice notice-success is-dismissible"><p>✅ ' . $published_count . ' article(s) ont été publiés avec succès.</p></div>';        
-        echo '<div class="notice notice-info is-dismissible"><p>🧠 Nombre total de tokens utilisés : <strong>' . intval($total_tokens) . '</strong> tokens.</p></div>';
-        
-        */
     }
+    
+
     
     private function sanitize_to_relative_url(string $url): string {
         $parsed = parse_url($url);
@@ -319,8 +309,14 @@ class CSB_Admin {
     
         return $map;
     }
-    
 
+    private function updateMapFromPost(array &$map, array $posted_structure): void {
+        foreach ($posted_structure as $post_id => $node_data) {
+            if (isset($map[$post_id]) && isset($node_data['title'])) {
+                $map[$post_id]['title'] = sanitize_text_field($node_data['title']);
+            }
+        }
+    }    
 
     private function handleStructureActionsMap(&$map) {
         // ➕ Ajouter un enfant

@@ -28,14 +28,15 @@ class CSB_Generator {
     }
     
 
-    private function normalize_title($title) {
-        return strtolower(trim(preg_replace('/\s+/', ' ', strip_tags($title))));
+    public function generateStructure($keyword, $depth = 1, bool $test = false) {
+        if ($test) 
+            return $this->generateStaticStructure();
+        
+        $prompt = $this->promptProvider->structure($keyword, $depth);
+        $raw = $this->call_api($prompt);
+        return $this->clean_generated_structure($raw);
     }
     
-
-    public function generateStructure($keyword, $depth = 1) {
-        return $this->generateStaticStructure();
-    }
 
     
 
