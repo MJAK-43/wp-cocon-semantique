@@ -247,7 +247,7 @@ class CSB_Admin {
         foreach ($this->mapIdPost as $id => $info) {
             if ($info['parent_id'] != null || empty($forced_link)) {
                 //$html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb);
-                $html .= "";
+                $html = "";
                 //$html .= $linker->generate_structured_links($this->mapIdPost, $id);
                 $this->publisher->fill_and_publish_content($id, $html);
             }
