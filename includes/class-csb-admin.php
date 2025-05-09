@@ -24,6 +24,7 @@ class CSB_Admin {
         $this->publisher=  new CSB_Publisher();
     }
 
+
     private static function convertBytes($size) {
         $unit = strtoupper(substr($size, -1));
         $value = (int) $size;
@@ -35,6 +36,8 @@ class CSB_Admin {
             default:  return (int) $size;
         }
     }
+
+
     private static function checkServerRequirements(): array {
         $errors = [];
 
@@ -73,11 +76,13 @@ class CSB_Admin {
 
     }
 
+
     private function capitalize_each_word($text) {
         $text = strtolower($text);
         $text = ucwords($text);
         return $text;
     }
+
 
     public function render_admin_page() {
 
@@ -193,6 +198,7 @@ class CSB_Admin {
         echo '</form>';
     }
 
+
     private function render_keyword_form($keyword, $nb) {
         $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
 
@@ -229,6 +235,7 @@ class CSB_Admin {
         echo '</form>';
     }
 
+
     private function render_structure_fields(?int $parent_id, string $prefix, int $level) {
         echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . ($level * 20) . 'px;">';
 
@@ -255,6 +262,7 @@ class CSB_Admin {
         echo '</ul>';
     }
 
+
     private function render_loaded_structure(?int $parent_id = null, int $level = 0): void {
         if (empty($this->mapIdPostLoaded)) {
             echo '<p>Aucun cocon chargé.</p>';
@@ -278,6 +286,7 @@ class CSB_Admin {
     
         echo '</ul>';
     }
+   
     
     private function process_structure() {
 
@@ -296,8 +305,8 @@ class CSB_Admin {
         // 📝 Publication de chaque nœud
         foreach ($this->mapIdPost as $id => $info) {
             if ($info['parent_id'] != null || empty($forced_link)) {
-                //$html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb);
-                $html = "";
+                $html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb);
+                //$html = "";
                 $html .= $linker->generate_structured_links($this->mapIdPost, $id);
                 $this->publisher->fill_and_publish_content($id, $html);
             }
@@ -308,6 +317,7 @@ class CSB_Admin {
 
         echo '<div class="notice notice-success is-dismissible"><p>✅ ' . $published_count . ' article(s) ont été publiés avec succès.</p></div>';
     }
+
 
     private function sanitize_to_relative_url(string $url): string {
         $parsed = parse_url($url);
@@ -379,6 +389,7 @@ class CSB_Admin {
         return $map;
     }
 
+
     private function updateMapFromPost(array &$map, array $posted_structure): void {
     
         foreach ($posted_structure as $post_id => $node_data) {
@@ -394,6 +405,7 @@ class CSB_Admin {
         }
     }
     
+
     private function handleStructureActionsMap(&$map) {
         // ➕ Ajouter un enfant
         if (isset($_POST['add_child'])) {
@@ -416,6 +428,7 @@ class CSB_Admin {
         }
     }
 
+
     private function addChildToNode(&$map, int $parent_post_id): void {
         if (!isset($map[$parent_post_id])) return;
 
@@ -431,6 +444,7 @@ class CSB_Admin {
         $map[$new_post_id] = $entry;
         $map[$parent_post_id]['children_ids'][] = $new_post_id;
     }
+
 
     private function deleteNode(&$map, $post_id) {
         // Supprimer les enfants récursivement
@@ -451,6 +465,7 @@ class CSB_Admin {
         unset($map[$post_id]);
     }
 
+
     private function render_links_to_articles($parent_id = null, $level = 0) {
         echo '<ul style="padding-left: ' . (20 * $level) . 'px;">';
 
@@ -469,6 +484,7 @@ class CSB_Admin {
 
         echo '</ul>';
     }
+
 
     private function mergeSubCoconIntoMap(array $subMap, ?int $target_parent_id = null): void {
         foreach ($subMap as $sub_id => $node) {
@@ -507,6 +523,7 @@ class CSB_Admin {
         // Met à jour la version persistée
         update_option('csb_structure_map', $this->mapIdPost);
     }
+  
     
     private function render_load_existing_button(int $post_id): void {
         echo '<form method="post" style="display:inline;">';
@@ -514,6 +531,7 @@ class CSB_Admin {
         echo '<button type="submit" class="button-link">📂 Charger</button>';
         echo '</form>';
     }
+  
     
     private function rebuildCoconFromRoot(int $root_post_id): array {
         $map = [];
@@ -522,6 +540,7 @@ class CSB_Admin {
     
         return $map;
     }
+   
     
     private function rebuildCoconRecursive(int $post_id, array &$map): void {
         $title = get_the_title($post_id);
