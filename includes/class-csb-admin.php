@@ -5,16 +5,22 @@ class CSB_Admin {
     private int $nb;
     private $mapIdPost=[];
     private $generator;
+    private $publisher;
 
-    private static $minExecutionTime=600;
-    private static $minInputTime=60;
-    private static $minSize=32;
+    // private static $minExecutionTime=600;
+    // private static $minInputTime=60;
+    // private static $minSize=32;
+
+    private static $minExecutionTime=1;
+    private static $minInputTime=1;
+    private static $minSize=1;
 
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         //echo "DOG";
         // add_action('admin_init', [$this, 'maybe_delete_author_posts']);
         $this->generator= new CSB_Generator(new CSB_Prompts());
+        $this->publisher=  new CSB_Publisher();
     }
 
     private static function convertBytes($size) {
@@ -88,7 +94,7 @@ class CSB_Admin {
             if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
 
                 //$this->generator->setKeyword($keyword);
-                $raw = $this->generator->generateStructure($keyword,$this->nb);
+                $raw = $this->generator->generateStructure($keyword,$this->nb,true);
                 $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
                 update_option('csb_structure_map', $this->mapIdPost);
             }
@@ -224,7 +230,7 @@ class CSB_Admin {
         echo '</ul>';
     }
     private function process_structure() {
-        $publisher = new CSB_Publisher();
+
         $linker = new CSB_Linker();
 
         $use_existing_root = isset($_POST['use_existing_root']) && $_POST['use_existing_root'] == '1';
@@ -241,13 +247,14 @@ class CSB_Admin {
         foreach ($this->mapIdPost as $id => $info) {
             if ($info['parent_id'] != null || empty($forced_link)) {
                 $html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb);
-                $html .= $linker->generate_structured_links($this->mapIdPost, $id);
-                $publisher->fill_and_publish_content($id, $html);
+                $html .= "";
+                //$html .= $linker->generate_structured_links($this->mapIdPost, $id);
+                $this->publisher->fill_and_publish_content($id, $html);
             }
         }
 
 
-        $published_count = $publisher->getPublishedCount();
+        $published_count = $this->publisher->getPublishedCount();
 
         echo '<div class="notice notice-success is-dismissible"><p>✅ ' . $published_count . ' article(s) ont été publiés avec succès.</p></div>';
     }
@@ -278,8 +285,7 @@ class CSB_Admin {
 
 
     private function createMapEntry(string $title, ?int $parent_id, ?string $forced_link = null): array {
-        $publisher = new CSB_Publisher();
-        $post_id = $publisher->createPostDraft($title);
+        $post_id = $this->publisher->createPostDraft($title);
 
         return [
             'post_id'      => $post_id,
@@ -322,50 +328,22 @@ class CSB_Admin {
     }
 
 
-    private function build_node_map(array $node, ?string $parent_id = null, ?string $forced_link = null): array {
-        $map = [];
-        //$linker= new CSB_Linker()
-
-        if (isset($node['post_id'])) {
-            $entry = [
-                'post_id'     => $node['post_id'],
-                'title'        => $node['title'] ?? '',
-                'link' => $forced_link ?? ($node['post_id'] ? wp_make_link_relative(get_permalink($node['post_id'])) : null),
-                'parent_id'   => $parent_id,
-                'children_ids' => []
-            ];
-
-            if (!empty($node['children'])) {
-                $count = 0;
-                foreach ($node['children'] as $child) {
-                    if (isset($child['post_id'])) {
-                        $entry['children_ids'][] = $child['post_id'];
-                        $count++;
-                        if ($count >= 3) break; // Limite à 3 enfants
-                    }
-                }
-            }
-
-            $map[$node['post_id']] = $entry;
-
-            // Appel récursif
-            if (!empty($node['children'])) {
-                foreach ($node['children'] as $child) {
-                    $map += $this->build_node_map($child, $node['post_id']);
-                }
-            }
-        }
-
-        return $map;
-    }
 
     private function updateMapFromPost(array &$map, array $posted_structure): void {
+    
         foreach ($posted_structure as $post_id => $node_data) {
             if (isset($map[$post_id]) && isset($node_data['title'])) {
-                $map[$post_id]['title'] = sanitize_text_field($node_data['title']);
+                $new_title = sanitize_text_field($node_data['title']);
+    
+                if ($map[$post_id]['title'] !== $new_title) {
+                    $this->publisher->updatePostTitleAndSlug($post_id, $new_title);
+                }
+    
+                $map[$post_id]['title'] = $new_title;
             }
         }
     }
+    
 
     private function handleStructureActionsMap(&$map) {
         // ➕ Ajouter un enfant
@@ -436,14 +414,6 @@ class CSB_Admin {
 
                 echo "</li>"; // Fermeture du LI APRÈS les enfants
             }
-            // $title = esc_html($node['title'] ?? "Article #$id");
-            // $url = $node['link'];
-            // echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a>";
-
-            // 🔥 Appel récursif pour afficher les enfants, **À L'INTÉRIEUR DU LI**
-            // $this->render_links_to_articles($id, $level + 1);
-
-            // echo "</li>"; // Fermeture du LI APRÈS les enfants
         }
 
         echo '</ul>';

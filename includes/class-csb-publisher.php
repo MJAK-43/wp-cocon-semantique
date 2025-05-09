@@ -17,7 +17,14 @@ class CSB_Publisher {
             }
         }
     }
-
+    
+    public function updatePostTitleAndSlug(int $post_id, string $new_title): void {
+        wp_update_post([
+            'ID'         => $post_id,
+            'post_title' => $new_title,
+            'post_name'  => sanitize_title($new_title),
+        ]);
+    }
     
 
     public function fill_and_publish_content(int $post_id, string $html_content): void {
