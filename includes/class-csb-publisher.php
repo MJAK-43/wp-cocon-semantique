@@ -56,11 +56,9 @@ class CSB_Publisher {
 
     
 
-    private function store_meta($post_id, $level, $parent_id, $slug, $click_bait) {
+    public function storeMeta(int $post_id, int $level, ?int $parent_id = null): void {
         update_post_meta($post_id, '_csb_level', $level);
-        update_post_meta($post_id, '_csb_parent_id', $parent_id);
-        update_post_meta($post_id, '_csb_slug', $slug);
-        update_post_meta($post_id, '_csb_click_bait', $click_bait);
+        update_post_meta($post_id, '_csb_parent_id', $parent_id ?? 0);
     }
 
     private function generate_html_content($content_parts, $level) {
@@ -128,6 +126,30 @@ class CSB_Publisher {
     
         // Définir comme image mise en avant
         set_post_thumbnail($post_id, $attachment_id);
+    }
+
+
+    public function getAllRootNodesFromMeta(): array {
+        $args = [
+            'post_type'      => 'post',
+            'post_status'    => 'publish',
+            'meta_key'       => '_csb_level',
+            'meta_value'     => '0',
+            'posts_per_page' => -1,
+        ];
+    
+        $query = new WP_Query($args);
+        $roots = [];
+    
+        foreach ($query->posts as $post) {
+            $roots[] = [
+                'post_id' => $post->ID,
+                'title'   => get_the_title($post->ID),
+                'link'    => wp_make_link_relative(get_permalink($post->ID)),
+            ];
+        }
+    
+        return $roots;
     }
     
 } 

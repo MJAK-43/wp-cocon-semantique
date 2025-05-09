@@ -4,6 +4,7 @@ if (!defined('ABSPATH')) exit;
 class CSB_Admin {
     private int $nb;
     private $mapIdPost=[];
+    private $mapIdPostLoaded=[];
     private $generator;
     private $publisher;
 
@@ -90,11 +91,19 @@ class CSB_Admin {
         if (empty($this->mapIdPost)) {
             $this->mapIdPost = get_option('csb_structure_map', []);
         }
+
+
+        if (isset($_POST['load_existing_cocon'])) {
+            $root_post_id = intval($_POST['load_existing_cocon']);
+            $this->mapIdPostLoaded = $this->rebuildCoconFromRoot($root_post_id);
+            update_option('csb_structure_map', $this->mapIdPost);
+        }
+
         if((!empty($keyword) && !empty($this->nb) && isset($_POST['submit']))||(isset($_POST['structure']))){
             if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
 
                 //$this->generator->setKeyword($keyword);
-                $raw = $this->generator->generateStructure($keyword,$this->nb,true);
+                $raw = $this->generator->generateStructure($keyword,$this->nb,false);
                 $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
                 update_option('csb_structure_map', $this->mapIdPost);
             }
@@ -143,6 +152,22 @@ class CSB_Admin {
         echo '<div style="margin: 1em 0; padding: 1em; border-left: 4px solid #0073aa; background: #f1f1f1;">';
         echo '<p><strong>🔐 Clé API :</strong> <a href="' . admin_url('admin.php?page=csb_settings') . '">Configurer ici</a></p>';
         echo '</div>';
+
+
+        $roots = $this->publisher->getAllRootNodesFromMeta();
+        echo '<h2>🌳 Racines des cocons existants</h2><ul>';
+        foreach ($roots as $root) {
+            echo '<li><strong>' . esc_html($root['title']) . '</strong> - ';
+            $this->render_load_existing_button($root['post_id']);
+            echo '</li>';
+        }
+        echo '</ul>';
+
+
+        if (!empty($this->mapIdPostLoaded)) {
+            echo '<h2>📂 Structure du cocon chargé</h2>';
+            $this->render_loaded_structure();
+        }
     }
 
     private function render_structure_form($prefix = 'structure', $level = 0, $use_existing_root = 0, $existing_root_url = ''){
@@ -229,6 +254,31 @@ class CSB_Admin {
 
         echo '</ul>';
     }
+
+    private function render_loaded_structure(?int $parent_id = null, int $level = 0): void {
+        if (empty($this->mapIdPostLoaded)) {
+            echo '<p>Aucun cocon chargé.</p>';
+            return;
+        }
+    
+        echo '<ul style="padding-left: ' . (20 * $level) . 'px;">';
+    
+        foreach ($this->mapIdPostLoaded as $id => $node) {
+            if ($node['parent_id'] !== $parent_id) continue;
+    
+            $title = esc_html($node['title']);
+            $link = esc_url($node['link']);
+    
+            echo "<li><a href=\"$link\" target=\"_blank\">🔗 $title</a>";
+    
+            $this->render_loaded_structure($id, $level + 1); // récursif
+    
+            echo '</li>';
+        }
+    
+        echo '</ul>';
+    }
+    
     private function process_structure() {
 
         $linker = new CSB_Linker();
@@ -248,7 +298,7 @@ class CSB_Admin {
             if ($info['parent_id'] != null || empty($forced_link)) {
                 //$html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb);
                 $html = "";
-                //$html .= $linker->generate_structured_links($this->mapIdPost, $id);
+                $html .= $linker->generate_structured_links($this->mapIdPost, $id);
                 $this->publisher->fill_and_publish_content($id, $html);
             }
         }
@@ -258,6 +308,7 @@ class CSB_Admin {
 
         echo '<div class="notice notice-success is-dismissible"><p>✅ ' . $published_count . ' article(s) ont été publiés avec succès.</p></div>';
     }
+
 
 
 
@@ -284,15 +335,19 @@ class CSB_Admin {
     }
 
 
-    private function createMapEntry(string $title, ?int $parent_id, ?string $forced_link = null): array {
+    private function createMapEntry(string $title, ?int $parent_id, ?string $forced_link = null, int $level = 0): array {
         $post_id = $this->publisher->createPostDraft($title);
+
+        //  Enregistre les métas ici
+        $this->publisher->storeMeta($post_id, $level, $parent_id);
 
         return [
             'post_id'      => $post_id,
             'title'        => $title,
             'link'         => $forced_link ?? wp_make_link_relative(get_permalink($post_id)),
             'parent_id'    => $parent_id,
-            'children_ids' => []
+            'children_ids' => [],
+            'level'        => $level
         ];
     }
 
@@ -311,7 +366,7 @@ class CSB_Admin {
                 $level = intval($indent / 4);
 
                 $parent_id = $level === 0 ? null : $stack[$level - 1]['post_id'];
-                $entry = $this->createMapEntry($title, $parent_id, $level === 0 ? $forced_link : null);
+                $entry = $this->createMapEntry($title, $parent_id, $level === 0 ? $forced_link : null,$level);
                 $post_id = $entry['post_id'];
 
                 $map[$post_id] = $entry;
@@ -371,7 +426,12 @@ class CSB_Admin {
         if (!isset($map[$parent_post_id])) return;
 
         $title = 'Nouveau sous-thème';
-        $entry = $this->createMapEntry($title, $parent_post_id);
+        // Récupère le niveau du parent (via postmeta ou map) et incrémente
+        $parent_level = $map[$parent_post_id]['level'] ?? 0;
+        $child_level = $parent_level + 1;
+
+        // Crée le nouvel article avec le bon niveau
+        $entry = $this->createMapEntry($title, $parent_post_id, null, $child_level);
 
         $new_post_id = $entry['post_id'];
         $map[$new_post_id] = $entry;
@@ -418,6 +478,95 @@ class CSB_Admin {
 
         echo '</ul>';
     }
+
+    private function mergeSubCoconIntoMap(array $subMap, ?int $target_parent_id = null): void {
+        foreach ($subMap as $sub_id => $node) {
+            // Crée un nouveau post pour chaque nœud du sous-cocon
+            $new_post_id = $this->publisher->createPostDraft($node['title']);
+            $new_level = ($target_parent_id && isset($this->mapIdPost[$target_parent_id]['level']))
+                         ? $this->mapIdPost[$target_parent_id]['level'] + 1
+                         : $node['level'];
+    
+            // Enregistre les métas
+            $this->publisher->storeMeta($new_post_id, $new_level, $target_parent_id);
+    
+            // Ajoute dans la map principale
+            $this->mapIdPost[$new_post_id] = [
+                'post_id'      => $new_post_id,
+                'title'        => $node['title'],
+                'link'         => wp_make_link_relative(get_permalink($new_post_id)),
+                'parent_id'    => $target_parent_id,
+                'children_ids' => [],
+                'level'        => $new_level
+            ];
+    
+            // Lier au parent dans la map
+            if ($target_parent_id !== null) {
+                $this->mapIdPost[$target_parent_id]['children_ids'][] = $new_post_id;
+            }
+    
+            // Si ce nœud a des enfants, les traiter récursivement
+            if (!empty($node['children_ids'])) {
+                // Extraire sous-map des enfants
+                $child_subMap = array_intersect_key($subMap, array_flip($node['children_ids']));
+                $this->mergeSubCoconIntoMap($child_subMap, $new_post_id);
+            }
+        }
+    
+        // Met à jour la version persistée
+        update_option('csb_structure_map', $this->mapIdPost);
+    }
+    
+
+    private function render_load_existing_button(int $post_id): void {
+        echo '<form method="post" style="display:inline;">';
+        echo '<input type="hidden" name="load_existing_cocon" value="' . esc_attr($post_id) . '">';
+        echo '<button type="submit" class="button-link">📂 Charger</button>';
+        echo '</form>';
+    }
+    
+
+    private function rebuildCoconFromRoot(int $root_post_id): array {
+        $map = [];
+    
+        $this->rebuildCoconRecursive($root_post_id, $map);
+    
+        return $map;
+    }
+    
+    private function rebuildCoconRecursive(int $post_id, array &$map): void {
+        $title = get_the_title($post_id);
+        $parent_id = intval(get_post_meta($post_id, '_csb_parent_id', true));
+        $level = intval(get_post_meta($post_id, '_csb_level', true));
+    
+        $map[$post_id] = [
+            'post_id'      => $post_id,
+            'title'        => $title,
+            'link'         => wp_make_link_relative(get_permalink($post_id)),
+            'parent_id'    => $parent_id ?: null,
+            'children_ids' => [],
+            'level'        => $level,
+        ];
+    
+        $args = [
+            'post_type'      => 'post',
+            'post_status'    => ['publish', 'draft'],
+            'meta_key'       => '_csb_parent_id',
+            'meta_value'     => $post_id,
+            'posts_per_page' => -1,
+            'orderby'        => 'menu_order',
+            'order'          => 'ASC',
+        ];
+    
+        $children = get_posts($args);
+    
+        foreach ($children as $child) {
+            $map[$post_id]['children_ids'][] = $child->ID;
+            $this->rebuildCoconRecursive($child->ID, $map);
+        }
+    }
+    
+    
 
 }
 
