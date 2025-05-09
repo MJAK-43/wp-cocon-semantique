@@ -8,13 +8,13 @@ class CSB_Admin {
     private $generator;
     private $publisher;
 
-    // private static $minExecutionTime=600;
-    // private static $minInputTime=60;
-    // private static $minSize=32;
+    private static $minExecutionTime=600;
+    private static $minInputTime=60;
+    private static $minSize=32;
 
-    private static $minExecutionTime=1;
-    private static $minInputTime=1;
-    private static $minSize=1;
+    // private static $minExecutionTime=1;
+    // private static $minInputTime=1;
+    // private static $minSize=1;
 
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
@@ -309,9 +309,6 @@ class CSB_Admin {
         echo '<div class="notice notice-success is-dismissible"><p>✅ ' . $published_count . ' article(s) ont été publiés avec succès.</p></div>';
     }
 
-
-
-
     private function sanitize_to_relative_url(string $url): string {
         $parsed = parse_url($url);
 
@@ -382,8 +379,6 @@ class CSB_Admin {
         return $map;
     }
 
-
-
     private function updateMapFromPost(array &$map, array $posted_structure): void {
     
         foreach ($posted_structure as $post_id => $node_data) {
@@ -399,7 +394,6 @@ class CSB_Admin {
         }
     }
     
-
     private function handleStructureActionsMap(&$map) {
         // ➕ Ajouter un enfant
         if (isset($_POST['add_child'])) {
@@ -437,9 +431,6 @@ class CSB_Admin {
         $map[$new_post_id] = $entry;
         $map[$parent_post_id]['children_ids'][] = $new_post_id;
     }
-
-
-
 
     private function deleteNode(&$map, $post_id) {
         // Supprimer les enfants récursivement
@@ -517,7 +508,6 @@ class CSB_Admin {
         update_option('csb_structure_map', $this->mapIdPost);
     }
     
-
     private function render_load_existing_button(int $post_id): void {
         echo '<form method="post" style="display:inline;">';
         echo '<input type="hidden" name="load_existing_cocon" value="' . esc_attr($post_id) . '">';
@@ -525,7 +515,6 @@ class CSB_Admin {
         echo '</form>';
     }
     
-
     private function rebuildCoconFromRoot(int $root_post_id): array {
         $map = [];
     
@@ -566,7 +555,5 @@ class CSB_Admin {
         }
     }
     
-    
-
 }
 
