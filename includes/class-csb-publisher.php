@@ -61,39 +61,7 @@ class CSB_Publisher {
         update_post_meta($post_id, '_csb_parent_id', $parent_id ?? 0);
     }
 
-    private function generate_html_content($content_parts, $level) {
-        $html = '';
 
-        if (!empty($content_parts['intro'])) {
-            $html .= '<p>' . esc_html($content_parts['intro']) . '</p>';
-        }
-
-        if (!empty($content_parts['developments'])) {
-            foreach ($content_parts['developments'] as $dev) {
-                $html .= '<h3>' . esc_html($dev['title']) . '</h3>';
-                $html .= '<p>' . wp_kses_post($dev['text']) . '</p>';
-                if (!empty($dev['link']) && $level != 3) {
-                    $html .= '<p>' . $dev['link'] . '</p>';
-                    // if($dev['link']=='')
-                    //     print_r("Lien vide");
-                    // else
-                    //     print_r($dev['link']);
-                }
-            }
-        }
-
-        if (!empty($content_parts['conclusion'])) {
-            $html .= '<p><strong>' . esc_html($content_parts['conclusion']) . '</strong></p>';
-        }
-
-        return $html;
-    }
-
-    private function append_freepik_image($content, $image_url, $alt = '') {
-        if (!$image_url || str_starts_with($image_url, '❌')) return $content;
-        $img_html = '<div style="margin-top:2em;"><img src="' . esc_url($image_url) . '" alt="' . esc_attr($alt) . '" style="max-width:100%; height:auto;" /></div>';
-        return $content . "\n\n" . $img_html;
-    }
 
     public function set_featured_image(int $post_id, string $image_url): void {
         if (empty($image_url) || str_starts_with($image_url, '❌')) {

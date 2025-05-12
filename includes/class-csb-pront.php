@@ -37,11 +37,12 @@ class CSB_Prompts implements PromptProviderInterface {
         - Favoriser un vocabulaire riche, précis et sémantique SEO.";
     }
 
-    public function image(string $title): string {
-        return "Imagine une photographie réaliste correspondant au sujet suivant : \"$title\". 
-        Donne une description très concrète, contenant des éléments visuels simples et populaires, en moins de 10 mots. 
-        Utilise des mots que l'on trouverait facilement sur une banque d'images.";
-    }
+    public function image(string $keyword, string $title): string {
+        return "Imagine une photographie réaliste liée au sujet \"$title\" dans le contexte de \"$keyword\". 
+        Donne une description très concrète, visuelle, simple et populaire, en moins de 10 mots. 
+        Utilise des termes qu’on trouverait dans une banque d’images.";
+    }   
+
     
 
     public function development(string $title, string $structure): string{

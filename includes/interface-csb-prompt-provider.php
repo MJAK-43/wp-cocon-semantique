@@ -10,7 +10,7 @@ interface PromptProviderInterface
 
     public function intro(string $title, string $structure): string;
 
-    public function image(string $title): string;
+    public function image(string $title,string $keyword): string;
 
     public function development(string $title, string $structure): string;
 

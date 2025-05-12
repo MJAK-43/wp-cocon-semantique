@@ -134,7 +134,25 @@ private function generateStaticStructure(string $keyword = 'Thème Principal'): 
         //print_r($out);
         return $out;
     }
-    
+
+    public function generateImage(string $title, string $keyword): string {
+    try {
+        $prompt_image = $this->promptProvider->image($keyword, $title);
+        $text_image_description = $this->call_api($prompt_image);
+        $image_url = $this->fetch_image_from_api($title, $text_image_description);
+
+        if (!str_starts_with($image_url, '❌')) {
+            return $image_url;
+        } else {
+            throw new Exception("URL image invalide.");
+        }
+    } catch (Exception $e) {
+        // Fallback : URL vers l’image locale par défaut
+        $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
+        error_log("Erreur lors de la récupération de l'image Freepik : " . $e->getMessage());
+        return $default_image_url;
+    }
+}
 
     public function generateContent(int $post_id, array $map, int $number): string {
         
@@ -181,47 +199,9 @@ private function generateStaticStructure(string $keyword = 'Thème Principal'): 
         $conclusion ="";
 
         $conclusion =$this->call_api($prompt_conclusion);
-        
-        // Récupération de l'URL de l'image depuis Freepik
-        $image = '';
-
-        try {
-            //$text_image_description = $this->normalize_keyword($title);
-            $prompt_image = $this->promptProvider->image($title);
-
-            //print_r($prompt_leaf);
-            
-            $text_image_description = $this->call_api($prompt_image);
-            $image_url =$this->fetch_image_from_api($title,$text_image_description);
-
-            // echo "<br>";
-            // print_r($text_image_description);
-            // echo "<br>";
-            // print_r($image_url);
-            if (!str_starts_with($image_url, '❌')) {
-                //$image = "\n\n<img src=\"" . esc_url($image_url) . "\" alt=\"" . esc_attr($text_image_description) . "\" style=\"max-width:100%; height:auto;\" />";
-                //print_r($image_url);
-                // Définir comme image mise en avant
-                $publisher = new CSB_Publisher();
-                $publisher->set_featured_image($post_id, $image_url);
-            } 
-            else {
-                print_r("//////////////////");
-                throw new Exception("URL image invalide.");
-            }
-        } catch (Exception $e) {
-            //Fallback vers l'image par défaut
-            $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
-            $image = "\n\n<img src=\"" . esc_url($default_image_url) . "\" alt=\"Image par défaut\" style=\"max-width:100%; height:auto;\" />";
-            
-            //Optionnel : log de l'erreur
-            error_log("Erreur lors de la récupération de l'image Freepik : " . $e->getMessage());
-        }
-        
-
     
         // Concatène toutes les parties
-        return $intro .$developments_html. $conclusion.$image;
+        return $intro .$developments_html. $conclusion;
     }
     
     

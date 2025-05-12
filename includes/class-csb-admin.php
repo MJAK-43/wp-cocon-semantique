@@ -8,13 +8,13 @@ class CSB_Admin {
     private $generator;
     private $publisher;
 
-    private static $minExecutionTime=600;
-    private static $minInputTime=60;
-    private static $minSize=32;
+    // private static $minExecutionTime=600;
+    // private static $minInputTime=60;
+    // private static $minSize=32;
 
-    // private static $minExecutionTime=1;
-    // private static $minInputTime=1;
-    // private static $minSize=1;
+    private static $minExecutionTime=1;
+    private static $minInputTime=1;
+    private static $minSize=1;
 
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
@@ -124,7 +124,8 @@ class CSB_Admin {
 
                 if (isset($_POST['csb_validate_publish'])) {
                     $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
-                    $this->process_structure();
+                    $word= reset($this->mapIdPost)['title']; 
+                    $this->process_structure($word);
                     echo '<div class="wrap"><h2>🔗 Articles publiés</h2><ul>';
                     $this->render_links_to_articles();
                     echo '</ul></div>';
@@ -248,8 +249,8 @@ class CSB_Admin {
             echo '<div style="display: flex; align-items: center; gap: 6px;">';
             echo '<span style="min-width: 10px;">-</span>';
             echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" required />';
-            echo '<button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">🗑️</button>';
-            echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">➕ Sous-thème</button>';
+            //echo '<button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">🗑️</button>';
+            //echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">➕ Sous-thème</button>';
             echo '</div>';
 
             if (!empty($node['children_ids'])) {
@@ -288,7 +289,7 @@ class CSB_Admin {
     }
    
     
-    private function process_structure() {
+    private function process_structure($keyword) {
 
         $linker = new CSB_Linker();
 
@@ -306,7 +307,8 @@ class CSB_Admin {
         foreach ($this->mapIdPost as $id => $info) {
             if ($info['parent_id'] != null || empty($forced_link)) {
                 $html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb);
-                //$html = "";
+                $image_url = $this->generator->generateImage($info['title'], $keyword);
+                $this->publisher->set_featured_image($id, $image_url);
                 $html .= $linker->generate_structured_links($this->mapIdPost, $id);
                 $this->publisher->fill_and_publish_content($id, $html);
             }
