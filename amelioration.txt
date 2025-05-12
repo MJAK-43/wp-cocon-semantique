@@ -1,1 +1,4 @@
 freepic image : input description   pour chaque image
+
+
+Ajout d’un fichier CSS conditionnel chargé uniquement sur les articles générés par le plugin, identifiés via une meta personnalisée.

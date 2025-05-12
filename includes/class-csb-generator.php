@@ -16,8 +16,6 @@ class CSB_Generator {
     }
 
 
-    
-
     public function __construct(PromptProviderInterface $promptProvider, $api_key = null, $freepik_api_key = null) {
         $this->promptProvider = $promptProvider;
         $this->api_key = $api_key ?: get_option('csb_openai_api_key');
@@ -50,19 +48,15 @@ class CSB_Generator {
     }
 
     
-private function generateStaticStructure(string $keyword = 'Thème Principal'): string {
-    return "- " . ucwords($keyword) . "\n"
-         . "    - Sous-thème A\n"
-         . "        - Exemple A1\n"
-         . "        - Exemple A2\n"
-         . "    - Sous-thème B\n"
-         . "        - Exemple B1\n"
-         . "        - Exemple B2\n";
-}
-
-    
-    
-    
+    private function generateStaticStructure(string $keyword = 'Thème Principal'): string {
+        return "- " . ucwords($keyword) . "\n"
+            . "    - Sous-thème A\n"
+            . "        - Exemple A1\n"
+            . "        - Exemple A2\n"
+            . "    - Sous-thème B\n"
+            . "        - Exemple B1\n"
+            . "        - Exemple B2\n";
+    }
 
 
     /**Utilise uniquement du texte brut sans mise en forme Markdown
@@ -135,12 +129,14 @@ private function generateStaticStructure(string $keyword = 'Thème Principal'): 
         return $out;
     }
 
-    public function generateImage(string $title, string $keyword): string {
+    public function generateImage(string $title, string $keyword,bool $test = false): string {
+        $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
+        if($test)
+            return $default_image_url;
         try {
             $prompt_image = $this->promptProvider->image($keyword, $title);
             $text_image_description = $this->call_api($prompt_image);
             $image_url = $this->fetch_image_from_api($title, $text_image_description);
-
             if (!str_starts_with($image_url, '❌')) {
                 return $image_url;
             } else {
@@ -148,28 +144,24 @@ private function generateStaticStructure(string $keyword = 'Thème Principal'): 
             }
         } catch (Exception $e) {
             // Fallback : URL vers l’image locale par défaut
-            $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
             error_log("Erreur lors de la récupération de l'image Freepik : " . $e->getMessage());
-            return $default_image_url;
         }
+        return $default_image_url;
+    
     }
 
-    private function slugify(string $text): string {
-        $text = iconv('UTF-8', 'ASCII//TRANSLIT', $text);
-        $text = preg_replace('/[^a-zA-Z0-9]+/', '-', strtolower($text));
-        return trim($text, '-');
-    }
-
-
-    public function generateContent(int $post_id, array $map, int $number): string {
+    public function generateContent(int $post_id, array $map, int $number,bool $test = false): string {
         $node = $map[$post_id];
         $title = $node['title'];
-        $slug = $this->slugify($title);
+        $slug = get_post_field('post_name', $post_id); 
         $structure = $this->to_bullet_tree($map);
 
         // Intro
         $prompt_intro = $this->promptProvider->intro($title, $structure);
-        $intro = $this->call_api($prompt_intro);
+        $intro ="";$this->call_api($prompt_intro);
+        if(!$test)
+            $intro =$this->call_api($prompt_intro);
+
         $intro = "<div id='csb-intro-$slug' class='csb-content csb-intro'>$intro</div>";
 
         // Développements
@@ -178,23 +170,29 @@ private function generateStaticStructure(string $keyword = 'Thème Principal'): 
             foreach ($node['children_ids'] as $child_id) {
                 if (!isset($map[$child_id])) continue;
                 $child = $map[$child_id];
-                $child_slug = $this->slugify($child['title']);
+                //$child_slug = $this->slugify($child['title']);
+                $child_slug = get_post_field('post_name', $child_id);
                 $prompt_dev = $this->promptProvider->development($child['title'], $structure);
-                $dev_content = $this->call_api($prompt_dev);
-                $dev_content = "<div id='csb-development-$child_slug' class='csb-content csb-development'>$dev_content</div>";
+                $dev_content ="";
+                if(!$test)
+                    $dev_content = $this->call_api($prompt_dev);
 
-                $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
+                $dev_content = "<div id='csb-development-$child_slug' class='csb-content csb-development'>$dev_content</div>";
+                $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="/' . esc_attr($child_slug) . '">' . esc_html($child['title']) . '</a>.</p>';
                 $developments_html .= $dev_content . $child_link;
             }
         } else {
             $prompt_leaf = $this->promptProvider->leafDevelopment($title, $structure, $number);
-            $dev_content = $this->call_api($prompt_leaf);
+            $dev_content = "";
+            if(!$test)
+                $dev_content = $this->call_api($prompt_leaf);
+
             $developments_html .= "<div id='csb-leaf-$slug' class='csb-content csb-development'>$dev_content</div>";
         }
 
         // Conclusion
         $prompt_conclusion = $this->promptProvider->conclusion($title, $structure);
-        $conclusion = $this->call_api($prompt_conclusion);
+        $conclusion = $test?"":$this->call_api($prompt_conclusion);
         $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
 
         return $intro . $developments_html . $conclusion;
@@ -246,11 +244,6 @@ private function generateStaticStructure(string $keyword = 'Thème Principal'): 
         }
     }
 
-
-    private static function generate_slug($title){
-        $slug = sanitize_title($title);
-        return $slug;
-    }
 
     private function fetch_image_from_api(string $title, string $text): ?string {
         // 🔥 Normalisation du titre et du texte

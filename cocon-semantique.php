@@ -21,6 +21,9 @@ require_once CSB_PATH . 'includes/class-csb-generator.php';
 
 
 
+
+remove_filter('the_content', 'your_theme_category_display_function');
+
 // Initialisation différée
 add_action('plugins_loaded', function () {
     new CSB_Admin();
@@ -32,7 +35,7 @@ add_action('wp_enqueue_scripts', function () {
             'csb_front_css',
             plugin_dir_url(__FILE__) . 'assets/css/csb-front.css',
             [],
-            '1.0'
+            time() 
         );
     }
 });

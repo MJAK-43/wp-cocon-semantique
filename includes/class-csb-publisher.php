@@ -41,7 +41,9 @@ class CSB_Publisher {
         // echo '<br>';echo '<br>';
         // print_r($post);
         // echo '<br>';echo '<br>';
-        //update_post_meta($post_id, '_csb_generated', 1); 
+        if (!is_wp_error($post)) {
+            update_post_meta($post, '_csb_generated', 1);
+        }
 
         return $post;
     }

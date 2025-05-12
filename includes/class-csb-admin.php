@@ -249,8 +249,8 @@ class CSB_Admin {
             echo '<div style="display: flex; align-items: center; gap: 6px;">';
             echo '<span style="min-width: 10px;">-</span>';
             echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" required />';
-            //echo '<button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">🗑️</button>';
-            //echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">➕ Sous-thème</button>';
+            echo '<button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">🗑️</button>';
+            echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">➕ Sous-thème</button>';
             echo '</div>';
 
             if (!empty($node['children_ids'])) {
@@ -306,17 +306,15 @@ class CSB_Admin {
         // 📝 Publication de chaque nœud
         foreach ($this->mapIdPost as $id => $info) {
             if ($info['parent_id'] != null || empty($forced_link)) {
-                $html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb);
-                $image_url = $this->generator->generateImage($info['title'], $keyword);
+                $html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb,true);
+                $image_url =$this->generator->generateImage($info['title'], $keyword,true);
                 $this->publisher->set_featured_image($id, $image_url);
                 $html .= $linker->generate_structured_links($this->mapIdPost, $id);
                 $this->publisher->fill_and_publish_content($id, $html);
             }
         }
 
-
         $published_count = $this->publisher->getPublishedCount();
-
         echo '<div class="notice notice-success is-dismissible"><p>✅ ' . $published_count . ' article(s) ont été publiés avec succès.</p></div>';
     }
 
