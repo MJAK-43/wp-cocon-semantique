@@ -63,7 +63,6 @@ class CSB_Publisher {
 
     private function slug_exists(string $slug): bool {
         global $wpdb;
-
         $query = $wpdb->prepare(
             "SELECT post_name FROM $wpdb->posts WHERE post_name = %s AND post_status != 'trash' LIMIT 1",
             $slug

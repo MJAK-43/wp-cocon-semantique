@@ -209,44 +209,7 @@ class CSB_Generator {
      * 
      * Récupération Image
      */
-    
-    private function get_freepik_image($keywords){
-        
-        if (empty($keywords)) {
-            throw new Exception("Aucun mot-clé généré.");
-        }
-        // 3. Préparation de la requête API Freepik
-        $curl = curl_init();
-        curl_setopt_array($curl, [
-        CURLOPT_URL => "https://api.freepik.com/v1/resources?filters%5Bvector%5D%5Btype%5D=jpg&term=" . urlencode($keywords) . "&limit=1&page=1&filters%5Borientation%5D%5Blandscape%5D=1&filters%5Bpsd%5D%5Btype%5D=jpg&filters%5Bai-generated%5D%5Bexcluded%5D=1&filters%5Bcontent_type%5D%5Bphoto%5D=1&filters%5Bcontent_type%5D%5Bpsd%5D=1&order=relevance",
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => "",
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => "GET",
-        CURLOPT_HTTPHEADER => [
-            "Accept-Language: fr-FR",
-            "x-freepik-api-key: " . $this->freepik_api_key
-        ],
-        ]);
-        // 4. Exécution de la requête API
-        $response = curl_exec($curl);
-        //print_r($response);
-        $err = curl_error($curl);
-        curl_close($curl);
-        if ($err) {
-            throw new Exception("Erreur cURL : " . $err);
-        }
-        // 5. Analyse de la réponse JSON pour obtenir l'URL de l'image
-        $data = json_decode($response, true);
-        if (isset($data['data'][0]['image']['source']['url'])) {
-        //print_r($data['data'][0]['image']['source']['url']);
-        return  $data['data'][0]['image']['source']['url'];
-        } else {
-        throw new Exception("Aucune image trouvée.");
-        }
-    }
+   
 
 
     private function fetch_image_from_api(string $title, string $text): ?string {

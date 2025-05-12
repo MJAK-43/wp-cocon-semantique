@@ -129,6 +129,7 @@ class CSB_Admin {
                     echo '<div class="wrap"><h2>🔗 Articles publiés</h2><ul>';
                     $this->render_links_to_articles();
                     echo '</ul></div>';
+                    $this->mapIdPost=[];
                 }
             }
             $total_tokens = $this->generator->get_tokens_used();
@@ -306,8 +307,8 @@ class CSB_Admin {
         // 📝 Publication de chaque nœud
         foreach ($this->mapIdPost as $id => $info) {
             if ($info['parent_id'] != null || empty($forced_link)) {
-                $html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb,true);
-                $image_url =$this->generator->generateImage($info['title'], $keyword,true);
+                $html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb,false);
+                $image_url =$this->generator->generateImage($info['title'], $keyword,false);
                 $this->publisher->set_featured_image($id, $image_url);
                 $html .= $linker->generate_structured_links($this->mapIdPost, $id);
                 $this->publisher->fill_and_publish_content($id, $html);
