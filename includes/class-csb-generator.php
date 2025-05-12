@@ -30,7 +30,7 @@ class CSB_Generator {
 
     public function generateStructure($keyword, $depth = 1, bool $test = false) {
         if ($test) 
-            return $this->generateStaticStructure();
+            return $this->generateStaticStructure($keyword);
         
         $prompt = $this->promptProvider->structure($keyword, $depth);
         $raw = $this->call_api($prompt);
@@ -50,15 +50,16 @@ class CSB_Generator {
     }
 
     
-    private function generateStaticStructure(): string {
-        return "- Chat\n"
-             . "    - Alimentation Du Chat\n"
-             . "        - Croquettes Pour Chatons\n"
-             . "        - Nourriture Maison Équilibrée\n"
-             . "    - Santé Du Chat\n"
-             . "        - Vaccins Essentiels\n"
-             . "        - Prévention Des Parasites\n";
-    }
+private function generateStaticStructure(string $keyword = 'Thème Principal'): string {
+    return "- " . ucwords($keyword) . "\n"
+         . "    - Sous-thème A\n"
+         . "        - Exemple A1\n"
+         . "        - Exemple A2\n"
+         . "    - Sous-thème B\n"
+         . "        - Exemple B1\n"
+         . "        - Exemple B2\n";
+}
+
     
     
     
