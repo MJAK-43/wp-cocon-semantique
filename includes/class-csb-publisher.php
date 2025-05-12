@@ -28,10 +28,10 @@ class CSB_Publisher {
     
 
     public function createPostDraft($title) {
-        /*$slug = $this->generate_unique_slug($title);*/
+        $slug = $this->generate_unique_slug($title);
         $post= wp_insert_post([
             'post_title'   => $title,
-            /*'post_name'    => $slug,*/
+            'post_name'    => $slug,
             'post_content' => '',
             'post_status'  => 'draft',
             'post_type'    => 'post',
@@ -47,6 +47,22 @@ class CSB_Publisher {
 
         return $post;
     }
+
+    private function generate_unique_slug(string $title): string {
+        // 1. Génère un slug de base à partir du titre
+        $base_slug = sanitize_title($title);
+        $slug = $base_slug;
+        $i = 1;
+
+        // 2. Vérifie si ce slug existe déjà
+        while (post_exists($slug)) {
+            $slug = $base_slug . '-' . $i;
+            $i++;
+        }
+
+        return $slug;
+    }
+
 
     
 

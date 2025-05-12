@@ -1,10 +1,8 @@
 .csb-content {
     margin: 20px 0;
-    background: rgb(255, 0, 0);
-    color: white; 
     padding: 1em;
 }
 
 .category, .post-categories {
-    display: none !important;
+    display: none;
 }

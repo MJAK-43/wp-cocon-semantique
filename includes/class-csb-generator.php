@@ -158,7 +158,7 @@ class CSB_Generator {
 
         // Intro
         $prompt_intro = $this->promptProvider->intro($title, $structure);
-        $intro ="";$this->call_api($prompt_intro);
+        $intro ="";
         if(!$test)
             $intro =$this->call_api($prompt_intro);
 
@@ -172,6 +172,8 @@ class CSB_Generator {
                 $child = $map[$child_id];
                 //$child_slug = $this->slugify($child['title']);
                 $child_slug = get_post_field('post_name', $child_id);
+                //echo "<br><br>";
+                
                 $prompt_dev = $this->promptProvider->development($child['title'], $structure);
                 $dev_content ="";
                 if(!$test)
@@ -192,7 +194,9 @@ class CSB_Generator {
 
         // Conclusion
         $prompt_conclusion = $this->promptProvider->conclusion($title, $structure);
-        $conclusion = $test?"":$this->call_api($prompt_conclusion);
+        $conclusion = "";
+        if(!$test)
+            $conclusion = $this->call_api($prompt_conclusion);
         $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
 
         return $intro . $developments_html . $conclusion;
