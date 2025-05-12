@@ -108,7 +108,7 @@ class CSB_Admin {
             if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
 
                 //$this->generator->setKeyword($keyword);
-                $raw = $this->generator->generateStructure($keyword,$this->nb,true);
+                $raw = $this->generator->generateStructure($keyword,$this->nb,false);
                 $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
                 update_option('csb_structure_map', $this->mapIdPost);
             }
