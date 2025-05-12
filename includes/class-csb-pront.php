@@ -56,7 +56,7 @@ class CSB_Prompts implements PromptProviderInterface {
         
         Consignes :
         - Ouvre un <div class='csb-development'>.
-        - Ajoute un titre unique en <h4> : le sujet exact traité.
+        - Ajoute un titre unique en <h3> : le sujet exact traité.
         - Ajoute 1 ou 2 paragraphes <p> clairs et optimisés SEO.
         - Mets en <strong> les mots-clés importants.
         - Souligne <u> les éléments stratégiques si pertinent.
@@ -85,7 +85,7 @@ class CSB_Prompts implements PromptProviderInterface {
         - Crée exactement {$number} parties distinctes.
         - Pour chaque partie :
             - Ouvre un <div class='csb-development'>.
-            - Commence avec un titre unique dans une balise <h4> (pas d'autres titres).
+            - Commence avec un titre unique dans une balise <h3> (pas d'autres titres).
             - Ajoute 1 ou 2 paragraphes <p> descriptifs, naturels et engageants.
             - Mets en gras <strong> les mots-clés importants.
             - Si pertinent, souligne <u> les points stratégiques.
