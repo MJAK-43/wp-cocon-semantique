@@ -136,74 +136,72 @@ private function generateStaticStructure(string $keyword = 'Thème Principal'): 
     }
 
     public function generateImage(string $title, string $keyword): string {
-    try {
-        $prompt_image = $this->promptProvider->image($keyword, $title);
-        $text_image_description = $this->call_api($prompt_image);
-        $image_url = $this->fetch_image_from_api($title, $text_image_description);
+        try {
+            $prompt_image = $this->promptProvider->image($keyword, $title);
+            $text_image_description = $this->call_api($prompt_image);
+            $image_url = $this->fetch_image_from_api($title, $text_image_description);
 
-        if (!str_starts_with($image_url, '❌')) {
-            return $image_url;
-        } else {
-            throw new Exception("URL image invalide.");
+            if (!str_starts_with($image_url, '❌')) {
+                return $image_url;
+            } else {
+                throw new Exception("URL image invalide.");
+            }
+        } catch (Exception $e) {
+            // Fallback : URL vers l’image locale par défaut
+            $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
+            error_log("Erreur lors de la récupération de l'image Freepik : " . $e->getMessage());
+            return $default_image_url;
         }
-    } catch (Exception $e) {
-        // Fallback : URL vers l’image locale par défaut
-        $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
-        error_log("Erreur lors de la récupération de l'image Freepik : " . $e->getMessage());
-        return $default_image_url;
     }
-}
+
+    private function slugify(string $text): string {
+        $text = iconv('UTF-8', 'ASCII//TRANSLIT', $text);
+        $text = preg_replace('/[^a-zA-Z0-9]+/', '-', strtolower($text));
+        return trim($text, '-');
+    }
+
 
     public function generateContent(int $post_id, array $map, int $number): string {
-        
         $node = $map[$post_id];
         $title = $node['title'];
+        $slug = $this->slugify($title);
         $structure = $this->to_bullet_tree($map);
-    
-        // Prompt et génération de l’intro
-        $prompt_intro = $this->promptProvider->intro($title, $structure);
-        //print_r($prompt_intro);
 
-        $intro ="";
-        $intro =$this->call_api($prompt_intro);
-    
+        // Intro
+        $prompt_intro = $this->promptProvider->intro($title, $structure);
+        $intro = $this->call_api($prompt_intro);
+        $intro = "<div id='csb-intro-$slug' class='csb-content csb-intro'>$intro</div>";
+
         // Développements
         $developments_html = '';
         if (!empty($node['children_ids'])) {
-            // L'article a de vrais enfants : on génère normalement
             foreach ($node['children_ids'] as $child_id) {
                 if (!isset($map[$child_id])) continue;
                 $child = $map[$child_id];
-                $prompt_dev = "";
+                $child_slug = $this->slugify($child['title']);
                 $prompt_dev = $this->promptProvider->development($child['title'], $structure);
-                //print_r($prompt_dev);
-
-                $dev_content ="";
-                $dev_content =$this->call_api($prompt_dev);
+                $dev_content = $this->call_api($prompt_dev);
+                $dev_content = "<div id='csb-development-$child_slug' class='csb-content csb-development'>$dev_content</div>";
 
                 $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link'] ?? '#') . '">' . esc_html($child['title']) . '</a>.</p>';
-        
                 $developments_html .= $dev_content . $child_link;
             }
         } else {
-            // L'article est une feuille : on génère un développement complet artificiel
-            $prompt_leaf =$this->promptProvider->leafDevelopment($title, $structure, $number);
-            //print_r($prompt_leaf);
-            $dev_content ="";
-            $dev_content =$this->call_api($prompt_leaf);
-            $developments_html .= $dev_content;
+            $prompt_leaf = $this->promptProvider->leafDevelopment($title, $structure, $number);
+            $dev_content = $this->call_api($prompt_leaf);
+            $developments_html .= "<div id='csb-leaf-$slug' class='csb-content csb-development'>$dev_content</div>";
         }
-    
-        // Prompt et génération de la conclusion
-        $prompt_conclusion = $this->promptProvider->conclusion($title, $structure);
-        $conclusion ="";
 
-        $conclusion =$this->call_api($prompt_conclusion);
-    
-        // Concatène toutes les parties
-        return $intro .$developments_html. $conclusion;
+        // Conclusion
+        $prompt_conclusion = $this->promptProvider->conclusion($title, $structure);
+        $conclusion = $this->call_api($prompt_conclusion);
+        $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
+
+        return $intro . $developments_html . $conclusion;
     }
+
     
+
     
     /***
      * 

@@ -27,7 +27,7 @@ class CSB_Prompts implements PromptProviderInterface {
         $structure
     
         Consignes :
-        - Structure en 2 à 3 paragraphes <p>, tous dans un <div class='csb-intro'>.
+        - Structure en 2 à 3 paragraphes <p>, sans utiliser de <div>.
         - Utilise un ton engageant, accessible, fluide et vendeur.
         - **Met en gras avec <strong> les mots ou expressions clés SEO** (liés au sujet).
         - **Souligne les idées importantes** avec <u> si pertinent.
@@ -56,13 +56,13 @@ class CSB_Prompts implements PromptProviderInterface {
         
         
         Consignes :
-        - Ouvre un <div class='csb-development'>.
+        - Ne pas utiliser de <div>.
         - Ajoute un titre unique en <h3> : le sujet exact traité.
         - Ajoute 1 ou 2 paragraphes <p> clairs et optimisés SEO.
         - Mets en <strong> les mots-clés importants.
         - Souligne <u> les éléments stratégiques si pertinent.
         - Ajoute une <ul><li> si cela améliore la lisibilité (ex: avantages, conseils).
-        - Ferme proprement le <div>.
+        - Structure uniquement avec <h3>, <p> et éventuellement <ul><li>.
         
         Important :
         - Langage naturel, agréable, optimisé.
@@ -85,13 +85,13 @@ class CSB_Prompts implements PromptProviderInterface {
         Consignes strictes :
         - Crée exactement {$number} parties distinctes.
         - Pour chaque partie :
-            - Ouvre un <div class='csb-development'>.
+            - Ne pas utiliser de <div>.
             - Commence avec un titre unique dans une balise <h3> (pas d'autres titres).
             - Ajoute 1 ou 2 paragraphes <p> descriptifs, naturels et engageants.
             - Mets en gras <strong> les mots-clés importants.
             - Si pertinent, souligne <u> les points stratégiques.
             - Si nécessaire, ajoute une liste <ul><li> pour structurer les informations.
-            - Ferme proprement le <div>.
+            - Structure uniquement avec <h3>, <p> et éventuellement <ul><li>.
 
         Règles :
         - Il doit y avoir **exactement {$number} blocs** au final.
@@ -123,7 +123,7 @@ class CSB_Prompts implements PromptProviderInterface {
         - Résume en 2 paragraphes maximum.
         - Rappelle les mots-clés importants en <strong> pour renforcer l'optimisation SEO.
         - Termine par une phrase inspirante ou engageante.
-        - Structure uniquement avec <div class='csb-conclusion'>, <p> et <strong>.
+        - Structure uniquement avec <p> et <strong>, sans utiliser de <div>.
         - Pas de liens ni d’ouverture vers d’autres articles.
         - Style naturel, positif, dynamique.
         - Aucune balise ```html ni Markdown.";

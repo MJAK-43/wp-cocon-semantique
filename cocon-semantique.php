@@ -26,3 +26,13 @@ add_action('plugins_loaded', function () {
     new CSB_Admin();
     new CSB_Settings();
 });
+add_action('wp_enqueue_scripts', function () {
+    if (is_singular('post') && get_post_meta(get_the_ID(), '_csb_generated', true)) {
+        wp_enqueue_style(
+            'csb_front_css',
+            plugin_dir_url(__FILE__) . 'assets/css/csb-front.css',
+            [],
+            '1.0'
+        );
+    }
+});

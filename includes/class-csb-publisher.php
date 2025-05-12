@@ -7,16 +7,6 @@ class CSB_Publisher {
         return $this->publishedCount;
     }
 
-
-    public function registerAllPost(array &$tree) {
-        foreach ($tree as $slug => &$node) {
-            $post_id = $this->createPostDraft($node['title']);
-            $node['post_id']=$post_id;
-            if (!empty($node['children'])) {
-                $this->registerAllPost($node['children']);
-            }
-        }
-    }
     
     public function updatePostTitleAndSlug(int $post_id, string $new_title): void {
         wp_update_post([
@@ -51,6 +41,8 @@ class CSB_Publisher {
         // echo '<br>';echo '<br>';
         // print_r($post);
         // echo '<br>';echo '<br>';
+        //update_post_meta($post_id, '_csb_generated', 1); 
+
         return $post;
     }
 
