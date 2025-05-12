@@ -49,13 +49,11 @@ class CSB_Publisher {
     }
 
     private function generate_unique_slug(string $title): string {
-        // 1. Génère un slug de base à partir du titre
         $base_slug = sanitize_title($title);
         $slug = $base_slug;
         $i = 1;
 
-        // 2. Vérifie si ce slug existe déjà
-        while (post_exists($slug)) {
+        while ($this->slug_exists($slug)) {
             $slug = $base_slug . '-' . $i;
             $i++;
         }
@@ -63,6 +61,16 @@ class CSB_Publisher {
         return $slug;
     }
 
+    private function slug_exists(string $slug): bool {
+        global $wpdb;
+
+        $query = $wpdb->prepare(
+            "SELECT post_name FROM $wpdb->posts WHERE post_name = %s AND post_status != 'trash' LIMIT 1",
+            $slug
+        );
+
+        return (bool) $wpdb->get_var($query);
+    }
 
     
 
