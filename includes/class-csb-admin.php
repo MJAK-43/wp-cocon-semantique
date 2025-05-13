@@ -8,13 +8,13 @@ class CSB_Admin {
     private $generator;
     private $publisher;
 
-    private static $minExecutionTime=600;
-    private static $minInputTime=60;
-    private static $minSize=32;
+    // private static $minExecutionTime=600;
+    // private static $minInputTime=60;
+    // private static $minSize=32;
 
-    // private static $minExecutionTime=1;
-    // private static $minInputTime=1;
-    // private static $minSize=1;
+    private static $minExecutionTime=1;
+    private static $minInputTime=1;
+    private static $minSize=1;
 
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);

@@ -74,6 +74,21 @@ class CSB_Prompts implements PromptProviderInterface {
         - N'utilise que HTML pur dans les balises spécifiées";
     }
 
+    public function leafParts(string $title, string $structure, int $number): string {
+        return "Tu es un expert en structuration éditoriale SEO.
+
+        Génère une liste de {$number} titres de sections pour un article intitulé « $title », qui est une feuille du cocon sémantique suivant :
+
+        $structure
+
+        Consignes :
+        - La liste doit comporter exactement {$number} titres.
+        - Chaque titre doit être court, clair, pertinent, informatif, et en français.
+        - Retourne uniquement une liste en texte brut avec un tiret `-` devant chaque titre.
+        - Pas de numérotation, pas de bloc Markdown, pas de HTML.";
+    }
+
+
 
 /*
     public function leafDevelopment(string $title, string $structure, int $number): string{

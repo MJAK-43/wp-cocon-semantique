@@ -185,15 +185,29 @@ class CSB_Generator {
                 $developments_html .= $dev_block . $child_link;
 
             }
-        } else {
-            $prompt_leaf = $this->promptProvider->leafDevelopment($title, $structure, $number);
-            $dev_content = "";
-            if(!$test)
-                $dev_content = $this->call_api($prompt_leaf);
+        } 
+        else {
+            // 1. Générer les titres des parties
+            $prompt_leaf_parts = $this->promptProvider->leafParts($title, $structure, $number);
+            $leaf_parts_raw = $test ? '' : $this->call_api($prompt_leaf_parts);
 
-            $developments_html .= "<div id='csb-leaf-$slug' class='csb-content csb-development'>$dev_content</div>";
+            // 2. Nettoyer et parser la liste
+            $lines = explode("\n", trim($leaf_parts_raw));
+            foreach ($lines as $line) {
+                if (preg_match('/^\s*-\s*(.+)$/', $line, $matches)) {
+                    $leaf_title = trim($matches[1]);
+
+                    // 3. Générer le contenu pour chaque partie
+                    $prompt_dev = $this->promptProvider->development($leaf_title, $structure);
+                    $dev_content = $test ? '' : $this->call_api($prompt_dev);
+
+                    $leaf_slug = $this->slugify($leaf_title);
+
+                    // 4. Rendu HTML
+                    $developments_html .= "<div id='csb-leaf-$leaf_slug' class='csb-content csb-development'>$dev_content</div>";
+                }
+            }
         }
-
         // Conclusion
         $prompt_conclusion = $this->promptProvider->conclusion($title, $structure);
         $conclusion = "";
@@ -203,6 +217,21 @@ class CSB_Generator {
 
         return $intro . $developments_html . $conclusion;
     }
+
+    private function slugify(string $text): string {
+        // 1. Translittération : convertit les accents et caractères spéciaux
+        $text = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text);
+
+        // 2. Mise en minuscule
+        $text = strtolower($text);
+
+        // 3. Remplace les caractères non alphanumériques par des tirets
+        $text = preg_replace('/[^a-z0-9]+/', '-', $text);
+
+        // 4. Supprime les tirets en début ou fin
+        return trim($text, '-');
+    }
+
 
     
 
