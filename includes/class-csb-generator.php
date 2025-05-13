@@ -168,22 +168,24 @@ class CSB_Generator {
         $developments_html = '';
         if (!empty($node['children_ids'])) {
             foreach ($node['children_ids'] as $child_id) {
-                if (!isset($map[$child_id])) continue;
-                $child = $map[$child_id];
-                //$child_slug = $this->slugify($child['title']);
-                //$child_slug = get_post_field('post_name', $child_id);
-                //echo "<br><br>";
-                
-                $prompt_dev = $this->promptProvider->development($child['title'], $structure);
-                $dev_content ="";
-                if(!$test)
-                    $dev_content = $this->call_api($prompt_dev);
+                if(isset($map[$child_id])){
+                    $child = $map[$child_id];
+                    //$child_slug = $this->slugify($child['title']);
+                    //$child_slug = get_post_field('post_name', $child_id);
+                    //echo "<br><br>";
+                    
+                    $prompt_dev = $this->promptProvider->development($child['title'], $structure);
+                    $dev_content ="";
+                    if(!$test)
+                        $dev_content = $this->call_api($prompt_dev);
 
-                 // Un seul bloc, bien structuré
-                $dev_block = "<div id='csb-development-$child_slug' class='csb-content csb-development'>$dev_content</div>";
-                $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link']) . '">' . esc_html($child['title']) . '</a>.</p>';
-                $developments_html .= $dev_block . $child_link;
+                    // Un seul bloc, bien structuré
+                    $dev_block = "<div id='csb-development-$child_slug' class='csb-content csb-development'>$dev_content</div>";
+                    $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link']) . '">' . esc_html($child['title']) . '</a>.</p>';
+                    $developments_html .= $dev_block . $child_link;
+                }
             }
+                
         } 
         else {
             // 1. Générer les titres des parties
