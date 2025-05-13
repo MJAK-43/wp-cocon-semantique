@@ -74,6 +74,8 @@ class CSB_Prompts implements PromptProviderInterface {
         - N'utilise que HTML pur dans les balises spécifiées";
     }
 
+
+/*
     public function leafDevelopment(string $title, string $structure, int $number): string{
         return "Tu es un expert en rédaction SEO sur WordPress.
     
@@ -107,6 +109,41 @@ class CSB_Prompts implements PromptProviderInterface {
         - Langage fluide, naturel, riche sémantiquement.
         - Optimisé pour le SEO sans être artificiel.";
     
+    }
+
+*/
+    public function leafDevelopment(string $title, string $structure, int $number): string {
+        return "Tu es un expert en rédaction SEO sur WordPress.
+
+        Tu dois écrire un DÉVELOPPEMENT HTML pour l'article intitulé « $title », qui est une feuille du cocon sémantique (pas d'enfants).
+
+        Voici la structure globale du cocon sémantique :
+        $structure
+
+        Consignes strictes :
+        - Crée exactement {$number} parties distinctes.
+        - Pour chaque partie :
+            - Ouvre un <div class='csb-content csb-development'>.
+            - Commence avec un titre unique dans une balise <h3> (pas d'autres titres).
+            - Ajoute 1 ou 2 paragraphes <p> descriptifs, naturels et engageants.
+            - Mets en gras <strong> les mots-clés importants.
+            - Si pertinent, souligne <u> les points stratégiques.
+            - Si nécessaire, ajoute une liste <ul><li> pour structurer les informations.
+            - Ferme le <div> proprement.
+
+        Règles :
+        - Il doit y avoir **exactement {$number} blocs <div>** au final.
+        - Ne dépasse jamais ni ne réduis ce nombre.
+        - N'ajoute ni introduction globale, ni conclusion globale.
+        - Aucun lien interne ou externe.
+
+        Interdictions :
+        - N'utilise pas ```html ni de blocs Markdown.
+        - N'utilise que HTML pur dans les balises spécifiées.
+
+        Style :
+        - Langage fluide, naturel, riche sémantiquement.
+        - Optimisé pour le SEO sans être artificiel.";
     }
 
 
