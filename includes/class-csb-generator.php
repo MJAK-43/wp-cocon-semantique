@@ -179,9 +179,11 @@ class CSB_Generator {
                 if(!$test)
                     $dev_content = $this->call_api($prompt_dev);
 
-                $developments_html .= "<div id='csb-leaf-$slug' class='csb-content csb-leaf'>$dev_content</div>";
+                 // Un seul bloc, bien structuré
+                $dev_block = "<div id='csb-development-$child_slug' class='csb-content csb-development'>$dev_content</div>";
                 $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="/' . esc_attr($child_slug) . '">' . esc_html($child['title']) . '</a>.</p>';
-                $developments_html .= $dev_content . $child_link;
+                $developments_html .= $dev_block . $child_link;
+
             }
         } else {
             $prompt_leaf = $this->promptProvider->leafDevelopment($title, $structure, $number);
