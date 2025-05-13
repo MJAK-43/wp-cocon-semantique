@@ -2,36 +2,6 @@
 if (!defined('ABSPATH')) exit;
 
 class CSB_Linker {
-
-    public function add_links_to_developments(array &$tree): void {
-        foreach ($tree as &$node) {
-            if (!empty($node['content']['developments']) && !empty($node['children'])) {
-                foreach ($node['content']['developments'] as &$dev) {
-                    foreach ($node['children'] as &$child) {
-                        if (
-                            isset($child['title'], $child['link'], $child['click_bait']) &&
-                            trim($child['title']) === trim($dev['title'])
-                        ) {
-                            // 💡 Ajoute le lien dans le développement
-                            $dev['link'] = '<a href="' . esc_url($child['link']) . '">' . esc_html($child['title']) . '</a>';
-                            break;
-                        }
-                        else{
-                            // echo "<br>";echo "<br>";echo "<br>";
-                            // print_r(trim($child['title']));
-                            // echo "<br>";
-                            // print_r(trim($dev['title']));
-                        }
-                    }
-                }
-            }
-    
-            if (!empty($node['children'])) {
-                $this->add_links_to_developments($node['children']);
-            }
-        }
-    }
-    
     
 
     
@@ -96,14 +66,4 @@ class CSB_Linker {
     
     
 
-    /**
-     * Récupère le nœud racine à partir du slug dans l’arbre.
-     */
-    public function get_root_from_map(array $map){
-        $post_id=array_key_first($map);
-        return $post_id;
-    }
-    
-
-    
 }

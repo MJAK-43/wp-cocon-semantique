@@ -108,7 +108,7 @@ class CSB_Admin {
             if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
 
                 //$this->generator->setKeyword($keyword);
-                $raw = $this->generator->generateStructure($keyword,$this->nb,false);
+                $raw = $this->generator->generateStructure($keyword,$this->nb,true);
                 $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
                 update_option('csb_structure_map', $this->mapIdPost);
             }
@@ -307,8 +307,8 @@ class CSB_Admin {
         // 📝 Publication de chaque nœud
         foreach ($this->mapIdPost as $id => $info) {
             if ($info['parent_id'] != null || empty($forced_link)) {
-                $html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb,false);
-                $image_url =$this->generator->generateImage($info['title'], $keyword,false);
+                $html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb,true);
+                $image_url =$this->generator->generateImage($info['title'], $keyword,true);
                 $this->publisher->set_featured_image($id, $image_url);
                 $html .= $linker->generate_structured_links($this->mapIdPost, $id);
                 $this->publisher->fill_and_publish_content($id, $html);
@@ -348,16 +348,19 @@ class CSB_Admin {
 
         //  Enregistre les métas ici
         $this->publisher->storeMeta($post_id, $level, $parent_id);
+        $link = $forced_link ?: '/' . get_post_field('post_name', $post_id);
 
         return [
             'post_id'      => $post_id,
             'title'        => $title,
-            'link'         => $forced_link ?? wp_make_link_relative(get_permalink($post_id)),
+            'link'         => $link,
             'parent_id'    => $parent_id,
             'children_ids' => [],
             'level'        => $level
         ];
     }
+
+
 
 
     private function convertStructureToMap(string $raw, ?string $forced_link = null): array {
