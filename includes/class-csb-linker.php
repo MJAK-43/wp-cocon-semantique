@@ -66,4 +66,11 @@ class CSB_Linker {
     
     
 
+    /**
+     * Récupère le nœud racine à partir du slug dans l’arbre.
+     */
+    public function get_root_from_map(array $map){
+        $post_id=array_key_first($map);
+        return $post_id;
+    }    
 }
