@@ -1,5 +1,6 @@
 <?php
 if (!defined('ABSPATH')) exit;
+//error_log('✅ CSB_Linker chargé depuis : ' . __FILE__);
 
 class CSB_Linker {
     
@@ -8,7 +9,7 @@ class CSB_Linker {
     /**
      * Génère les sections de liens internes selon le niveau de l'article.
      */
-    public function generate_structured_links(array $map, int $post_id): string {
+    public function generateStructuredLinks(array $map, int $post_id): string {
         $content = '';
     
         $idPostRoot = $this->get_root_from_map($map);

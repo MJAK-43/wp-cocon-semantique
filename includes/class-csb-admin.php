@@ -26,6 +26,7 @@ class CSB_Admin {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('wp_ajax_csb_process_node', [$this, 'ajax_process_node']); 
+        $this->nb=2;
 
         //echo "DOG";
         // add_action('admin_init', [$this, 'maybe_delete_author_posts']);
@@ -111,14 +112,14 @@ class CSB_Admin {
             $node_id = intval($_POST['generate_single_node']);
             if (isset($this->mapIdPost[$node_id])) {
                 $keyword = reset($this->mapIdPost)['title'] ?? ''; // mot-clé racine
-                $this->processNode(
-                    $node_id,
-                    $this->mapIdPost,
-                    $this->nb,
-                    $keyword,
-                    $this->debugModContent,
-                    $this->debugModImage
-                );
+                // $this->processNode(
+                //     $node_id,
+                //     $this->mapIdPost,
+                //     $this->nb,
+                //     $keyword,
+                //     $this->debugModContent,
+                //     $this->debugModImage
+                // );
             }
             $url = esc_url($this->mapIdPost[$node_id]['link']);
             $title = esc_html($this->mapIdPost[$node_id]['title']);
@@ -331,40 +332,46 @@ class CSB_Admin {
         echo '</ul>';
     }
 
-
     public function ajax_process_node() {
-        // Vérifie les capacités et la sécurité
         if (!current_user_can('manage_options') || !check_ajax_referer('csb_nonce', 'nonce', false)) {
             wp_send_json_error('Non autorisé', 403);
         }
 
-        // Recharge la map si nécessaire
         if (empty($this->mapIdPost)) {
             $this->mapIdPost = get_option('csb_structure_map', []);
         }
 
+
         $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+        $nb = $this->nb; // récupère la valeur définie en propriété
+
+        //error_log("🚀 processNode lancé pour post_id $post_id avec nb=$nb");
 
         if (!$post_id || !isset($this->mapIdPost[$post_id])) {
             wp_send_json_error('Post ID invalide ou introuvable');
         }
+        else{
+            //echo "///////////////";
+            $keyword = reset($this->mapIdPost)['title'] ?? '';
+            $this->processNode($post_id, $this->mapIdPost, $nb, $keyword);
 
-        $keyword = reset($this->mapIdPost)['title'] ?? '';
-        $this->processNode($post_id, $this->mapIdPost, $this->nb, $keyword);
+            update_option('csb_structure_map', $this->mapIdPost);
 
-        wp_send_json_success([
-            'message' => 'Nœud généré avec succès',
-            'link' => $this->mapIdPost[$post_id]['link'] ?? ''
-        ]);
+            wp_send_json_success([
+                'message' => 'Nœud généré avec succès',
+                'link' => $this->mapIdPost[$post_id]['link'] ?? ''
+            ]);
+        }
+        
     }
 
 
     public function enqueue_admin_assets() {
         wp_enqueue_script(
             'csb-admin',
-            plugin_dir_url(__FILE__) . '../assets/js/admin.js',
+            plugin_dir_url(__DIR__) . 'assets/js/admin.js',
             ['jquery'],
-            filemtime(plugin_dir_path(__FILE__) . '../assets/js/admin.js'),
+            filemtime(plugin_dir_path(__DIR__) . 'assets/js/admin.js'),
             true
         );
 
@@ -374,17 +381,51 @@ class CSB_Admin {
         ]);
     }
 
+    private function to_bullet_tree(array $map, int $current_id = null, int $indent = 0): string {
+        $out = '';
 
-   
+        foreach ($map as $id => $node) {
+            if ($node['parent_id'] === $current_id) {
+                $out .= str_repeat('    ', $indent) . "- {$node['title']} [ID: {$id}]\n";
+
+                if (!empty($node['children_ids'])) {
+                    $out .= $this->to_bullet_tree($map, $id, $indent + 1);
+                }
+            }
+        }
+        //print_r($out);
+        return $out;
+    }
+
+    private function slugify(string $text): string {
+        // 1. Translittération : convertit les accents et caractères spéciaux
+        $text = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text);
+
+        // 2. Mise en minuscule
+        $text = strtolower($text);
+
+        // 3. Remplace les caractères non alphanumériques par des tirets
+        $text = preg_replace('/[^a-z0-9]+/', '-', $text);
+
+        // 4. Supprime les tirets en début ou fin
+        return trim($text, '-');
+    }
+
+
+
+    
 
     private function processNode(int $post_id, array &$map, int $nb, string $keyword): void {
-        if (!isset($map[$post_id])) 
+        error_log("🚀 processNode lancé pour post_id $post_id avec nb=$nb");
+        if (!isset($map[$post_id])){
+            error_log("CHIEN");
             return;
+        }        
         else{
             $node = $map[$post_id];
             $title = $node['title'];
             $slug = get_post_field('post_name', $post_id);
-            $structure = $this->generator->to_bullet_tree($map);
+            $structure = $this->to_bullet_tree($map);
 
             // 🔸 Génération Intro
             $intro = $this->generator->generateIntro($title, $structure, $slug, $this->debugModContent);
@@ -397,7 +438,7 @@ class CSB_Admin {
                     if (!isset($map[$child_id])) continue;
 
                     $child = $map[$child_id];
-                    $child_slug = $this->generator->slugify($child['title']);
+                    $child_slug = $this->slugify($child['title']);
                     $dev = $this->generator->generateDevelopment($child['title'], $structure, $this->debugModContent);
                     $dev_html = "<div id='csb-development-$child_slug' class='csb-content csb-development'>$dev</div>";
                     $link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link']) . '">' . esc_html($child['title']) . '</a>.</p>';
@@ -408,33 +449,45 @@ class CSB_Admin {
             else
             {
                 // Feuille
-                $prompt_leaf_parts = $this->generator->promptProvider->leafParts($title, $structure, $nb);
-                $leaf_parts = $this->debugModContent ? [] : explode("\n", trim($this->generator->callApi($prompt_leaf_parts)));
+                $leaf_parts_raw = $this->generator->generateLeaf($title, $structure, $nb, $this->debugModContent);
+                $leaf_parts = explode("\n", trim($leaf_parts_raw));
 
                 foreach ($leaf_parts as $line) {
                     if (preg_match('/^\s*-\s*(.+)$/', $line, $matches)) {
                         $part_title = trim($matches[1]);
-                        $part_slug = $this->generator->slugify($part_title);
+                        $part_slug = $this->slugify($part_title);
                         $dev = $this->generator->generateDevelopment($part_title, $structure, $this->debugModContent);
                         $developments_html .= "<div id='csb-leaf-$part_slug' class='csb-content csb-development'>$dev</div>";
                     }
                 }
+
             }
+            
 
             // 🔸 Conclusion
             $conclusion = $this->generator->generateConclusion($title, $structure, $slug, $this->debugModContent);
             $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
-
+            error_log("Conclution lancé pour post_id $post_id avec nb=$nb");
             // 🖼️ Image
-            $image_url = $this->generator->generateImage($title, $keyword, $this->debugModImage);
-            $this->publisher->setFeaturedImage($post_id, $image_url);
+            // $image_url = $this->generator->generateImage($title, $keyword, true);
+            // $this->publisher->setFeaturedImage($post_id, $image_url);
+            error_log("Image lancé pour post_id $post_id avec nb=$nb");
 
-            // 🔗 Liens
+
+            //🔗 Liens
+            error_log('📌 processNode: classe linker = ' . get_class($this->linker));
+            if (!method_exists($this->linker, 'generateStructuredLinks')) {
+                error_log('❌ Méthode generateStructuredLinks ABSENTE');
+            } else {
+                error_log('✅ Méthode generateStructuredLinks disponible');
+            }
+
             $links = $this->linker->generateStructuredLinks($map, $post_id);
 
             // 💾 Publication
             $final_html = $intro . $developments_html . $conclusion . $links;
             $this->publisher->fillAndPublishContent($post_id, $final_html);
+            error_log("✅ processNode terminé pour post_id $post_id");
         }
         
     }

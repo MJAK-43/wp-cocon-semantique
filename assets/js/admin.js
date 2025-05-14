@@ -1,3 +1,4 @@
+console.log('✅ admin.js chargé');
 jQuery(document).ready(function ($) {
     $('.csb-generate-node').on('click', function () {
         const postId = $(this).data('post-id');

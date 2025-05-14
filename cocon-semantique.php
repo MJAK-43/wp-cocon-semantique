@@ -12,6 +12,7 @@ define('CSB_PATH', plugin_dir_path(__FILE__));
 define('CSB_URL', plugin_dir_url(__FILE__));
 
 // Inclure les fichiers du plugin
+
 require_once CSB_PATH . 'includes/class-csb-pront.php';
 require_once CSB_PATH . 'includes/class-csb-linker.php';
 require_once CSB_PATH . 'includes/class-csb-admin.php';

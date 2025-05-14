@@ -134,41 +134,28 @@ class CSB_Generator {
         return preg_replace('/^```.*$\n?|```$/m', '', $text);
     }
 
-    private function to_bullet_tree(array $map, int $current_id = null, int $indent = 0): string {
-        $out = '';
-    
-        foreach ($map as $id => $node) {
-            if ($node['parent_id'] === $current_id) {
-                $out .= str_repeat('    ', $indent) . "- {$node['title']} [ID: {$id}]\n";
-    
-                if (!empty($node['children_ids'])) {
-                    $out .= $this->to_bullet_tree($map, $id, $indent + 1);
-                }
-            }
-        }
-        //print_r($out);
-        return $out;
-    }
 
-    public function generateImage(string $title, string $keyword,bool $test = false): string {
+    public function generateImage(string $title, string $keyword, bool $test = false): string {
         $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
-        if($test)
-            return $default_image_url;
-        try {
-            $prompt_image = $this->promptProvider->image($keyword, $title);
-            $text_image_description = $this->callApi($prompt_image);
-            $image_url = $this->fetch_image_from_api($title, $text_image_description);
-            if (!str_starts_with($image_url, '❌')) {
-                return $image_url;
-            } else {
-                throw new Exception("URL image invalide.");
+        $result = $default_image_url;
+
+        if (!$test) {
+            try {
+                $prompt_image = $this->promptProvider->image($keyword, $title);
+                $text_image_description = $this->callApi($prompt_image);
+                $image_url = $this->fetch_image_from_api($title, $text_image_description, 15); // timeout 15s
+
+                if (!empty($image_url) && !str_starts_with($image_url, '❌')) {
+                    $result = $image_url;
+                } else {
+                    throw new Exception("URL image invalide ou vide.");
+                }
+            } catch (Exception $e) {
+                error_log("❌ Erreur image : " . $e->getMessage());
             }
-        } catch (Exception $e) {
-            // Fallback : URL vers l’image locale par défaut
-            error_log("Erreur lors de la récupération de l'image Freepik : " . $e->getMessage());
         }
-        return $default_image_url;
-    
+
+        return $result;
     }
 
     public function generateIntro(string $title, string $structure, string $slug, bool $test): string {
@@ -194,7 +181,14 @@ class CSB_Generator {
     }
 
 
-    public function generate(string $title, string $structure, bool $test, string $defaultContent, string $prompt): string {
+    public function generateLeaf(string $title, string $structure, int $nb, bool $test = false): string {
+        $prompt = $this->promptProvider->leafParts($title, $structure, $nb);
+        $default = self::getDefaultLeafParts($title);
+        return $this->generate($title, $structure, $test, $default, $prompt);
+    }
+
+
+    private function generate(string $title, string $structure, bool $test, string $defaultContent, string $prompt): string {
         $content = '';
         if ($test) 
             $content = $defaultContent;
@@ -206,88 +200,7 @@ class CSB_Generator {
         return $content;
     }
 
-    public function generateContent(int $post_id, array $map, int $number,bool $test = false): string {
-        $node = $map[$post_id];
-        $title = $node['title'];
-        $slug = get_post_field('post_name', $post_id); 
-        $structure = $this->to_bullet_tree($map);
 
-        // Intro
-        $prompt_intro = $this->promptProvider->intro($title, $structure);
-        $intro ="";
-        if(!$test)
-            $intro =$this->callApi($prompt_intro);
-
-        $intro = "<div id='csb-intro-$slug' class='csb-content csb-intro'>$intro</div>";
-
-        // Développements
-        $developments_html = '';
-        if (!empty($node['children_ids'])) {
-            foreach ($node['children_ids'] as $child_id) {
-                if (isset($map[$child_id])) {
-                    $child = $map[$child_id];
-
-                    $devContent = $this->generateDevelopment($child['title'], $structure, $test);
-                    $child_slug = $this->slugify($child['title']);
-
-                    $devBlock = "<div id='csb-development-$child_slug' class='csb-content csb-development'>$devContent</div>";
-                    $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link']) . '">' . esc_html($child['title']) . '</a>.</p>';
-
-                    $developments_html .= $devBlock . $child_link;
-                }
-            }
-                
-        } 
-        else {
-            // 1. Générer les titres des parties
-            $prompt_leaf_parts = $this->promptProvider->leafParts($title, $structure, $number);
-            $leaf_parts_raw = $test ? '' : $this->callApi($prompt_leaf_parts);
-
-            // 2. Nettoyer et parser la liste
-            $lines = explode("\n", trim($leaf_parts_raw));
-            foreach ($lines as $line) {
-                if (preg_match('/^\s*-\s*(.+)$/', $line, $matches)) {
-                    $leaf_title = trim($matches[1]);
-
-                    // 3. Générer le contenu pour chaque partie
-                    $prompt_dev = $this->promptProvider->development($leaf_title, $structure);
-                    $dev_content = $test ? '' : $this->callApi($prompt_dev);
-
-                    $leaf_slug = $this->slugify($leaf_title);
-
-                    // 4. Rendu HTML
-                    $developments_html .= "<div id='csb-leaf-$leaf_slug' class='csb-content csb-development'>$dev_content</div>";
-                }
-            }
-        }
-        // Conclusion
-        $prompt_conclusion = $this->promptProvider->conclusion($title, $structure);
-        $conclusion = "";
-        if(!$test)
-            $conclusion = $this->callApi($prompt_conclusion);
-        $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
-
-        return $intro . $developments_html . $conclusion;
-    }
-
-    private function slugify(string $text): string {
-        // 1. Translittération : convertit les accents et caractères spéciaux
-        $text = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text);
-
-        // 2. Mise en minuscule
-        $text = strtolower($text);
-
-        // 3. Remplace les caractères non alphanumériques par des tirets
-        $text = preg_replace('/[^a-z0-9]+/', '-', $text);
-
-        // 4. Supprime les tirets en début ou fin
-        return trim($text, '-');
-    }
-
-
-    
-
-    
     /***
      * 
      * Récupération Image
