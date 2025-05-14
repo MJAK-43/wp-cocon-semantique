@@ -19,7 +19,7 @@ class CSB_Admin {
 
     private bool $debugModStructure=false;
     private bool $debugModContent=false;
-    private bool $debugModImage=true;
+    private bool $debugModImage=false;
 
 
     public function __construct() {
@@ -469,8 +469,8 @@ class CSB_Admin {
             $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
             error_log("Conclution lancé pour post_id $post_id avec nb=$nb");
             // 🖼️ Image
-            // $image_url = $this->generator->generateImage($title, $keyword,$this->debugModImage);
-            // $this->publisher->setFeaturedImage($post_id, $image_url);
+            $image_url = $this->generator->generateImage($title, $keyword,$this->debugModImage);
+            $this->publisher->setFeaturedImage($post_id, $image_url);
             error_log("Image lancé pour post_id $post_id avec nb=$nb");
 
 
