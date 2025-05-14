@@ -39,7 +39,7 @@ class CSB_Generator {
     }
 
 
-    public function get_tokens_used() {
+    public function getTokensUsed() {
         return $this->tokens_used;
     }
 
@@ -54,19 +54,6 @@ class CSB_Generator {
     }
     
 
-    public function generateStructure($keyword, $depth = 1, bool $test = false) {
-        if ($test) 
-            return self::generateDefaultStructure($keyword);
-        
-        $prompt = $this->promptProvider->structure($keyword, $depth);
-        $raw = $this->callApi($prompt);
-        return $this->clean_generated_structure($raw);
-    }
-
-
-    
-
-    
 
     private function normalizeKeyword($title) {
         // Convertir les accents
@@ -78,7 +65,6 @@ class CSB_Generator {
     }
 
     
-
 
     /**Utilise uniquement du texte brut sans mise en forme Markdown
      * Envoie une requête à l'API ChatGPT avec le prompt donne
@@ -134,35 +120,32 @@ class CSB_Generator {
         return preg_replace('/^```.*$\n?|```$/m', '', $text);
     }
 
+    public function generateStructure(string $keyword, int $depth = 1, bool $test = false): string {
+        $default = self::generateDefaultStructure($keyword);
+        $prompt = $this->promptProvider->structure($keyword, $depth);
+        return $this->generateTexte($test, $default, $prompt);
+    }
+    
+
 
     public function generateImage(string $title, string $keyword, bool $test = false): string {
         $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
-        $result = $default_image_url;
 
-        if (!$test) {
-            try {
-                $prompt_image = $this->promptProvider->image($keyword, $title);
-                $text_image_description = $this->callApi($prompt_image);
-                $image_url = $this->fetch_image_from_api($title, $text_image_description, 15); // timeout 15s
+        $prompt = $this->promptProvider->image($keyword, $title);
 
-                if (!empty($image_url) && !str_starts_with($image_url, '❌')) {
-                    $result = $image_url;
-                } else {
-                    throw new Exception("URL image invalide ou vide.");
-                }
-            } catch (Exception $e) {
-                error_log("❌ Erreur image : " . $e->getMessage());
-            }
-        }
-
-        return $result;
+        return $this->generate(
+            fn($p) => $this->fetch_image_from_api($title, $this->callApi($p), 15),
+            $prompt,
+            $test,
+            $default_image_url
+        );
     }
 
     public function generateIntro(string $title, string $structure, string $slug, bool $test): string {
         $prompt = $this->promptProvider->intro($title, $structure);
         $default = self::getDefaultIntro($title);
 
-        return $this->generate($title, $structure, $test, $default, $prompt);
+        return $this->generateTexte($title, $test, $default, $prompt);
     }
 
 
@@ -170,35 +153,48 @@ class CSB_Generator {
         $prompt = $this->promptProvider->development($title, $structure);
         $default = self::getDefaultDevelopment($title);
 
-        return $this->generate($title, $structure, $test, $default, $prompt);
+        return $this->generateTexte($title, $test, $default, $prompt);
     }
 
     public function generateConclusion(string $title, string $structure, string $slug, bool $test): string {
         $prompt = $this->promptProvider->conclusion($title, $structure);
         $default = self::getDefaultConclusion($title);
 
-        return $this->generate($title, $structure, $test, $default, $prompt);
+        return $this->generateTexte($title, $test, $default, $prompt);
     }
 
 
     public function generateLeaf(string $title, string $structure, int $nb, bool $test = false): string {
         $prompt = $this->promptProvider->leafParts($title, $structure, $nb);
         $default = self::getDefaultLeafParts($title);
-        return $this->generate($title, $structure, $test, $default, $prompt);
+        return $this->generateTexte($title, $test, $default, $prompt);
     }
 
 
-    private function generate(string $title, string $structure, bool $test, string $defaultContent, string $prompt): string {
-        $content = '';
-        if ($test) 
-            $content = $defaultContent;
+    private function generateTexte(string $title, bool $test, string $defaultContent, string $prompt): string {
+        return $this->generate(fn($p) => $this->callApi($p), $prompt, $test, $default);
+    }
 
-        else 
-            $content = $this->callApi($prompt);
-        
+    private function generate(callable $method, string $prompt, bool $test = false, string $default = ''): string {
+        $content = $default;
+        if (!$test) {
+            try {
+                $content = $method($prompt);
+            } 
+            catch (\Throwable $e) {
+                error_log("❌ Erreur dans generate() : " . $e->getMessage());
+            }
+        }
 
         return $content;
     }
+
+
+
+
+
+
+
 
 
     /***

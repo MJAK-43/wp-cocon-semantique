@@ -15,9 +15,7 @@ jQuery(document).ready(function ($) {
             post_id: postId
         }, function (response) {
             if (response.success) {
-                status.html(
-                    '✅ <a href="' + response.data.link + '" target="_blank">Voir l’article</a>'
-                );
+                status.html('✅ <a href="' + response.data.link + '" target="_blank">Voir l’article</a>');
                 button.text('✅ Fait');
             } else {
                 status.text('❌ Erreur');
@@ -30,26 +28,19 @@ jQuery(document).ready(function ($) {
         });
     });
 
-    // ✅ Génération séquentielle pour tous les boutons
-    function processAllNodesSequentially() {
-        const buttons = $('.csb-generate-node').toArray();
-
-        function clickNext(index) {
-            if (index >= buttons.length) return;
-
-            const btn = $(buttons[index]);
-            btn.trigger('click');
-
-            setTimeout(() => clickNext(index + 1), 3500); // délai pour attendre la génération
-        }
-
-        clickNext(0);
+    // ✅ Génération simultanée de tous les boutons
+    function processAllNodesSimultaneously() {
+        $('.csb-generate-node').each(function () {
+            $(this).trigger('click');
+        });
     }
 
     // ✅ Bouton "Tout générer"
-    if ($('#csb-generate-all').length === 0) {
-        $('<button id="csb-generate-all" class="button button-primary" style="margin: 10px 0;">🚀 Tout générer en AJAX</button>')
-            .insertBefore('.csb-generate-node:first')
-            .on('click', processAllNodesSequentially);
-    }
+    $('#csb-generate-all').on('click', function () {
+        $(this).prop('disabled', true).text('⏳ Génération en cours...');
+        processAllNodesSimultaneously();
+        setTimeout(() => {
+            $(this).prop('disabled', false).text('🚀 Tout générer en AJAX');
+        }, 4000);
+    });
 });

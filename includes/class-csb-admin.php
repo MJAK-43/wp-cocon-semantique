@@ -25,7 +25,7 @@ class CSB_Admin {
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
-        add_action('wp_ajax_csb_process_node', [$this, 'ajax_process_node']); 
+        add_action('wp_ajax_csb_process_node', [$this, 'ajaxProcessNode']); 
         $this->nb=2;
 
         //echo "DOG";
@@ -166,7 +166,7 @@ class CSB_Admin {
                     $this->mapIdPost=[];
                 }
             }
-            $total_tokens = $this->generator->get_tokens_used();
+            $total_tokens = $this->generator->getTokensUsed();
             echo '<div class="notice notice-info is-dismissible"><p>Nombre total de tokens utilisés : <strong>' . intval($total_tokens) . '</strong> tokens.</p></div>';
         }
 
@@ -332,7 +332,7 @@ class CSB_Admin {
         echo '</ul>';
     }
 
-    public function ajax_process_node() {
+    public function ajaxProcessNode() {
         if (!current_user_can('manage_options') || !check_ajax_referer('csb_nonce', 'nonce', false)) {
             wp_send_json_error('Non autorisé', 403);
         }
@@ -381,7 +381,7 @@ class CSB_Admin {
         ]);
     }
 
-    private function to_bullet_tree(array $map, int $current_id = null, int $indent = 0): string {
+    private function toBulletArchitecture(array $map, int $current_id = null, int $indent = 0): string {
         $out = '';
 
         foreach ($map as $id => $node) {
@@ -389,7 +389,7 @@ class CSB_Admin {
                 $out .= str_repeat('    ', $indent) . "- {$node['title']} [ID: {$id}]\n";
 
                 if (!empty($node['children_ids'])) {
-                    $out .= $this->to_bullet_tree($map, $id, $indent + 1);
+                    $out .= $this->toBulletArchitecture($map, $id, $indent + 1);
                 }
             }
         }
@@ -412,9 +412,6 @@ class CSB_Admin {
     }
 
 
-
-    
-
     private function processNode(int $post_id, array &$map, int $nb, string $keyword): void {
         error_log("🚀 processNode lancé pour post_id $post_id avec nb=$nb");
         if (!isset($map[$post_id])){
@@ -425,7 +422,7 @@ class CSB_Admin {
             $node = $map[$post_id];
             $title = $node['title'];
             $slug = get_post_field('post_name', $post_id);
-            $structure = $this->to_bullet_tree($map);
+            $structure = $this->toBulletArchitecture($map);
 
             // 🔸 Génération Intro
             $intro = $this->generator->generateIntro($title, $structure, $slug, $this->debugModContent);
@@ -491,7 +488,6 @@ class CSB_Admin {
         }
         
     }
-
 
 
     private function process($keyword) {
