@@ -123,7 +123,7 @@ class CSB_Generator {
     public function generateStructure(string $keyword, int $depth = 1, bool $test = false): string {
         $default = self::generateDefaultStructure($keyword);
         $prompt = $this->promptProvider->structure($keyword, $depth);
-        return $this->generateTexte($test, $default, $prompt);
+        return $this->generateTexte($keyword, $test, $default, $prompt);
     }
     
 
@@ -144,7 +144,6 @@ class CSB_Generator {
     public function generateIntro(string $title, string $structure, string $slug, bool $test): string {
         $prompt = $this->promptProvider->intro($title, $structure);
         $default = self::getDefaultIntro($title);
-
         return $this->generateTexte($title, $test, $default, $prompt);
     }
 
@@ -172,7 +171,7 @@ class CSB_Generator {
 
 
     private function generateTexte(string $title, bool $test, string $defaultContent, string $prompt): string {
-        return $this->generate(fn($p) => $this->callApi($p), $prompt, $test, $default);
+        return $this->generate(fn($p) => $this->callApi($p), $prompt, $test, $defaultContent);
     }
 
     private function generate(callable $method, string $prompt, bool $test = false, string $default = ''): string {
