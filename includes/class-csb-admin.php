@@ -66,10 +66,6 @@ class CSB_Admin {
             $errors[] = "📥 `max_input_time` est trop bas : $maxInputTime (minimum requis : " . self::$minInputTime . ")";
         }
 
-        // if ($postMaxSize < self::$minSize * 1024 * 1024) { // minSize est en Mo
-        //     $errors[] = "📦 `post_max_size` est trop petit : $postMaxSizeRaw (minimum requis : " . self::$minSize . "M)";
-        // }
-
         return $errors;
     }
 
@@ -112,14 +108,7 @@ class CSB_Admin {
             $node_id = intval($_POST['generate_single_node']);
             if (isset($this->mapIdPost[$node_id])) {
                 $keyword = reset($this->mapIdPost)['title'] ?? ''; // mot-clé racine
-                // $this->processNode(
-                //     $node_id,
-                //     $this->mapIdPost,
-                //     $this->nb,
-                //     $keyword,
-                //     $this->debugModContent,
-                //     $this->debugModImage
-                // );
+ 
             }
             $url = esc_url($this->mapIdPost[$node_id]['link']);
             $title = esc_html($this->mapIdPost[$node_id]['title']);
@@ -149,22 +138,12 @@ class CSB_Admin {
 
             if (isset($_POST['structure'])) {
                 $this->handleStructureActionsMap($this->mapIdPost);
-
                  // Synchronise les modifications utilisateur (titres)
                 if (isset($_POST['structure']) && is_array($_POST['structure'])) {
                     $this->updateMapFromPost($this->mapIdPost, $_POST['structure']);
                     update_option('csb_structure_map', $this->mapIdPost);
                 }
 
-                if (isset($_POST['csb_validate_publish'])) {
-                    $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
-                    $word= reset($this->mapIdPost)['title']; 
-                    $this->process($word);
-                    echo '<div class="wrap"><h2>🔗 Articles publiés</h2><ul>';
-                    $this->renderLinksToArticles();
-                    echo '</ul></div>';
-                    $this->mapIdPost=[];
-                }
             }
             $total_tokens = $this->generator->getTokensUsed();
             echo '<div class="notice notice-info is-dismissible"><p>Nombre total de tokens utilisés : <strong>' . intval($total_tokens) . '</strong> tokens.</p></div>';
@@ -490,36 +469,6 @@ class CSB_Admin {
     }
 
 
-    private function process($keyword) {
-        $use_existing_root = isset($_POST['use_existing_root']) && $_POST['use_existing_root'] == '1';
-        $forced_link = null;
-
-        if ($use_existing_root && !empty($_POST['existing_root_url'])) {
-            $forced_link = sanitize_text_field($_POST['existing_root_url']);
-        }
-
-        // 💾 Mise à jour de la map persistée avant publication
-        update_option('csb_structure_map', $this->mapIdPost);
-
-        // 📝 Publication de chaque nœud
-        foreach ($this->mapIdPost as $id => $info) {
-            if ($info['parent_id'] != null || empty($forced_link)) {
-                $this->processNode(
-                    $id,
-                    $this->mapIdPost,
-                    $this->nb,
-                    $keyword,
-                    $this->debugModContent,
-                    $this->debugModImage
-                );
-            }
-        }
-
-        $published_count = $this->publisher->getPublishedCount();
-        echo '<div class="notice notice-success is-dismissible"><p>✅ ' . $published_count . ' article(s) ont été publiés avec succès.</p></div>';
-    }
-
-
     private function sanitizeToRelativeUrl(string $url): string {
         $parsed = parse_url($url);
 
@@ -665,26 +614,6 @@ class CSB_Admin {
 
         // Supprimer ce nœud
         unset($map[$post_id]);
-    }
-
-
-    private function renderLinksToArticles($parent_id = null, $level = 0) {
-        echo '<ul style="padding-left: ' . (20 * $level) . 'px;">';
-
-        foreach ($this->mapIdPost as $id => $node) {
-            if ($node['parent_id'] === $parent_id) {
-                $title = esc_html($node['title'] ?? "Article #$id");
-                $url = $node['link'];
-                echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a>";
-
-                // 🔥 Appel récursif pour afficher les enfants, **À L'INTÉRIEUR DU LI**
-                $this->renderLinksToArticles($id, $level + 1);
-
-                echo "</li>"; // Fermeture du LI APRÈS les enfants
-            }
-        }
-
-        echo '</ul>';
     }
 
 
