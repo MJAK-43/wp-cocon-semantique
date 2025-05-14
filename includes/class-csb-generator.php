@@ -11,6 +11,34 @@ class CSB_Generator {
     private PromptProviderInterface $promptProvider;
     private $tokens_used = 0;
 
+
+    private static function getDefaultIntro(string $title): string {
+        return "<p><em>Introduction par défaut sur «&nbsp;$title&nbsp;».</em></p>";
+    }
+
+    private static function getDefaultDevelopment(string $title): string {
+        return "<p><em>Développement par défaut pour «&nbsp;$title&nbsp;».</em></p>";
+    }
+
+    private static function getDefaultConclusion(string $title): string {
+        return "<p><em>Conclusion par défaut sur «&nbsp;$title&nbsp;».</em></p>";
+    }
+
+    private static function getDefaultLeafParts(string $title): string {
+        return "- Partie 1 de « $title »\n- Partie 2 de « $title »\n- Partie 3 de « $title »";
+    }
+
+    private static function generateDefaultStructure(string $keyword = 'Thème Principal'): string {
+        return "- " . ucwords($keyword) . "\n"
+            . "    - Sous-thème A\n"
+            . "        - Exemple A1\n"
+            . "        - Exemple A2\n"
+            . "    - Sous-thème B\n"
+            . "        - Exemple B1\n"
+            . "        - Exemple B2\n";
+    }
+
+
     public function get_tokens_used() {
         return $this->tokens_used;
     }
@@ -28,17 +56,19 @@ class CSB_Generator {
 
     public function generateStructure($keyword, $depth = 1, bool $test = false) {
         if ($test) 
-            return $this->generateStaticStructure($keyword);
+            return self::generateDefaultStructure($keyword);
         
         $prompt = $this->promptProvider->structure($keyword, $depth);
-        $raw = $this->call_api($prompt);
+        $raw = $this->callApi($prompt);
         return $this->clean_generated_structure($raw);
     }
-    
+
 
     
 
-    private function normalize_keyword($title) {
+    
+
+    private function normalizeKeyword($title) {
         // Convertir les accents
         $translit = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $title);
         // Nettoyer les caractères non alphanumériques sauf espace
@@ -48,21 +78,12 @@ class CSB_Generator {
     }
 
     
-    private function generateStaticStructure(string $keyword = 'Thème Principal'): string {
-        return "- " . ucwords($keyword) . "\n"
-            . "    - Sous-thème A\n"
-            . "        - Exemple A1\n"
-            . "        - Exemple A2\n"
-            . "    - Sous-thème B\n"
-            . "        - Exemple B1\n"
-            . "        - Exemple B2\n";
-    }
 
 
     /**Utilise uniquement du texte brut sans mise en forme Markdown
      * Envoie une requête à l'API ChatGPT avec le prompt donne
      */
-    private function call_api($prompt) {
+    private function callApi($prompt) {
         if (!$this->api_key) return '❌ Clé API non configurée.';
 
         $url = 'https://api.openai.com/v1/chat/completions';
@@ -113,7 +134,7 @@ class CSB_Generator {
         return preg_replace('/^```.*$\n?|```$/m', '', $text);
     }
 
-    public function to_bullet_tree(array $map, int $current_id = null, int $indent = 0): string {
+    private function to_bullet_tree(array $map, int $current_id = null, int $indent = 0): string {
         $out = '';
     
         foreach ($map as $id => $node) {
@@ -135,7 +156,7 @@ class CSB_Generator {
             return $default_image_url;
         try {
             $prompt_image = $this->promptProvider->image($keyword, $title);
-            $text_image_description = $this->call_api($prompt_image);
+            $text_image_description = $this->callApi($prompt_image);
             $image_url = $this->fetch_image_from_api($title, $text_image_description);
             if (!str_starts_with($image_url, '❌')) {
                 return $image_url;
@@ -150,6 +171,41 @@ class CSB_Generator {
     
     }
 
+    public function generateIntro(string $title, string $structure, string $slug, bool $test): string {
+        $prompt = $this->promptProvider->intro($title, $structure);
+        $default = self::getDefaultIntro($title);
+
+        return $this->generate($title, $structure, $test, $default, $prompt);
+    }
+
+
+    public function generateDevelopment(string $title, string $structure, bool $test): string {
+        $prompt = $this->promptProvider->development($title, $structure);
+        $default = self::getDefaultDevelopment($title);
+
+        return $this->generate($title, $structure, $test, $default, $prompt);
+    }
+
+    public function generateConclusion(string $title, string $structure, string $slug, bool $test): string {
+        $prompt = $this->promptProvider->conclusion($title, $structure);
+        $default = self::getDefaultConclusion($title);
+
+        return $this->generate($title, $structure, $test, $default, $prompt);
+    }
+
+
+    public function generate(string $title, string $structure, bool $test, string $defaultContent, string $prompt): string {
+        $content = '';
+        if ($test) 
+            $content = $defaultContent;
+
+        else 
+            $content = $this->callApi($prompt);
+        
+
+        return $content;
+    }
+
     public function generateContent(int $post_id, array $map, int $number,bool $test = false): string {
         $node = $map[$post_id];
         $title = $node['title'];
@@ -160,7 +216,7 @@ class CSB_Generator {
         $prompt_intro = $this->promptProvider->intro($title, $structure);
         $intro ="";
         if(!$test)
-            $intro =$this->call_api($prompt_intro);
+            $intro =$this->callApi($prompt_intro);
 
         $intro = "<div id='csb-intro-$slug' class='csb-content csb-intro'>$intro</div>";
 
@@ -168,21 +224,16 @@ class CSB_Generator {
         $developments_html = '';
         if (!empty($node['children_ids'])) {
             foreach ($node['children_ids'] as $child_id) {
-                if(isset($map[$child_id])){
+                if (isset($map[$child_id])) {
                     $child = $map[$child_id];
-                    //$child_slug = $this->slugify($child['title']);
-                    //$child_slug = get_post_field('post_name', $child_id);
-                    //echo "<br><br>";
-                    
-                    $prompt_dev = $this->promptProvider->development($child['title'], $structure);
-                    $dev_content ="";
-                    if(!$test)
-                        $dev_content = $this->call_api($prompt_dev);
 
-                    // Un seul bloc, bien structuré
-                    $dev_block = "<div id='csb-development-$child_slug' class='csb-content csb-development'>$dev_content</div>";
+                    $devContent = $this->generateDevelopment($child['title'], $structure, $test);
+                    $child_slug = $this->slugify($child['title']);
+
+                    $devBlock = "<div id='csb-development-$child_slug' class='csb-content csb-development'>$devContent</div>";
                     $child_link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link']) . '">' . esc_html($child['title']) . '</a>.</p>';
-                    $developments_html .= $dev_block . $child_link;
+
+                    $developments_html .= $devBlock . $child_link;
                 }
             }
                 
@@ -190,7 +241,7 @@ class CSB_Generator {
         else {
             // 1. Générer les titres des parties
             $prompt_leaf_parts = $this->promptProvider->leafParts($title, $structure, $number);
-            $leaf_parts_raw = $test ? '' : $this->call_api($prompt_leaf_parts);
+            $leaf_parts_raw = $test ? '' : $this->callApi($prompt_leaf_parts);
 
             // 2. Nettoyer et parser la liste
             $lines = explode("\n", trim($leaf_parts_raw));
@@ -200,7 +251,7 @@ class CSB_Generator {
 
                     // 3. Générer le contenu pour chaque partie
                     $prompt_dev = $this->promptProvider->development($leaf_title, $structure);
-                    $dev_content = $test ? '' : $this->call_api($prompt_dev);
+                    $dev_content = $test ? '' : $this->callApi($prompt_dev);
 
                     $leaf_slug = $this->slugify($leaf_title);
 
@@ -213,7 +264,7 @@ class CSB_Generator {
         $prompt_conclusion = $this->promptProvider->conclusion($title, $structure);
         $conclusion = "";
         if(!$test)
-            $conclusion = $this->call_api($prompt_conclusion);
+            $conclusion = $this->callApi($prompt_conclusion);
         $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
 
         return $intro . $developments_html . $conclusion;
@@ -246,8 +297,8 @@ class CSB_Generator {
 
     private function fetch_image_from_api(string $title, string $text): ?string {
         // 🔥 Normalisation du titre et du texte
-        $normalized_title = $this->normalize_keyword($title);
-        $normalized_text = $this->normalize_keyword($text);
+        $normalized_title = $this->normalizeKeyword($title);
+        $normalized_text = $this->normalizeKeyword($text);
         // echo "<br>";echo "<br>";
         // print_r($normalized_title);
         // echo "<br>";

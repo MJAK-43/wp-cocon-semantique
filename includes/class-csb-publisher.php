@@ -17,7 +17,7 @@ class CSB_Publisher {
     }
     
 
-    public function fill_and_publish_content(int $post_id, string $html_content): void {
+    public function fillAndPublishContent(int $post_id, string $html_content): void {
         $this->publishedCount++; 
         $updated = wp_update_post([
             'ID'           => $post_id,
@@ -80,7 +80,7 @@ class CSB_Publisher {
 
 
 
-    public function set_featured_image(int $post_id, string $image_url): void {
+    public function setFeaturedImage(int $post_id, string $image_url): void {
         if (empty($image_url) || str_starts_with($image_url, '❌')) {
             error_log("❌ Image invalide pour mise en avant : $image_url");
             return;

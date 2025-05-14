@@ -7,21 +7,31 @@ class CSB_Admin {
     private $mapIdPostLoaded=[];
     private $generator;
     private $publisher;
+    private $linker; 
 
-    private static $minExecutionTime=600;
-    private static $minInputTime=60;
-    private static $minSize=32;
+    // private static $minExecutionTime=600;
+    // private static $minInputTime=60;
+    // private static $minSize=32;
 
-    // private static $minExecutionTime=1;
-    // private static $minInputTime=1;
-    // private static $minSize=1;
+    private static $minExecutionTime=1;
+    private static $minInputTime=1;
+    private static $minSize=1;
+
+    private bool $debugModStructure=true;
+    private bool $debugModContent=true;
+    private bool $debugModImage=true;
+
 
     public function __construct() {
         add_action('admin_menu', [$this, 'add_admin_menu']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
+        add_action('wp_ajax_csb_process_node', [$this, 'ajax_process_node']); 
+
         //echo "DOG";
         // add_action('admin_init', [$this, 'maybe_delete_author_posts']);
         $this->generator= new CSB_Generator(new CSB_Prompts());
         $this->publisher=  new CSB_Publisher();
+        $this->linker = new CSB_Linker();
     }
 
 
@@ -55,9 +65,9 @@ class CSB_Admin {
             $errors[] = "📥 `max_input_time` est trop bas : $maxInputTime (minimum requis : " . self::$minInputTime . ")";
         }
 
-        if ($postMaxSize < self::$minSize * 1024 * 1024) { // minSize est en Mo
-            $errors[] = "📦 `post_max_size` est trop petit : $postMaxSizeRaw (minimum requis : " . self::$minSize . "M)";
-        }
+        // if ($postMaxSize < self::$minSize * 1024 * 1024) { // minSize est en Mo
+        //     $errors[] = "📦 `post_max_size` est trop petit : $postMaxSizeRaw (minimum requis : " . self::$minSize . "M)";
+        // }
 
         return $errors;
     }
@@ -77,7 +87,7 @@ class CSB_Admin {
     }
 
 
-    private function capitalize_each_word($text) {
+    private function capitalizeEachWord($text) {
         $text = strtolower($text);
         $text = ucwords($text);
         return $text;
@@ -86,16 +96,39 @@ class CSB_Admin {
 
     public function render_admin_page() {
 
-        $keyword =$this->capitalize_each_word(isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '');
+        $keyword =$this->capitalizeEachWord(isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '');
         $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
         $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
         $existing_root_url = isset($_POST['existing_root_url']) ? $_POST['existing_root_url'] : '';
-        $existing_root_url = $this->sanitize_to_relative_url($existing_root_url);
+        $existing_root_url = $this->sanitizeToRelativeUrl($existing_root_url);
 
 
         if (empty($this->mapIdPost)) {
             $this->mapIdPost = get_option('csb_structure_map', []);
         }
+
+        if (isset($_POST['generate_single_node'])) {
+            $node_id = intval($_POST['generate_single_node']);
+            if (isset($this->mapIdPost[$node_id])) {
+                $keyword = reset($this->mapIdPost)['title'] ?? ''; // mot-clé racine
+                $this->processNode(
+                    $node_id,
+                    $this->mapIdPost,
+                    $this->nb,
+                    $keyword,
+                    $this->debugModContent,
+                    $this->debugModImage
+                );
+            }
+            $url = esc_url($this->mapIdPost[$node_id]['link']);
+            $title = esc_html($this->mapIdPost[$node_id]['title']);
+
+            echo '<div class="notice notice-success is-dismissible">';
+            echo '<p>✅ Article généré : <a href="' . $url . '" target="_blank">🔗 ' . $title . '</a></p>';
+            echo '</div>';
+                
+        }
+
 
 
         if (isset($_POST['load_existing_cocon'])) {
@@ -108,7 +141,7 @@ class CSB_Admin {
             if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
 
                 //$this->generator->setKeyword($keyword);
-                $raw = $this->generator->generateStructure($keyword,$this->nb,false);
+                $raw = $this->generator->generateStructure($keyword,$this->nb,$this->debugModStructure);
                 $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
                 update_option('csb_structure_map', $this->mapIdPost);
             }
@@ -125,9 +158,9 @@ class CSB_Admin {
                 if (isset($_POST['csb_validate_publish'])) {
                     $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
                     $word= reset($this->mapIdPost)['title']; 
-                    $this->process_structure($word);
+                    $this->process($word);
                     echo '<div class="wrap"><h2>🔗 Articles publiés</h2><ul>';
-                    $this->render_links_to_articles();
+                    $this->renderLinksToArticles();
                     echo '</ul></div>';
                     $this->mapIdPost=[];
                 }
@@ -150,8 +183,8 @@ class CSB_Admin {
             echo '</ul></div>';
         }
         else{
-            $this->render_keyword_form($keyword, $this->nb);
-            $this->render_structure_form('structure', 0, $use_existing_root, $existing_root_url);
+            $this->renderKeywordForm($keyword, $this->nb);
+            $this->renderStructureForm('structure', 0, $use_existing_root, $existing_root_url);
         }
 
         echo '</div>';
@@ -165,7 +198,7 @@ class CSB_Admin {
         echo '<h2>🌳 Racines des cocons existants</h2><ul>';
         foreach ($roots as $root) {
             echo '<li><strong>' . esc_html($root['title']) . '</strong> - ';
-            $this->render_load_existing_button($root['post_id']);
+            $this->renderLoadExistingButton($root['post_id']);
             echo '</li>';
         }
         echo '</ul>';
@@ -173,11 +206,12 @@ class CSB_Admin {
 
         if (!empty($this->mapIdPostLoaded)) {
             echo '<h2>📂 Structure du cocon chargé</h2>';
-            $this->render_loaded_structure();
+            $this->renderLoadedStructure();
         }
     }
 
-    private function render_structure_form($prefix = 'structure', $level = 0, $use_existing_root = 0, $existing_root_url = ''){
+
+    private function renderStructureForm($prefix = 'structure', $level = 0, $use_existing_root = 0, $existing_root_url = ''){
         echo '<form method="post">';
         echo '<input type="hidden" name="csb_nb_nodes" value="' . intval($this->nb) . '" />';
 
@@ -185,7 +219,7 @@ class CSB_Admin {
         echo '<legend style="font-weight: bold;">Structure générée</legend>';
 
         // Affichage à partir de la racine (parent_id null)
-        $this->render_structure_fields(null, $prefix, 0);
+        $this->renderStructureFields(null, $prefix, 0);
 
         echo '</fieldset>';
 
@@ -196,16 +230,16 @@ class CSB_Admin {
             echo '<input type="hidden" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" />';
         }
 
-        submit_button('Valider et publier', 'primary', 'csb_validate_publish');
+        submit_button('Tout générer', 'primary', 'csb_validate_publish');
         echo '</form>';
     }
 
 
-    private function render_keyword_form($keyword, $nb) {
+    private function renderKeywordForm($keyword, $nb) {
         $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
 
         $original_url = isset($_POST['existing_root_url']) ? sanitize_text_field($_POST['existing_root_url']) : '';
-        $existing_root_url = $this->sanitize_to_relative_url($original_url); // <-- Conversion ici
+        $existing_root_url = $this->sanitizeToRelativeUrl($original_url); // <-- Conversion ici
 
         echo '<form method="post">';
         echo '<table class="form-table">';
@@ -238,7 +272,7 @@ class CSB_Admin {
     }
 
 
-    private function render_structure_fields(?int $parent_id, string $prefix, int $level) {
+    private function renderStructureFields(?int $parent_id, string $prefix, int $level) {
         echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . ($level * 20) . 'px;">';
 
         foreach ($this->mapIdPost as $id => $node) {
@@ -250,12 +284,20 @@ class CSB_Admin {
             echo '<div style="display: flex; align-items: center; gap: 6px;">';
             echo '<span style="min-width: 10px;">-</span>';
             echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" required />';
-            //echo '<button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">🗑️</button>';
-            //echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">➕ Sous-thème</button>';
+            
+            // Bouton de génération AJAX (sans <form>)
+            echo '<button type="button" class="button csb-generate-node" data-post-id="' . esc_attr($id) . '">⚙️ Générer (AJAX)</button>';
+            echo '<span class="csb-node-status" data-post-id="' . esc_attr($id) . '"></span>';
+
+
+            // Décommenter si tu veux les boutons ajouter/supprimer
+            // echo '<button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">🗑️</button>';
+            // echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">➕ Sous-thème</button>';
+
             echo '</div>';
 
             if (!empty($node['children_ids'])) {
-                $this->render_structure_fields($id, $prefix, $level + 1);
+                $this->renderStructureFields($id, $prefix, $level + 1);
             }
 
             echo '</li>';
@@ -265,7 +307,7 @@ class CSB_Admin {
     }
 
 
-    private function render_loaded_structure(?int $parent_id = null, int $level = 0): void {
+    private function renderLoadedStructure(?int $parent_id = null, int $level = 0): void {
         if (empty($this->mapIdPostLoaded)) {
             echo '<p>Aucun cocon chargé.</p>';
             return;
@@ -281,19 +323,125 @@ class CSB_Admin {
     
             echo "<li><a href=\"$link\" target=\"_blank\">🔗 $title</a>";
     
-            $this->render_loaded_structure($id, $level + 1); // récursif
+            $this->renderLoadedStructure($id, $level + 1); // récursif
     
             echo '</li>';
         }
     
         echo '</ul>';
     }
+
+
+    public function ajax_process_node() {
+        // Vérifie les capacités et la sécurité
+        if (!current_user_can('manage_options') || !check_ajax_referer('csb_nonce', 'nonce', false)) {
+            wp_send_json_error('Non autorisé', 403);
+        }
+
+        // Recharge la map si nécessaire
+        if (empty($this->mapIdPost)) {
+            $this->mapIdPost = get_option('csb_structure_map', []);
+        }
+
+        $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+
+        if (!$post_id || !isset($this->mapIdPost[$post_id])) {
+            wp_send_json_error('Post ID invalide ou introuvable');
+        }
+
+        $keyword = reset($this->mapIdPost)['title'] ?? '';
+        $this->processNode($post_id, $this->mapIdPost, $this->nb, $keyword);
+
+        wp_send_json_success([
+            'message' => 'Nœud généré avec succès',
+            'link' => $this->mapIdPost[$post_id]['link'] ?? ''
+        ]);
+    }
+
+
+    public function enqueue_admin_assets() {
+        wp_enqueue_script(
+            'csb-admin',
+            plugin_dir_url(__FILE__) . '../assets/js/admin.js',
+            ['jquery'],
+            filemtime(plugin_dir_path(__FILE__) . '../assets/js/admin.js'),
+            true
+        );
+
+        wp_localize_script('csb-admin', 'csbData', [
+            'nonce' => wp_create_nonce('csb_nonce'),
+            'ajaxurl' => admin_url('admin-ajax.php')
+        ]);
+    }
+
+
    
-    
-    private function process_structure($keyword) {
 
-        $linker = new CSB_Linker();
+    private function processNode(int $post_id, array &$map, int $nb, string $keyword): void {
+        if (!isset($map[$post_id])) 
+            return;
+        else{
+            $node = $map[$post_id];
+            $title = $node['title'];
+            $slug = get_post_field('post_name', $post_id);
+            $structure = $this->generator->to_bullet_tree($map);
 
+            // 🔸 Génération Intro
+            $intro = $this->generator->generateIntro($title, $structure, $slug, $this->debugModContent);
+            $intro = "<div id='csb-intro-$slug' class='csb-content csb-intro'>$intro</div>";
+
+            // 🔸 Génération Développements
+            $developments_html = '';
+            if (!empty($node['children_ids'])) {
+                foreach ($node['children_ids'] as $child_id) {
+                    if (!isset($map[$child_id])) continue;
+
+                    $child = $map[$child_id];
+                    $child_slug = $this->generator->slugify($child['title']);
+                    $dev = $this->generator->generateDevelopment($child['title'], $structure, $this->debugModContent);
+                    $dev_html = "<div id='csb-development-$child_slug' class='csb-content csb-development'>$dev</div>";
+                    $link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link']) . '">' . esc_html($child['title']) . '</a>.</p>';
+
+                    $developments_html .= $dev_html . $link;
+                }
+            } 
+            else
+            {
+                // Feuille
+                $prompt_leaf_parts = $this->generator->promptProvider->leafParts($title, $structure, $nb);
+                $leaf_parts = $this->debugModContent ? [] : explode("\n", trim($this->generator->callApi($prompt_leaf_parts)));
+
+                foreach ($leaf_parts as $line) {
+                    if (preg_match('/^\s*-\s*(.+)$/', $line, $matches)) {
+                        $part_title = trim($matches[1]);
+                        $part_slug = $this->generator->slugify($part_title);
+                        $dev = $this->generator->generateDevelopment($part_title, $structure, $this->debugModContent);
+                        $developments_html .= "<div id='csb-leaf-$part_slug' class='csb-content csb-development'>$dev</div>";
+                    }
+                }
+            }
+
+            // 🔸 Conclusion
+            $conclusion = $this->generator->generateConclusion($title, $structure, $slug, $this->debugModContent);
+            $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
+
+            // 🖼️ Image
+            $image_url = $this->generator->generateImage($title, $keyword, $this->debugModImage);
+            $this->publisher->setFeaturedImage($post_id, $image_url);
+
+            // 🔗 Liens
+            $links = $this->linker->generateStructuredLinks($map, $post_id);
+
+            // 💾 Publication
+            $final_html = $intro . $developments_html . $conclusion . $links;
+            $this->publisher->fillAndPublishContent($post_id, $final_html);
+        }
+        
+    }
+
+
+
+    private function process($keyword) {
         $use_existing_root = isset($_POST['use_existing_root']) && $_POST['use_existing_root'] == '1';
         $forced_link = null;
 
@@ -307,11 +455,14 @@ class CSB_Admin {
         // 📝 Publication de chaque nœud
         foreach ($this->mapIdPost as $id => $info) {
             if ($info['parent_id'] != null || empty($forced_link)) {
-                $html =$this->generator->generateContent($id, $this->mapIdPost, $this->nb,false);
-                $image_url =$this->generator->generateImage($info['title'], $keyword,false);
-                $this->publisher->set_featured_image($id, $image_url);
-                $html .= $linker->generate_structured_links($this->mapIdPost, $id);
-                $this->publisher->fill_and_publish_content($id, $html);
+                $this->processNode(
+                    $id,
+                    $this->mapIdPost,
+                    $this->nb,
+                    $keyword,
+                    $this->debugModContent,
+                    $this->debugModImage
+                );
             }
         }
 
@@ -320,7 +471,7 @@ class CSB_Admin {
     }
 
 
-    private function sanitize_to_relative_url(string $url): string {
+    private function sanitizeToRelativeUrl(string $url): string {
         $parsed = parse_url($url);
 
         if (!isset($parsed['path'])) {
@@ -359,8 +510,6 @@ class CSB_Admin {
             'level'        => $level
         ];
     }
-
-
 
 
     private function convertStructureToMap(string $raw, ?string $forced_link = null): array {
@@ -470,7 +619,7 @@ class CSB_Admin {
     }
 
 
-    private function render_links_to_articles($parent_id = null, $level = 0) {
+    private function renderLinksToArticles($parent_id = null, $level = 0) {
         echo '<ul style="padding-left: ' . (20 * $level) . 'px;">';
 
         foreach ($this->mapIdPost as $id => $node) {
@@ -480,7 +629,7 @@ class CSB_Admin {
                 echo "<li><a href='" . esc_url($url) . "' target='_blank'>🔗 $title</a>";
 
                 // 🔥 Appel récursif pour afficher les enfants, **À L'INTÉRIEUR DU LI**
-                $this->render_links_to_articles($id, $level + 1);
+                $this->renderLinksToArticles($id, $level + 1);
 
                 echo "</li>"; // Fermeture du LI APRÈS les enfants
             }
@@ -529,7 +678,7 @@ class CSB_Admin {
     }
   
     
-    private function render_load_existing_button(int $post_id): void {
+    private function renderLoadExistingButton(int $post_id): void {
         echo '<form method="post" style="display:inline;">';
         echo '<input type="hidden" name="load_existing_cocon" value="' . esc_attr($post_id) . '">';
         echo '<button type="submit" class="button-link">📂 Charger</button>';
