@@ -32,6 +32,7 @@ class CSB_Settings {
         ?>
         <div class="wrap">
             <h1>🔐 Configuration de l'API OpenAI & Freepik</h1>
+            <p><a href="<?php echo admin_url('admin.php?page=csb_admin'); ?>" class="button">⬅ Retour à l'interface principale</a></p>
             <form method="post" action="options.php">
                 <?php settings_fields('csb_settings_group'); ?>
                 <?php do_settings_sections('csb_settings_group'); ?>

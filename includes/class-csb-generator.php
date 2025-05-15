@@ -69,7 +69,7 @@ class CSB_Generator {
     /**Utilise uniquement du texte brut sans mise en forme Markdown
      * Envoie une requête à l'API ChatGPT avec le prompt donne
      */
-    private function callApi(string $prompt, bool $base64 = false): string {
+    private function callApi(string $prompt, bool $base64 = false, bool $preserveFormatting = false): string {
         $result = '';
 
         if (empty($this->api_key)) {
@@ -84,7 +84,7 @@ class CSB_Generator {
                     ['role' => 'user', 'content' => $prompt],
                 ],
                 'temperature' => $this->temperature,
-                'max_tokens' => 800, // Limite explicite
+                'max_tokens' => 800,
             ];
 
             $args = [
@@ -112,10 +112,7 @@ class CSB_Generator {
                     }
 
                     $raw = $body['choices'][0]['message']['content'];
-
-                    // Nettoyage léger (réduction de taille)
-                    $cleaned = trim(preg_replace('/\s+/', ' ', $raw));
-                    $result = $cleaned;
+                    $result = $preserveFormatting ? rtrim($raw) : trim(preg_replace('/\s+/', ' ', $raw));
                 }
             }
         }
@@ -123,15 +120,15 @@ class CSB_Generator {
         return $base64 ? base64_encode($result) : $result;
     }
 
+
         
 
     public function generateStructure(string $keyword, int $depth = 1, bool $test = false): string {
         $default = self::generateDefaultStructure($keyword);
         $prompt = $this->promptProvider->structure($keyword, $depth);
-        return $this->generateTexte($keyword, $test, $default, $prompt);
+        return $this->generateTexte($keyword, $test, $default, $prompt, true);
     }
     
-
 
     public function generateImage(string $title, string $keyword, bool $test = false): string {
         $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
@@ -158,6 +155,7 @@ class CSB_Generator {
         return $this->generateTexte($title, $test, $default, $prompt);
     }
 
+
     public function generateConclusion(string $title, string $structure, string $slug, bool $test): string {
         $prompt = $this->promptProvider->conclusion($title, $structure);
         $default = self::getDefaultConclusion($title);
@@ -172,8 +170,8 @@ class CSB_Generator {
     }
 
 
-    private function generateTexte(string $title, bool $test, string $defaultContent, string $prompt): string {
-        return $this->generate(fn($p) => $this->callApi($p), $prompt, $test, $defaultContent);
+    private function generateTexte(string $title, bool $test, string $defaultContent, string $prompt, bool $preserveFormatting = false): string {
+        return $this->generate(fn($p) => $this->callApi($p, false, $preserveFormatting), $prompt, $test, $defaultContent);
     }
 
     private function generate(callable $method, string $prompt, bool $test = false, string $default = ''): string {
@@ -223,18 +221,6 @@ class CSB_Generator {
         }
     
         return trim($response); // Toujours trim au cas où il y a des espaces
-    }
-    
-        
-
-    
-    
-    
-
-
-    
-    
-    
-    
+    }  
 
 }
