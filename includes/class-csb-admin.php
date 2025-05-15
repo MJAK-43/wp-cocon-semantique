@@ -197,10 +197,6 @@ class CSB_Admin {
     private function renderStructureForm($prefix = 'structure', $level = 0, $use_existing_root = 0, $existing_root_url = ''){
         echo '<form method="post">';
         
-        echo '<p><label for="csb_nb_nodes">Nombre de sous-niveaux : </label>';
-        echo '<input type="number" id="csb_nb_nodes" name="csb_nb_nodes" value="' . esc_attr($this->nb) . '" min="1" max="5" required>';
-        echo '</p>';
-
 
         echo '<fieldset class="csb-fieldset">';
         echo '<legend>Structure générée</legend>';
@@ -238,7 +234,7 @@ class CSB_Admin {
 
         // Champ nombre de niveaux
         echo '<tr><th><label for="csb_nb_nodes">Nombre de sous-niveaux</label></th>';
-        echo '<td><input type="number" id="csb_nb_nodes" name="csb_nb_nodes" value="' . esc_attr($nb) . '" class="regular-text" required></td></tr>';
+        echo '<td><input type="number" id="csb_nb_nodes" name="csb_nb_nodes" value="' . esc_attr($nb) . '" min="1" max="5" required class="regular-text" /></td></tr>';
 
         // Case à cocher
         echo '<tr><th><label for="use_existing_root">Utiliser un article racine existant</label></th>';
