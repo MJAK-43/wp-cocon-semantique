@@ -31,7 +31,7 @@ jQuery(document).ready(function ($) {
             }
 
             setTimeout(() => {
-                button.prop('disabled', false).text('⚙️ Générer (AJAX)');
+                button.prop('disabled', false).text('⚙️ Générer');
             }, 3000);
         });
     });

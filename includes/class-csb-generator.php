@@ -69,52 +69,61 @@ class CSB_Generator {
     /**Utilise uniquement du texte brut sans mise en forme Markdown
      * Envoie une requête à l'API ChatGPT avec le prompt donne
      */
-    private function callApi($prompt) {
-        if (!$this->api_key) return '❌ Clé API non configurée.';
+    private function callApi(string $prompt, bool $base64 = false): string {
+        $result = '';
 
-        $url = 'https://api.openai.com/v1/chat/completions';
+        if (empty($this->api_key)) {
+            $result = '❌ Clé API non configurée.';
+        } else {
+            $url = 'https://api.openai.com/v1/chat/completions';
 
-        $data = [
-            'model' => $this->model,
-            'messages' => [
-                ['role' => 'system', 'content' => "Tu es un rédacteur {$this->style}."],
-                ['role' => 'user', 'content' => $prompt],
-            ],
-            'temperature' => $this->temperature,
-        ];
+            $data = [
+                'model' => $this->model,
+                'messages' => [
+                    ['role' => 'system', 'content' => "Tu es un rédacteur {$this->style}."],
+                    ['role' => 'user', 'content' => $prompt],
+                ],
+                'temperature' => $this->temperature,
+                'max_tokens' => 800, // Limite explicite
+            ];
 
-        $args = [
-            'headers' => [
-                'Content-Type'  => 'application/json',
-                'Authorization' => 'Bearer ' . $this->api_key,
-            ],
-            'body' => json_encode($data),
-            'timeout' => 60,
-        ];
+            $args = [
+                'headers' => [
+                    'Content-Type'  => 'application/json',
+                    'Authorization' => 'Bearer ' . $this->api_key,
+                ],
+                'body' => json_encode($data),
+                'timeout' => 30,
+                'httpversion' => '1.1',
+            ];
 
-        $response = wp_remote_post($url, $args);
+            $response = wp_remote_post($url, $args);
 
-        if (is_wp_error($response)) {
-            return '❌ Erreur API : ' . $response->get_error_message();
+            if (is_wp_error($response)) {
+                $result = '❌ Erreur API : ' . $response->get_error_message();
+            } else {
+                $body = json_decode(wp_remote_retrieve_body($response), true);
+
+                if (!isset($body['choices'][0]['message']['content'])) {
+                    $result = '❌ Erreur : réponse OpenAI invalide ou vide.';
+                } else {
+                    if (isset($body['usage']['total_tokens'])) {
+                        $this->tokens_used += (int)$body['usage']['total_tokens'];
+                    }
+
+                    $raw = $body['choices'][0]['message']['content'];
+
+                    // Nettoyage léger (réduction de taille)
+                    $cleaned = trim(preg_replace('/\s+/', ' ', $raw));
+                    $result = $cleaned;
+                }
+            }
         }
 
-        $body = json_decode(wp_remote_retrieve_body($response), true);
-
-        // 🧪 Debug : afficher toute la réponse dans les logs si besoin
-        // error_log(print_r($body, true));
-
-        if (!isset($body['choices'][0]['message']['content'])) {
-            return '❌ Erreur : réponse OpenAI invalide ou vide.';
-        }
-        // ➔ Stocke les tokens utilisés si possible
-        if (isset($body['usage']['total_tokens'])) {
-            $this->tokens_used += (int)$body['usage']['total_tokens'];
-        }
-
-        return $body['choices'][0]['message']['content'];
-
+        return $base64 ? base64_encode($result) : $result;
     }
 
+        
 
     public function generateStructure(string $keyword, int $depth = 1, bool $test = false): string {
         $default = self::generateDefaultStructure($keyword);

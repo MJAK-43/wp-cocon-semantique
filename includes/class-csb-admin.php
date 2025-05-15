@@ -218,7 +218,7 @@ class CSB_Admin {
             echo '<input type="hidden" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" />';
         }
 
-        echo '<button type="button" id="csb-generate-all" class="button button-primary">Tout générer en AJAX</button>';
+        echo '<button type="button" id="csb-generate-all" class="button button-primary">Tout générer </button>';
         echo '</form>';
     }
 
