@@ -146,9 +146,9 @@ class CSB_Admin {
             }
         }
 
-        echo '<div id="csb-token-tracker">';
-        echo '<strong>🧠 Tokens utilisés :</strong> <span id="csb-token-count">0</span>';
-        echo '</div>';
+        // echo '<div id="csb-token-tracker">';
+        // echo '<strong>🧠 Tokens utilisés :</strong> <span id="csb-token-count">0</span>';
+        // echo '</div>';
 
 
 
@@ -171,9 +171,10 @@ class CSB_Admin {
 
         echo '</div>';
 
-        echo '<div style="margin: 1em 0; padding: 1em; border-left: 4px solid #0073aa; background: #f1f1f1;">';
+        echo '<div class="csb-api-settings">';
         echo '<p><strong>🔐 Clé API :</strong> <a href="' . admin_url('admin.php?page=csb_settings') . '">Configurer ici</a></p>';
         echo '</div>';
+
 
 
         $roots = $this->publisher->getAllRootNodesFromMeta();
@@ -195,10 +196,15 @@ class CSB_Admin {
 
     private function renderStructureForm($prefix = 'structure', $level = 0, $use_existing_root = 0, $existing_root_url = ''){
         echo '<form method="post">';
-        echo '<input type="hidden" name="csb_nb_nodes" value="' . intval($this->nb) . '" />';
+        
+        echo '<p><label for="csb_nb_nodes">Nombre de sous-niveaux : </label>';
+        echo '<input type="number" id="csb_nb_nodes" name="csb_nb_nodes" value="' . esc_attr($this->nb) . '" min="1" max="5" required>';
+        echo '</p>';
 
-        echo '<fieldset style="padding: 1em; border: 1px solid #ccd0d4; background: #fff; margin-bottom: 1em;">';
-        echo '<legend style="font-weight: bold;">Structure générée</legend>';
+
+        echo '<fieldset class="csb-fieldset">';
+        echo '<legend>Structure générée</legend>';
+
 
         // Affichage à partir de la racine (parent_id null)
         $this->renderStructureFields(null, $prefix, 0, !$use_existing_root);
@@ -244,7 +250,7 @@ class CSB_Admin {
         echo '<p class="description">Uniquement une URL relative (ex: /mon-article)</p>';
 
         if (!empty($original_url) && str_starts_with($original_url, 'http')) {
-            echo '<p style="color: red;">❗ L’URL absolue a été automatiquement convertie en lien relatif';
+            echo '<p>❗ L’URL absolue a été automatiquement convertie en lien relatif';
         }
 
         echo '</td></tr>';
@@ -255,16 +261,17 @@ class CSB_Admin {
 
 
     private function renderStructureFields(?int $parent_id, string $prefix, int $level, bool $generation = true) {
-        echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . ($level * 20) . 'px;">';
+        echo '<ul class="csb-structure-list level-' . $level . '" style="--level: ' . $level . ';">';
+
 
         foreach ($this->mapIdPost as $id => $node) {
             if ($node['parent_id'] !== $parent_id) continue;
 
             $node_prefix = $prefix . "[$id]";
 
-            echo '<li style="margin-bottom: 10px;">';
-            echo '<div style="display: flex; align-items: center; gap: 6px;">';
-            echo '<span style="min-width: 10px;">-</span>';
+            echo '<li class="csb-node-item">';            
+            echo '<div class="csb-node-controls">';            
+            echo '<span class="csb-node-indent">-</span>';
             echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" required />';
             
             // Bouton de génération AJAX (sans <form>)
@@ -357,6 +364,14 @@ class CSB_Admin {
             ['jquery'],
             filemtime(plugin_dir_path(__DIR__) . 'assets/js/admin.js'),
             true
+        );
+
+        // CSS
+        wp_enqueue_style(
+            'csb-admin-style',
+            plugin_dir_url(__DIR__) . 'assets/css/csb-front.css',
+            [],
+            filemtime(plugin_dir_path(__DIR__) . 'assets/css/csb-front.css')
         );
 
         wp_localize_script('csb-admin', 'csbData', [

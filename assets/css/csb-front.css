@@ -6,3 +6,45 @@
 .category, .post-categories {
     display: none;
 }
+
+.csb-structure-list {
+    list-style-type: none;
+    margin: 0;
+}
+
+.csb-node-item {
+    margin-bottom: 10px;
+}
+
+.csb-node-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.csb-fieldset {
+    padding: 1em;
+    border: 1px solid #ccd0d4;
+    background: #fff;
+    margin-bottom: 1em;
+}
+
+.csb-fieldset legend {
+    font-weight: bold;
+}
+
+.csb-node-indent {
+    min-width: 10px;
+}
+
+.csb-structure-list[class*="level-"] {
+    padding-left: calc(var(--level, 0) * 20px);
+    /* background-color: black; */
+}
+
+.csb-api-settings {
+    margin: 1em 0;
+    padding: 1em;
+    border-left: 4px solid #0073aa;
+    background: #f1f1f1;
+}

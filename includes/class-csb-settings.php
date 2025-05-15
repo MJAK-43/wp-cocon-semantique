@@ -47,9 +47,13 @@ class CSB_Settings {
                         <th scope="row"><label for="csb_model">Modèle GPT</label></th>
                         <td>
                             <select name="csb_model" id="csb_model">
-                                <option value="gpt-3.5-turbo" <?php selected(get_option('csb_model'), 'gpt-3.5-turbo'); ?>>gpt-3.5-turbo</option>
-                                <option value="gpt-4o" <?php selected(get_option('csb_model'), 'gpt-4o'); ?>>gpt-4o</option>
+                                <option value="gpt-3.5-turbo" <?php selected(get_option('csb_model'), 'gpt-3.5-turbo'); ?>>gpt-3.5-turbo (rapide, 4K)</option>
+                                <option value="gpt-3.5-turbo-16k" <?php selected(get_option('csb_model'), 'gpt-3.5-turbo-16k'); ?>>gpt-3.5-turbo-16k (rapide, 16K)</option>
+                                <option value="gpt-4" <?php selected(get_option('csb_model'), 'gpt-4'); ?>>gpt-4 (plus précis)</option>
+                                <option value="gpt-4-32k" <?php selected(get_option('csb_model'), 'gpt-4-32k'); ?>>gpt-4-32k (plus lent, 32K tokens)</option>
+                                <option value="gpt-4o" <?php selected(get_option('csb_model'), 'gpt-4o'); ?>>gpt-4o (rapide & multimodal)</option>
                             </select>
+
                         </td>
                     </tr>
                     <tr>
