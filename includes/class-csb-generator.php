@@ -115,10 +115,6 @@ class CSB_Generator {
 
     }
 
-    
-    private function clean_generated_structure($text) {
-        return preg_replace('/^```.*$\n?|```$/m', '', $text);
-    }
 
     public function generateStructure(string $keyword, int $depth = 1, bool $test = false): string {
         $default = self::generateDefaultStructure($keyword);
@@ -133,7 +129,7 @@ class CSB_Generator {
         $prompt = $this->promptProvider->image($keyword, $title);
 
         return $this->generate(
-            fn($p) => $this->fetch_image_from_api($title, $this->callApi($p), 15),
+            fn($p) => $this->fetchImageFromPosteria($title, $this->callApi($p), 15),
             $prompt,
             $test,
             $default_image_url
@@ -191,7 +187,7 @@ class CSB_Generator {
      */
    
 
-    private function fetch_image_from_api(string $title, string $text): ?string {
+    private function fetchImageFromPosteria(string $title, string $text): ?string {
         // 🔥 Normalisation du titre et du texte
         $normalized_title = $this->normalizeKeyword($title);
         $normalized_text = $this->normalizeKeyword($text);

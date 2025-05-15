@@ -103,7 +103,6 @@ class CSB_Admin {
         if (empty($this->mapIdPost)) {
             $this->mapIdPost = get_option('csb_structure_map', []);
         }
-
         if (isset($_POST['generate_single_node'])) {
             $node_id = intval($_POST['generate_single_node']);
             if (isset($this->mapIdPost[$node_id])) {
@@ -145,9 +144,12 @@ class CSB_Admin {
                 }
 
             }
-            $total_tokens = $this->generator->getTokensUsed();
-            echo '<div class="notice notice-info is-dismissible"><p>Nombre total de tokens utilisés : <strong>' . intval($total_tokens) . '</strong> tokens.</p></div>';
         }
+
+        echo '<div id="csb-token-tracker">';
+        echo '<strong>🧠 Tokens utilisés :</strong> <span id="csb-token-count">0</span>';
+        echo '</div>';
+
 
 
         echo '<div class="wrap">';
@@ -199,7 +201,7 @@ class CSB_Admin {
         echo '<legend style="font-weight: bold;">Structure générée</legend>';
 
         // Affichage à partir de la racine (parent_id null)
-        $this->renderStructureFields(null, $prefix, 0);
+        $this->renderStructureFields(null, $prefix, 0, !$use_existing_root);
 
         echo '</fieldset>';
 
@@ -252,7 +254,7 @@ class CSB_Admin {
     }
 
 
-    private function renderStructureFields(?int $parent_id, string $prefix, int $level) {
+    private function renderStructureFields(?int $parent_id, string $prefix, int $level, bool $generation = true) {
         echo '<ul style="list-style-type: none; margin: 0; padding-left: ' . ($level * 20) . 'px;">';
 
         foreach ($this->mapIdPost as $id => $node) {
@@ -266,7 +268,8 @@ class CSB_Admin {
             echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" required />';
             
             // Bouton de génération AJAX (sans <form>)
-            echo '<button type="button" class="button csb-generate-node" data-post-id="' . esc_attr($id) . '">⚙️ Générer (AJAX)</button>';
+            if($generation)
+                echo '<button type="button" class="button csb-generate-node" data-post-id="' . esc_attr($id) . '">⚙️ Générer </button>';
             echo '<span class="csb-node-status" data-post-id="' . esc_attr($id) . '"></span>';
 
 
@@ -277,7 +280,7 @@ class CSB_Admin {
             echo '</div>';
 
             if (!empty($node['children_ids'])) {
-                $this->renderStructureFields($id, $prefix, $level + 1);
+                $this->renderStructureFields($id, $prefix, $level + 1,true);
             }
 
             echo '</li>';
@@ -315,6 +318,7 @@ class CSB_Admin {
         if (!current_user_can('manage_options') || !check_ajax_referer('csb_nonce', 'nonce', false)) {
             wp_send_json_error('Non autorisé', 403);
         }
+        session_write_close(); 
 
         if (empty($this->mapIdPost)) {
             $this->mapIdPost = get_option('csb_structure_map', []);
@@ -338,7 +342,8 @@ class CSB_Admin {
 
             wp_send_json_success([
                 'message' => 'Nœud généré avec succès',
-                'link' => $this->mapIdPost[$post_id]['link'] ?? ''
+                'link' => $this->mapIdPost[$post_id]['link'] ?? '',
+                'tokens' => $this->generator->getTokensUsed()
             ]);
         }
         
@@ -443,10 +448,10 @@ class CSB_Admin {
             // 🔸 Conclusion
             $conclusion = $this->generator->generateConclusion($title, $structure, $slug, $this->debugModContent);
             $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
-            error_log("Conclution lancé pour post_id $post_id avec nb=$nb");
+            //error_log("Conclution lancé pour post_id $post_id avec nb=$nb");
             // 🖼️ Image
-            $image_url = $this->generator->generateImage($title, $keyword,$this->debugModImage);
-            $this->publisher->setFeaturedImage($post_id, $image_url);
+            // $image_url = $this->generator->generateImage($title, $keyword,$this->debugModImage);
+            // $this->publisher->setFeaturedImage($post_id, $image_url);
             //error_log("Image lancé pour post_id $post_id avec nb=$nb");
 
 

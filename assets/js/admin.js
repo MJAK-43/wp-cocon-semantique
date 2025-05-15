@@ -6,6 +6,7 @@ jQuery(document).ready(function ($) {
         const postId = $(this).data('post-id');
         const button = $(this);
         const status = $('.csb-node-status[data-post-id="' + postId + '"]');
+        
 
         const startTime = Date.now();
 
@@ -18,6 +19,10 @@ jQuery(document).ready(function ($) {
         }, function (response) {
             const duration = ((Date.now() - startTime) / 1000).toFixed(1); // ⏱️ End
             if (response.success) {
+                const tokensUsed = response.data.tokens || 0;
+                const currentTotal = parseInt($('#csb-token-count').text()) || 0;
+                $('#csb-token-count').text(currentTotal + tokensUsed);
+
                 status.html('✅ <a href="' + response.data.link + '" target="_blank">Voir l’article</a>');
                 button.text(`✅ Fait (${duration}s)`);
             } else {
