@@ -130,7 +130,6 @@ class CSB_Generator {
 
     public function generateImage(string $title, string $keyword, bool $test = false): string {
         $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
-
         $prompt = $this->promptProvider->image($keyword, $title);
 
         return $this->generate(
@@ -151,14 +150,12 @@ class CSB_Generator {
     public function generateDevelopment(string $title, string $structure, bool $test): string {
         $prompt = $this->promptProvider->development($title, $structure);
         $default = self::getDefaultDevelopment($title);
-
         return $this->generateTexte($title, $test, $default, $prompt);
     }
 
     public function generateConclusion(string $title, string $structure, string $slug, bool $test): string {
         $prompt = $this->promptProvider->conclusion($title, $structure);
         $default = self::getDefaultConclusion($title);
-
         return $this->generateTexte($title, $test, $default, $prompt);
     }
 
@@ -188,20 +185,11 @@ class CSB_Generator {
         return $content;
     }
 
-
-
-
-
-
-
-
-
     /***
      * 
      * Récupération Image
      */
    
-
 
     private function fetch_image_from_api(string $title, string $text): ?string {
         // 🔥 Normalisation du titre et du texte

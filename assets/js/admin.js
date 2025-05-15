@@ -1,4 +1,4 @@
-console.log('✅ admin.js chargé');
+//console.log('✅ admin.js chargé');
 
 jQuery(document).ready(function ($) {
     // ✅ Génération AJAX pour un seul bouton
@@ -7,6 +7,8 @@ jQuery(document).ready(function ($) {
         const button = $(this);
         const status = $('.csb-node-status[data-post-id="' + postId + '"]');
 
+        const startTime = Date.now();
+
         button.prop('disabled', true).text('⏳ Génération...');
 
         $.post(csbData.ajaxurl, {
@@ -14,9 +16,10 @@ jQuery(document).ready(function ($) {
             nonce: csbData.nonce,
             post_id: postId
         }, function (response) {
+            const duration = ((Date.now() - startTime) / 1000).toFixed(1); // ⏱️ End
             if (response.success) {
                 status.html('✅ <a href="' + response.data.link + '" target="_blank">Voir l’article</a>');
-                button.text('✅ Fait');
+                button.text(`✅ Fait (${duration}s)`);
             } else {
                 status.text('❌ Erreur');
                 button.text('⚠️ Erreur');

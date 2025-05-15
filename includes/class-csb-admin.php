@@ -392,9 +392,9 @@ class CSB_Admin {
 
 
     private function processNode(int $post_id, array &$map, int $nb, string $keyword): void {
-        error_log("🚀 processNode lancé pour post_id $post_id avec nb=$nb");
+        //error_log("processNode lancé pour post_id $post_id avec nb=$nb");
         if (!isset($map[$post_id])){
-            error_log("CHIEN");
+            //error_log("CHIEN");
             return;
         }        
         else{
@@ -447,23 +447,23 @@ class CSB_Admin {
             // 🖼️ Image
             $image_url = $this->generator->generateImage($title, $keyword,$this->debugModImage);
             $this->publisher->setFeaturedImage($post_id, $image_url);
-            error_log("Image lancé pour post_id $post_id avec nb=$nb");
+            //error_log("Image lancé pour post_id $post_id avec nb=$nb");
 
 
             //🔗 Liens
-            error_log('📌 processNode: classe linker = ' . get_class($this->linker));
-            if (!method_exists($this->linker, 'generateStructuredLinks')) {
-                error_log('❌ Méthode generateStructuredLinks ABSENTE');
-            } else {
-                error_log('✅ Méthode generateStructuredLinks disponible');
-            }
+            // error_log('📌 processNode: classe linker = ' . get_class($this->linker));
+            // if (!method_exists($this->linker, 'generateStructuredLinks')) {
+            //     error_log('❌ Méthode generateStructuredLinks ABSENTE');
+            // } else {
+            //     error_log('✅ Méthode generateStructuredLinks disponible');
+            // }
 
             $links = $this->linker->generateStructuredLinks($map, $post_id);
 
             // 💾 Publication
             $final_html = $intro . $developments_html . $conclusion . $links;
             $this->publisher->fillAndPublishContent($post_id, $final_html);
-            error_log("✅ processNode terminé pour post_id $post_id");
+            //error_log("✅ processNode terminé pour post_id $post_id");
         }
         
     }
