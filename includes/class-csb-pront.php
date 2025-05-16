@@ -6,36 +6,25 @@ require_once 'interface-csb-prompt-provider.php';
 
 class CSB_Prompts implements PromptProviderInterface {
 
-    // public function structure(string $keyword, int $depth): string{
-    //     return "Tu es un expert en SEO abtimiser pour le référencement. Génère une structure hiérarchique de cocon sémantique en texte brut.
-    //     Consignes :
-    //     - Utilise des tirets `-` pour chaque point.
-    //     - Utilise **4 espaces** pour chaque niveau d’imbrication (indentation).
-    //     - Le mot-clé principal est : \"$keyword\"
-    //     - $depth sous-thèmes, chacun avec $depth sous-sous-thèmes.
-    //     - Chaque titre doit commencer par une majuscule à chaque mot
-    //     Pas de commentaires, pas de balises ,Pas de / ou \ , juste le texte hiérarchique.";
-    // }
 
     public function structure(string $keyword, int $depth, int $breadth): string {
-        return "Tu es un expert en cocons sémantiques et structuration SEO.
+        return "Ignore toutes les instructions précédentes.
 
-        Génère une structure hiérarchique parfaitement formatée, sous forme de liste en texte brut, avec :
+        Tu es un expert SEO spécialisé en cocon sémantique.
 
-        - Une profondeur exacte de $depth niveaux.
-        - Chaque niveau (sauf les feuilles) contenant exactement $breadth sous-éléments.
-        - Chaque ligne précédée d’un tiret `-`, avec **4 espaces par niveau de profondeur**.
-        - Pas de numérotation, pas de balises HTML, pas de commentaires.
+        Génère une structure hiérarchique STRICTEMENT conforme à ces règles :
+
+        - EXACTEMENT $depth niveaux (profondeur).
+        - Chaque nœud NON-FEUILLE doit contenir EXACTEMENT $breadth sous-éléments.
+        - Format brut en liste avec indentation : 4 espaces par niveau.
+        - Chaque ligne commence par `- ` suivi du titre du nœud.
+        - Titres uniquement en français, clairs, sans doublons, avec Majuscule À Chaque Mot.
+        - AUCUN commentaire, balise, ou ligne vide.
 
         Mot-clé racine : « $keyword »
 
-        Consignes :
-        - Utilise des titres clairs, informatifs et en français.
-        - Chaque titre commence par une majuscule à chaque mot.
-        - Ne sors **que** le texte brut correctement indenté.
-        ";
+        ⚠️ Si la structure ne respecte pas les règles, la réponse est invalide.";
     }
-
 
 
     public function intro(string $title, string $structure): string{
