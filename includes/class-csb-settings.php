@@ -71,15 +71,6 @@ class CSB_Settings {
                             <p class="description">Ex : SEO, académique, technique, storytelling…</p>
                         </td>
                     </tr>
-
-                    <!-- Champ pour l'API Freepik -->
-                    <tr>
-                        <th scope="row"><label for="csb_freepik_api_key">Clé API Freepik</label></th>
-                        <td>
-                            <input type="password" name="csb_freepik_api_key" id="csb_freepik_api_key" class="regular-text" value="<?php echo esc_attr(get_option('csb_freepik_api_key')); ?>" />
-                            <p class="description">Collez ici votre clé API Freepik si vous en avez une.</p>
-                        </td>
-                    </tr>
                 </table>
 
                 <?php submit_button('💾 Enregistrer les paramètres'); ?>

@@ -1,8 +1,9 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-class CSB_Generator {
-    private $freepik_api_key;
+require_once __DIR__ . '/interface-csb-generator.php';
+
+class CSB_Generator implements GeneratorInterface {
     private $api_key;
     private $model;
     private $temperature;
@@ -47,7 +48,6 @@ class CSB_Generator {
     public function __construct(PromptProviderInterface $promptProvider, $api_key = null, $freepik_api_key = null) {
         $this->promptProvider = $promptProvider;
         $this->api_key = $api_key ?: get_option('csb_openai_api_key');
-        $this->freepik_api_key = $freepik_api_key ?: get_option('csb_freepik_api_key');
         $this->model = get_option('csb_model', 'gpt-3.5-turbo');
         $this->temperature = floatval(get_option('csb_temperature', 0.7));
         $this->style = get_option('csb_writing_style', 'SEO');

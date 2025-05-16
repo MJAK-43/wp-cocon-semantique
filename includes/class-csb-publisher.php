@@ -48,6 +48,13 @@ class CSB_Publisher {
         return $post;
     }
 
+    public function deletePost(int $post_id): void {
+        if ($post_id > 0 && get_post($post_id)) {
+           wp_delete_post($post_id, true); // true = force delete
+        }
+    }
+
+
     private function generate_unique_slug(string $title): string {
         $base_slug = sanitize_title($title);
         $slug = $base_slug;

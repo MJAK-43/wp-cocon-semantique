@@ -5,24 +5,27 @@ class CSB_Admin {
     private int $nb;
     private $mapIdPost=[];
     private $mapIdPostLoaded=[];
-    private $generator;
+    private GeneratorInterface $generator;
     private $publisher;
     private $linker; 
+
 
     // private static $minExecutionTime=600;
     // private static $minInputTime=60;
     // private static $minSize=32;
 
+
     private static $minExecutionTime=1;
     private static $minInputTime=1;
     private static $minSize=1;
+
 
     private bool $debugModStructure=false;
     private bool $debugModContent=false;
     private bool $debugModImage=false;
 
 
-    public function __construct() {
+    public function __construct(GeneratorInterface $generator) {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('wp_ajax_csb_process_node', [$this, 'ajaxProcessNode']); 
@@ -30,7 +33,8 @@ class CSB_Admin {
 
         //echo "DOG";
         // add_action('admin_init', [$this, 'maybe_delete_author_posts']);
-        $this->generator= new CSB_Generator(new CSB_Prompts());
+        //$this->generator= new CSB_Generator(new CSB_Prompts());
+        $this->generator= $generator;
         $this->publisher=  new CSB_Publisher();
         $this->linker = new CSB_Linker();
     }
@@ -118,6 +122,23 @@ class CSB_Admin {
                 
         }
 
+        // Traitement bouton Nettoyer
+        if (isset($_POST['csb_clear_structure'])) {
+            foreach ($this->mapIdPost as $node){
+                $post_id = $node['post_id'];
+                // Ne supprimer que les articles WordPress valides
+                if ($post_id > 0 && get_post($post_id)) {
+                    $this->publisher->deletePost($post_id);
+                }
+            }
+                
+            
+            $this->mapIdPost = [];
+            update_option('csb_structure_map', []);
+            echo '<div class="notice notice-success is-dismissible"><p>🧹 Structure nettoyée et brouillons supprimés.</p></div>';
+        }
+
+
 
 
         if (isset($_POST['load_existing_cocon'])) {
@@ -196,11 +217,8 @@ class CSB_Admin {
 
     private function renderStructureForm($prefix = 'structure', $level = 0, $use_existing_root = 0, $existing_root_url = ''){
         echo '<form method="post">';
-        
-
         echo '<fieldset class="csb-fieldset">';
         echo '<legend>Structure générée</legend>';
-
 
         // Affichage à partir de la racine (parent_id null)
         $this->renderStructureFields(null, $prefix, 0, !$use_existing_root);
@@ -214,7 +232,12 @@ class CSB_Admin {
             echo '<input type="hidden" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" />';
         }
 
-        echo '<button type="button" id="csb-generate-all" class="button button-primary">Tout générer </button>';
+        echo '<div class="csb-structure-actions">';
+        echo '<button type="button" id="csb-generate-all" class="button button-primary">🚀 Tout générer</button> ';
+        echo '<button type="submit" name="csb_stop_generation" class="button">🛑 Stopper la génération</button> ';
+        echo '<button type="submit" name="csb_clear_structure" class="button button-danger" onclick="return confirm(\'Supprimer la structure et tous les brouillons ?\');">🧹 Nettoyer la structure</button>';
+        echo '</div>';
+
         echo '</form>';
     }
 
@@ -376,6 +399,7 @@ class CSB_Admin {
         ]);
     }
 
+
     private function toBulletArchitecture(array $map, int $current_id = null, int $indent = 0): string {
         $out = '';
 
@@ -391,6 +415,7 @@ class CSB_Admin {
         //print_r($out);
         return $out;
     }
+
 
     private function slugify(string $text): string {
         // 1. Translittération : convertit les accents et caractères spéciaux
@@ -509,11 +534,19 @@ class CSB_Admin {
 
 
     private function createMapEntry(string $title, ?int $parent_id, ?string $forced_link = null, int $level = 0): array {
-        $post_id = $this->publisher->createPostDraft($title);
+        $post_id = -1;
+        $link = '';
 
-        //  Enregistre les métas ici
-        $this->publisher->storeMeta($post_id, $level, $parent_id);
-        $link = $forced_link ?: '/' . get_post_field('post_name', $post_id);
+        if ($level === 0 && $forced_link) {
+            // 🔹 Cas d’un article racine déjà existant (fourni par l’utilisateur)
+            $post_id = 0; // ID fictif (aucune génération)
+            $link = $forced_link;
+        } else {
+            // 🔹 Cas normal : création d’un brouillon
+            $post_id = $this->publisher->createPostDraft($title);
+            $this->publisher->storeMeta($post_id, $level, $parent_id);
+            $link = '/' . get_post_field('post_name', $post_id);
+        }
 
         return [
             'post_id'      => $post_id,
@@ -532,24 +565,24 @@ class CSB_Admin {
         $map = [];
 
         foreach ($lines as $line) {
-            if (trim($line) === '') continue;
+            if (trim($line) != ''){
+                if (preg_match('/^(\s*)-\s*(.+)$/', $line, $matches)) {
+                    $indent = strlen($matches[1]);
+                    $title = trim($matches[2]);
+                    $level = intval($indent / 4);
 
-            if (preg_match('/^(\s*)-\s*(.+)$/', $line, $matches)) {
-                $indent = strlen($matches[1]);
-                $title = trim($matches[2]);
-                $level = intval($indent / 4);
+                    $parent_id = $level === 0 ? null : $stack[$level - 1]['post_id'];
+                    $entry = $this->createMapEntry($title, $parent_id, $level === 0 ? $forced_link : null,$level);
+                    $post_id = $entry['post_id'];
 
-                $parent_id = $level === 0 ? null : $stack[$level - 1]['post_id'];
-                $entry = $this->createMapEntry($title, $parent_id, $level === 0 ? $forced_link : null,$level);
-                $post_id = $entry['post_id'];
+                    $map[$post_id] = $entry;
+                    $stack[$level] = &$map[$post_id];
 
-                $map[$post_id] = $entry;
-                $stack[$level] = &$map[$post_id];
-
-                // Ajout dans les enfants du parent
-                if ($level > 0) {
-                    $map[$parent_id]['children_ids'][] = $post_id;
-                }
+                    // Ajout dans les enfants du parent
+                    if ($level > 0) {
+                        $map[$parent_id]['children_ids'][] = $post_id;
+                    }
+                }   
             }
         }
 

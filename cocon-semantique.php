@@ -27,7 +27,7 @@ remove_filter('the_content', 'your_theme_category_display_function');
 
 // Initialisation différée
 add_action('plugins_loaded', function () {
-    new CSB_Admin();
+    new CSB_Admin(new CSB_Generator(new CSB_Prompts()));
     new CSB_Settings();
 });
 add_action('wp_enqueue_scripts', function () {

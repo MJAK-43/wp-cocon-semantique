@@ -48,3 +48,9 @@
     border-left: 4px solid #0073aa;
     background: #f1f1f1;
 }
+.csb-structure-actions {
+    margin-top: 1em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
