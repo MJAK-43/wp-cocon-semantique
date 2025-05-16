@@ -30,13 +30,24 @@ class CSB_Generator implements GeneratorInterface {
     }
 
     private static function generateDefaultStructure(string $keyword = 'Thème Principal'): string {
-        return "- " . ucwords($keyword) . "\n"
-            . "    - Sous-thème A\n"
-            . "        - Exemple A1\n"
-            . "        - Exemple A2\n"
-            . "    - Sous-thème B\n"
-            . "        - Exemple B1\n"
-            . "        - Exemple B2\n";
+        $structure = "- " . ucwords($keyword) . "\n";
+
+        // Niveau 1
+        foreach (['A', 'B'] as $lvl1) {
+            $structure .= "    - Niveau 1 $lvl1\n";
+
+            // Niveau 2
+            foreach ([1, 2] as $i) {
+                $structure .= "        - Niveau 2 {$lvl1}{$i}\n";
+
+                // Niveau 3 (feuilles)
+                foreach (['a', 'b'] as $j) {
+                    $structure .= "            - Niveau 3 {$lvl1}{$i}{$j}\n";
+                }
+            }
+        }
+
+        return $structure;
     }
 
 
@@ -123,12 +134,12 @@ class CSB_Generator implements GeneratorInterface {
 
         
 
-    public function generateStructure(string $keyword, int $depth = 1, bool $test = false): string {
-        $default = self::generateDefaultStructure($keyword);
-        $prompt = $this->promptProvider->structure($keyword, $depth);
+    public function generateStructure(string $keyword, int $depth, int $breadth, bool $test = false): string {
+        $default = self::generateDefaultStructure($keyword, $depth, $breadth);
+        $prompt = $this->promptProvider->structure($keyword, $depth, $breadth);
         return $this->generateTexte($keyword, $test, $default, $prompt, true);
     }
-    
+
 
     public function generateImage(string $title, string $keyword, bool $test = false): string {
         $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';

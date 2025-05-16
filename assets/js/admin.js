@@ -50,12 +50,20 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    // 🛑 Si le bouton Stop est soumis, activer le flag
+    let lastClickedButton = null;
+
+    $('form button[type="submit"]').on('click', function () {
+        lastClickedButton = this;
+    });
+
     $('form').on('submit', function (e) {
-        if ($(this).find('[name="csb_stop_generation"]').length > 0) {
+        if (lastClickedButton && lastClickedButton.name === 'csb_stop_generation') {
             csbStopRequested = true;
             alert('🛑 La génération a été arrêtée.');
         }
+
+        // Réinitialiser après soumission
+        lastClickedButton = null;
     });
 
     // ✅ Bouton "Tout générer"

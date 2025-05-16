@@ -4,7 +4,6 @@ if (!defined('ABSPATH')) exit;
 
 class CSB_Linker {
     
-
     
     /**
      * Génère les sections de liens internes selon le niveau de l'article.

@@ -8,6 +8,10 @@ class CSB_Admin {
     private GeneratorInterface $generator;
     private $publisher;
     private $linker; 
+    private static int $depth=4;
+    //private int $breadth;
+
+
 
 
     // private static $minExecutionTime=600;
@@ -18,6 +22,7 @@ class CSB_Admin {
     private static $minExecutionTime=1;
     private static $minInputTime=1;
     private static $minSize=1;
+
 
 
     private bool $debugModStructure=false;
@@ -151,8 +156,13 @@ class CSB_Admin {
             if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
 
                 //$this->generator->setKeyword($keyword);
-                $raw = $this->generator->generateStructure($keyword,$this->nb,$this->debugModStructure);
+                $raw = $this->generator->generateStructure($keyword,self::$depth,$this->nb,$this->debugModStructure);
                 $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
+
+                // echo "<br><br>";
+                // print_r($raw);
+                // echo "<br><br>";
+
                 update_option('csb_structure_map', $this->mapIdPost);
             }
 
@@ -279,41 +289,39 @@ class CSB_Admin {
     }
 
 
-    private function renderStructureFields(?int $parent_id, string $prefix, int $level, bool $generation = true) {
+    private function renderStructureFields($parent_id, string $prefix, int $level, bool $generation = true) {
         echo '<ul class="csb-structure-list level-' . $level . '" style="--level: ' . $level . ';">';
 
-
         foreach ($this->mapIdPost as $id => $node) {
-            if ($node['parent_id'] !== $parent_id) continue;
+            $isChild = ($node['parent_id'] === $parent_id);
+            $isLeaf = empty($node['children_ids']);
+            $isVirtual = $id < 0;
 
-            $node_prefix = $prefix . "[$id]";
+            if ($isChild && !$isLeaf && !$isVirtual) {
+                $node_prefix = $prefix . "[" . strval($id) . "]";
 
-            echo '<li class="csb-node-item">';            
-            echo '<div class="csb-node-controls">';            
-            echo '<span class="csb-node-indent">-</span>';
-            echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" required />';
-            
-            // Bouton de génération AJAX (sans <form>)
-            if($generation)
-                echo '<button type="button" class="button csb-generate-node" data-post-id="' . esc_attr($id) . '">⚙️ Générer </button>';
-            echo '<span class="csb-node-status" data-post-id="' . esc_attr($id) . '"></span>';
+                echo '<li class="csb-node-item">';
+                echo '<div class="csb-node-controls">';
+                echo '<span class="csb-node-indent">-</span>';
+                echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" required />';
 
+                if ($generation) {
+                    echo '<button type="button" class="button csb-generate-node" data-post-id="' . esc_attr($id) . '">⚙️ Générer </button>';
+                }
 
-            // Décommenter si tu veux les boutons ajouter/supprimer
-            // echo '<button type="submit" name="delete_node" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">🗑️</button>';
-            // echo '<button type="submit" name="add_child" value="' . esc_attr($node_prefix) . '" style="padding: 2px 6px;">➕ Sous-thème</button>';
+                echo '<span class="csb-node-status" data-post-id="' . esc_attr($id) . '"></span>';
+                echo '</div>';
 
-            echo '</div>';
-
-            if (!empty($node['children_ids'])) {
-                $this->renderStructureFields($id, $prefix, $level + 1,true);
+                // Récursion sur les enfants
+                $this->renderStructureFields($id, $prefix, $level + 1, $generation);
+                echo '</li>';
             }
-
-            echo '</li>';
         }
 
         echo '</ul>';
     }
+
+
 
 
     private function renderLoadedStructure(?int $parent_id = null, int $level = 0): void {
@@ -433,79 +441,53 @@ class CSB_Admin {
 
 
     private function processNode(int $post_id, array &$map, int $nb, string $keyword): void {
-        //error_log("processNode lancé pour post_id $post_id avec nb=$nb");
-        if (!isset($map[$post_id])){
-            //error_log("CHIEN");
-            return;
-        }        
-        else{
+        if (isset($map[$post_id])) {
             $node = $map[$post_id];
             $title = $node['title'];
             $slug = get_post_field('post_name', $post_id);
             $structure = $this->toBulletArchitecture($map);
 
-            // 🔸 Génération Intro
+            // 🔸 Introduction
             $intro = $this->generator->generateIntro($title, $structure, $slug, $this->debugModContent);
             $intro = "<div id='csb-intro-$slug' class='csb-content csb-intro'>$intro</div>";
 
-            // 🔸 Génération Développements
+            // 🔸 Développements
             $developments_html = '';
+
             if (!empty($node['children_ids'])) {
                 foreach ($node['children_ids'] as $child_id) {
-                    if (!isset($map[$child_id])) continue;
+                    if (isset($map[$child_id])) {
+                        $child = $map[$child_id];
+                        $child_title = $child['title'];
+                        $child_slug = $this->slugify($child_title);
+                        $dev = $this->generator->generateDevelopment($child_title, $structure, $this->debugModContent);
+                        $block_id = ($child_id < 0) ? "csb-leaf-$child_slug" : "csb-development-$child_slug";
+                        $dev_html = "<div id='$block_id' class='csb-content csb-development'>$dev</div>";
 
-                    $child = $map[$child_id];
-                    $child_slug = $this->slugify($child['title']);
-                    $dev = $this->generator->generateDevelopment($child['title'], $structure, $this->debugModContent);
-                    $dev_html = "<div id='csb-development-$child_slug' class='csb-content csb-development'>$dev</div>";
-                    $link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link']) . '">' . esc_html($child['title']) . '</a>.</p>';
+                        if ($child_id >= 0) {
+                            $link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link']) . '">' . esc_html($child_title) . '</a>.</p>';
+                            $dev_html .= $link;
+                        }
 
-                    $developments_html .= $dev_html . $link;
-                }
-            } 
-            else
-            {
-                // Feuille
-                $leaf_parts_raw = $this->generator->generateLeaf($title, $structure, $nb, $this->debugModContent);
-                $leaf_parts = explode("\n", trim($leaf_parts_raw));
-
-                foreach ($leaf_parts as $line) {
-                    if (preg_match('/^\s*-\s*(.+)$/', $line, $matches)) {
-                        $part_title = trim($matches[1]);
-                        $part_slug = $this->slugify($part_title);
-                        $dev = $this->generator->generateDevelopment($part_title, $structure, $this->debugModContent);
-                        $developments_html .= "<div id='csb-leaf-$part_slug' class='csb-content csb-development'>$dev</div>";
+                        $developments_html .= $dev_html;
                     }
                 }
-
             }
-            
 
             // 🔸 Conclusion
             $conclusion = $this->generator->generateConclusion($title, $structure, $slug, $this->debugModContent);
             $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
-            //error_log("Conclution lancé pour post_id $post_id avec nb=$nb");
+
             // 🖼️ Image
-            $image_url = $this->generator->generateImage($title, $keyword,$this->debugModImage);
+            $image_url = $this->generator->generateImage($title, $keyword, $this->debugModImage);
             $this->publisher->setFeaturedImage($post_id, $image_url);
-            //error_log("Image lancé pour post_id $post_id avec nb=$nb");
 
-
-            //🔗 Liens
-            // error_log('📌 processNode: classe linker = ' . get_class($this->linker));
-            // if (!method_exists($this->linker, 'generateStructuredLinks')) {
-            //     error_log('❌ Méthode generateStructuredLinks ABSENTE');
-            // } else {
-            //     error_log('✅ Méthode generateStructuredLinks disponible');
-            // }
-
+            // 🔗 Liens + publication
             $links = $this->linker->generateStructuredLinks($map, $post_id);
-
-            // 💾 Publication
             $final_html = $intro . $developments_html . $conclusion . $links;
             $this->publisher->fillAndPublishContent($post_id, $final_html);
-            //error_log("✅ processNode terminé pour post_id $post_id");
         }
+
         
     }
 
@@ -533,19 +515,17 @@ class CSB_Admin {
     }
 
 
-    private function createMapEntry(string $title, ?int $parent_id, ?string $forced_link = null, int $level = 0): array {
-        $post_id = -1;
+    private function createMapEntry(string $title, ?int $parent_id, ?string $forced_link = null, int $level = 0, ?int $post_id = null): array {
         $link = '';
 
-        if ($level === 0 && $forced_link) {
-            // 🔹 Cas d’un article racine déjà existant (fourni par l’utilisateur)
-            $post_id = 0; // ID fictif (aucune génération)
-            $link = $forced_link;
-        } else {
-            // 🔹 Cas normal : création d’un brouillon
+        if ($post_id === null) {
+            // Cas classique : création d’un vrai article WordPress
             $post_id = $this->publisher->createPostDraft($title);
             $this->publisher->storeMeta($post_id, $level, $parent_id);
             $link = '/' . get_post_field('post_name', $post_id);
+        } else {
+            // Cas d’une feuille virtuelle (pas de vrai post WP)
+            $link = $forced_link ?? '/leaf-' . sanitize_title($title);
         }
 
         return [
@@ -558,36 +538,73 @@ class CSB_Admin {
         ];
     }
 
-
-    private function convertStructureToMap(string $raw, ?string $forced_link = null): array {
+    private function parseStructureLines(string $raw): array {
         $lines = explode("\n", trim($raw));
-        $stack = [];
+        $parsed = [];
+
+        foreach ($lines as $index => $line) {
+            if (preg_match('/^(\s*)-\s*(.+)$/', $line, $matches)) {
+                $indent = strlen($matches[1]);
+                $title = trim($matches[2]);
+                $level = intval($indent / 4);
+                $parsed[] = [
+                    'index' => $index,
+                    'level' => $level,
+                    'title' => $title,
+                    'raw_indent' => $indent
+                ];
+            }
+        }
+
+        return $parsed;
+    }
+
+    private function buildMapFromParsedLines(array $parsed_lines, ?string $forced_link = null): array {
         $map = [];
+        $stack = [];
+        $virtualId = -1;
+        $total = count($parsed_lines);
 
-        foreach ($lines as $line) {
-            if (trim($line) != ''){
-                if (preg_match('/^(\s*)-\s*(.+)$/', $line, $matches)) {
-                    $indent = strlen($matches[1]);
-                    $title = trim($matches[2]);
-                    $level = intval($indent / 4);
+        foreach ($parsed_lines as $i => $item) {
+            $level = $item['level'];
+            $title = $item['title'];
 
-                    $parent_id = $level === 0 ? null : $stack[$level - 1]['post_id'];
-                    $entry = $this->createMapEntry($title, $parent_id, $level === 0 ? $forced_link : null,$level);
-                    $post_id = $entry['post_id'];
+            $parent_id = $level === 0 ? null : ($stack[$level - 1]['post_id'] ?? null);
 
-                    $map[$post_id] = $entry;
-                    $stack[$level] = &$map[$post_id];
+            // Détermine si c’est une feuille
+            $isLeaf = true;
+            if ($i + 1 < $total && $parsed_lines[$i + 1]['level'] > $level) {
+                $isLeaf = false;
+            }
 
-                    // Ajout dans les enfants du parent
-                    if ($level > 0) {
-                        $map[$parent_id]['children_ids'][] = $post_id;
-                    }
-                }   
+            // Crée l’entrée
+            if ($isLeaf) {
+                $entry = $this->createMapEntry($title, $parent_id, null, $level, $virtualId);
+                $post_id = $virtualId;
+                $virtualId--;
+            } else {
+                $entry = $this->createMapEntry($title, $parent_id, $level === 0 ? $forced_link : null, $level);
+                $post_id = $entry['post_id'];
+            }
+
+            $map[$post_id] = $entry;
+            $stack[$level] = &$map[$post_id];
+
+            if ($parent_id !== null && isset($map[$parent_id])) {
+                $map[$parent_id]['children_ids'][] = $post_id;
             }
         }
 
         return $map;
     }
+
+
+    public function convertStructureToMap(string $raw, ?string $forced_link = null): array {
+        $parsed_lines = $this->parseStructureLines($raw);
+        return $this->buildMapFromParsedLines($parsed_lines, $forced_link);
+    }
+
+
 
 
     private function updateMapFromPost(array &$map, array $posted_structure): void {

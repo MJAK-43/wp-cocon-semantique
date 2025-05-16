@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) exit;
  */
 interface PromptProviderInterface
 {
-    public function structure(string $keyword, int $depth): string;
+    public function structure(string $keyword, int $depth, int $breadth): string;
 
     public function intro(string $title, string $structure): string;
 
