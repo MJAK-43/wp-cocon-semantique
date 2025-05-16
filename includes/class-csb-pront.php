@@ -8,22 +8,41 @@ class CSB_Prompts implements PromptProviderInterface {
 
 
     public function structure(string $keyword, int $depth, int $breadth): string {
-        return "Ignore toutes les instructions précédentes.
+        return "return Ignore toutes les instructions précédentes.
 
         Tu es un expert SEO spécialisé en cocon sémantique.
 
-        Génère une structure hiérarchique STRICTEMENT conforme à ces règles :
+        🎯 Ta mission : générer une structure STRICTEMENT conforme à ces règles :
 
-        - EXACTEMENT $depth niveaux (profondeur).
+        - EXACTEMENT $depth niveaux de profondeur hiérarchique.
         - Chaque nœud NON-FEUILLE doit contenir EXACTEMENT $breadth sous-éléments.
-        - Format brut en liste avec indentation : 4 espaces par niveau.
-        - Chaque ligne commence par `- ` suivi du titre du nœud.
-        - Titres uniquement en français, clairs, sans doublons, avec Majuscule À Chaque Mot.
-        - AUCUN commentaire, balise, ou ligne vide.
+        - Chaque nœud FEUILLE se trouve uniquement au niveau $depth.
+        - La structure doit former un arbre complet et équilibré : pas de niveaux manquants.
+        - Format en texte brut avec indentation de 4 espaces par niveau.
+        - Chaque ligne commence par « - » suivi du titre du nœud.
+        - Les titres sont en français, clairs, uniques, avec Majuscule À Chaque Mot.
+        - AUCUN commentaire, AUCUNE balise, AUCUNE ligne vide.
 
         Mot-clé racine : « $keyword »
 
-        ⚠️ Si la structure ne respecte pas les règles, la réponse est invalide.";
+        
+        Exemple pour profondeur = 4 et largeur = 2 :
+
+        - Sujet Principal
+            - Thème A
+                - Sous-thème A1
+                    - Point A1a
+                    - Point A1b
+                - Sous-thème A2
+                    - Point A2a
+                    - Point A2b
+            - Thème B
+                - Sous-thème B1
+                    - Point B1a
+                    - Point B1b
+                - Sous-thème B2
+                    - Point B2a
+                    - Point B2b";
     }
 
 

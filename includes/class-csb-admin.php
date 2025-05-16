@@ -368,7 +368,6 @@ class CSB_Admin {
             wp_send_json_error('Post ID invalide ou introuvable');
         }
         else{
-            //echo "///////////////";
             $keyword = reset($this->mapIdPost)['title'] ?? '';
             $this->processNode($post_id, $this->mapIdPost, $nb, $keyword);
 
@@ -420,7 +419,6 @@ class CSB_Admin {
                 }
             }
         }
-        //print_r($out);
         return $out;
     }
 
@@ -541,7 +539,6 @@ class CSB_Admin {
     private function parseStructureLines(string $raw): array {
         $lines = explode("\n", trim($raw));
         $parsed = [];
-        print_r($lines);
 
         foreach ($lines as $index => $line) {
             if (preg_match('/^(\s*)-\s*(.+)$/', $line, $matches)) {
