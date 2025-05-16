@@ -159,9 +159,9 @@ class CSB_Admin {
                 $raw = $this->generator->generateStructure($keyword,self::$depth,$this->nb,$this->debugModStructure);
                 $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
 
-                // echo "<br><br>";
-                // print_r($raw);
-                // echo "<br><br>";
+                echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
+                echo esc_html($raw);
+                echo '</pre>';
 
                 update_option('csb_structure_map', $this->mapIdPost);
             }
