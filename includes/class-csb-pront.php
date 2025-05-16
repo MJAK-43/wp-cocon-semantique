@@ -6,7 +6,6 @@ require_once 'interface-csb-prompt-provider.php';
 
 class CSB_Prompts implements PromptProviderInterface {
 
-
     public function structure(string $keyword, int $depth, int $breadth): string {
         return "return Ignore toutes les instructions précédentes.
 
@@ -66,6 +65,7 @@ class CSB_Prompts implements PromptProviderInterface {
         - Favoriser un vocabulaire riche, précis et sémantique SEO.";
     }
 
+
     public function image(string $keyword, string $title): string {
         return "Imagine une photographie réaliste liée au sujet \"$title\" dans le contexte de \"$keyword\". 
         Donne une description très concrète, visuelle, simple et populaire, en moins de 10 mots. 
@@ -73,7 +73,6 @@ class CSB_Prompts implements PromptProviderInterface {
     }   
 
     
-
     public function development(string $title, string $structure): string{
         return "Tu es un expert en rédaction SEO sur WordPress.
 
@@ -103,23 +102,6 @@ class CSB_Prompts implements PromptProviderInterface {
         - N'utilise que HTML pur dans les balises spécifiées";
     }
 
-    public function leafParts(string $title, string $structure, int $number): string {
-        return "Tu es un expert en structuration éditoriale SEO.
-
-        Génère une liste de {$number} titres de sections pour un article intitulé « $title », qui est une feuille du cocon sémantique suivant :
-
-        $structure
-
-        Consignes :
-        - La liste doit comporter exactement {$number} titres.
-        - Chaque titre doit être court, clair, pertinent, informatif, et en français.
-        - Retourne uniquement une liste en texte brut avec un tiret `-` devant chaque titre.
-        - Pas de numérotation, pas de bloc Markdown, pas de HTML.";
-    }
-
-
-
-
 
     public function conclusion(string $title, string $structure): string{
         return "Tu es un rédacteur SEO confirmé.
@@ -139,5 +121,46 @@ class CSB_Prompts implements PromptProviderInterface {
         - Style naturel, positif, dynamique.
         - Aucune balise ```html ni Markdown.";
     }
+
+
+    public function fullArtical(string $title, string $structure, int $number, array $links): string {
+        $formattedLinks = '';
+        foreach ($links as $i => $link) {
+            $formattedLinks .= "- Lien " . ($i + 1) . " : " . $link . "\n";
+        }
+
+        return "Tu es un rédacteur expert en SEO et WordPress.
+
+        🎯 Ta mission : Rédiger un **article HTML complet** intitulé « $title », en suivant la structure du cocon sémantique ci-dessous :
+
+        $structure
+
+        L'article doit contenir :
+        - Une **introduction** engageante (2 à 3 <p>), sans lien.
+        - EXACTEMENT $number parties principales (Partie 1, 2, 3...), chacune avec :
+            • Un <h3> clair et optimisé (titre de la partie)
+            • 1 à 2 <p> + si pertinent une <ul><li>
+            • 1 lien HTML que je te fournirai, intégré naturellement dans le texte avec une ancre descriptive.
+        - Une **conclusion** synthétique (1 à 2 <p>), avec un ton positif.
+        - À la fin : une section « Pour aller plus loin » contenant 2 liens HTML avec texte d'accroche.
+
+        📎 Voici les liens à intégrer :
+        $formattedLinks
+
+        ⛔ Interdictions :
+        - Pas de <div>, pas de <h1>, pas de balises inutiles.
+        - Pas de syntaxe Markdown, ni de ```html.
+
+        ✅ Obligations SEO :
+        - Mots-clés importants en <strong>
+        - Éléments importants soulignés avec <u> si utile
+        - Style fluide, professionnel, adapté au web
+
+        🔎 Rendu attendu :
+        - Du HTML pur, prêt à être inséré dans un article WordPress
+        - Un ton accessible, expert, naturel et structuré";
+    }
+
+
 
 }

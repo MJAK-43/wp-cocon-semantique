@@ -159,9 +159,9 @@ class CSB_Admin {
                 $raw = $this->generator->generateStructure($keyword,self::$depth,$this->nb,$this->debugModStructure);
                 $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
 
-                echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
-                echo esc_html($raw);
-                echo '</pre>';
+                // echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
+                // echo esc_html($raw);
+                // echo '</pre>';
 
                 update_option('csb_structure_map', $this->mapIdPost);
             }
@@ -439,55 +439,38 @@ class CSB_Admin {
 
 
     private function processNode(int $post_id, array &$map, int $nb, string $keyword): void {
-        if (isset($map[$post_id])) {
-            $node = $map[$post_id];
-            $title = $node['title'];
-            $slug = get_post_field('post_name', $post_id);
-            $structure = $this->toBulletArchitecture($map);
-
-            // 🔸 Introduction
-            $intro = $this->generator->generateIntro($title, $structure, $slug, $this->debugModContent);
-            $intro = "<div id='csb-intro-$slug' class='csb-content csb-intro'>$intro</div>";
-
-            // 🔸 Développements
-            $developments_html = '';
-
-            if (!empty($node['children_ids'])) {
-                foreach ($node['children_ids'] as $child_id) {
-                    if (isset($map[$child_id])) {
-                        $child = $map[$child_id];
-                        $child_title = $child['title'];
-                        $child_slug = $this->slugify($child_title);
-                        $dev = $this->generator->generateDevelopment($child_title, $structure, $this->debugModContent);
-                        $block_id = ($child_id < 0) ? "csb-leaf-$child_slug" : "csb-development-$child_slug";
-                        $dev_html = "<div id='$block_id' class='csb-content csb-development'>$dev</div>";
-
-                        if ($child_id >= 0) {
-                            $link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link']) . '">' . esc_html($child_title) . '</a>.</p>';
-                            $dev_html .= $link;
-                        }
-
-                        $developments_html .= $dev_html;
-                    }
-                }
-            }
-
-            // 🔸 Conclusion
-            $conclusion = $this->generator->generateConclusion($title, $structure, $slug, $this->debugModContent);
-            $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
-
-            // 🖼️ Image
-            $image_url = $this->generator->generateImage($title, $keyword, $this->debugModImage);
-            $this->publisher->setFeaturedImage($post_id, $image_url);
-
-            // 🔗 Liens + publication
-            $links = $this->linker->generateStructuredLinks($map, $post_id);
-            $final_html = $intro . $developments_html . $conclusion . $links;
-            $this->publisher->fillAndPublishContent($post_id, $final_html);
+        if (!isset($map[$post_id])) {
+            return;
         }
 
-        
+        $node = $map[$post_id];
+        $title = $node['title'];
+        $structure = $this->toBulletArchitecture($map);
+        $links = [];
+
+        // Génère un lien HTML pour chaque enfant direct
+        if (!empty($node['children_ids'])) {
+            foreach ($node['children_ids'] as $child_id) {
+                if (isset($map[$child_id]) && $child_id >= 0) {
+                    $child = $map[$child_id];
+                    $anchor = esc_html($child['title']);
+                    $url = esc_url($child['link']);
+                    $links[] = '<a href="' . $url . '">' . $anchor . '</a>';
+                }
+            }
+        }
+
+        // 🔥 Appel unique : article complet HTML
+        $final_html = $this->generator->generateFullContent($title, $structure, $nb, $links, $this->debugModContent);
+
+        // 🖼️ Image (hors generateFullContent)
+        $image_url = $this->generator->generateImage($title, $keyword, $this->debugModImage);
+        $this->publisher->setFeaturedImage($post_id, $image_url);
+
+        // 💾 Publication
+        $this->publisher->fillAndPublishContent($post_id, $final_html);
     }
+
 
 
     private function sanitizeToRelativeUrl(string $url): string {

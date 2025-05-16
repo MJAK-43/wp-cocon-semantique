@@ -25,10 +25,6 @@ class CSB_Generator implements GeneratorInterface {
         return "<p><em>Conclusion par défaut sur «&nbsp;$title&nbsp;».</em></p>";
     }
 
-    private static function getDefaultLeafParts(string $title): string {
-        return "- Partie 1 de « $title »\n- Partie 2 de « $title »\n- Partie 3 de « $title »";
-    }
-
     private static function generateDefaultStructure(string $keyword = 'Thème Principal'): string {
         $structure = "- " . ucwords($keyword) . "\n";
 
@@ -153,7 +149,7 @@ class CSB_Generator implements GeneratorInterface {
         );
     }
 
-    public function generateIntro(string $title, string $structure, string $slug, bool $test): string {
+    public function generateIntro(string $title, string $structure, bool $test): string {
         $prompt = $this->promptProvider->intro($title, $structure);
         $default = self::getDefaultIntro($title);
         return $this->generateTexte($title, $test, $default, $prompt);
@@ -167,18 +163,12 @@ class CSB_Generator implements GeneratorInterface {
     }
 
 
-    public function generateConclusion(string $title, string $structure, string $slug, bool $test): string {
+    public function generateConclusion(string $title, string $structure, bool $test): string {
         $prompt = $this->promptProvider->conclusion($title, $structure);
         $default = self::getDefaultConclusion($title);
         return $this->generateTexte($title, $test, $default, $prompt);
     }
 
-
-    public function generateLeaf(string $title, string $structure, int $nb, bool $test = false): string {
-        $prompt = $this->promptProvider->leafParts($title, $structure, $nb);
-        $default = self::getDefaultLeafParts($title);
-        return $this->generateTexte($title, $test, $default, $prompt);
-    }
 
 
     private function generateTexte(string $title, bool $test, string $defaultContent, string $prompt, bool $preserveFormatting = false): string {
@@ -197,6 +187,12 @@ class CSB_Generator implements GeneratorInterface {
         }
 
         return $content;
+    }
+
+    public function generateFullContent(string $title, string $structure, int $number, array $links, bool $test = false): string {
+        $prompt = $this->promptProvider->fullArtical($title, $structure, $number, $links);
+        $default = "<p><em>Contenu complet par défaut pour &laquo;&nbsp;$title&nbsp;&raquo;.</em></p>";
+        return $this->generateTexte($title, $test, $default, $prompt, true);
     }
 
     /***
