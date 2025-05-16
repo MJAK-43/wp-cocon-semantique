@@ -541,6 +541,7 @@ class CSB_Admin {
     private function parseStructureLines(string $raw): array {
         $lines = explode("\n", trim($raw));
         $parsed = [];
+        print_r($lines);
 
         foreach ($lines as $index => $line) {
             if (preg_match('/^(\s*)-\s*(.+)$/', $line, $matches)) {
