@@ -25,10 +25,6 @@ class CSB_Generator implements GeneratorInterface {
         return "<p><em>Conclusion par défaut sur «&nbsp;$title&nbsp;».</em></p>";
     }
 
-    private static function getDefaultLeafParts(string $title): string {
-        return "- Partie 1 de « $title »\n- Partie 2 de « $title »\n- Partie 3 de « $title »";
-    }
-
     private static function generateDefaultStructure(string $keyword = 'Thème Principal'): string {
         $structure = "- " . ucwords($keyword) . "\n";
 
@@ -50,11 +46,9 @@ class CSB_Generator implements GeneratorInterface {
         return $structure;
     }
 
-
     public function getTokensUsed() {
         return $this->tokens_used;
     }
-
 
     public function __construct(PromptProviderInterface $promptProvider, $api_key = null, $freepik_api_key = null) {
         $this->promptProvider = $promptProvider;
@@ -63,8 +57,6 @@ class CSB_Generator implements GeneratorInterface {
         $this->temperature = floatval(get_option('csb_temperature', 0.7));
         $this->style = get_option('csb_writing_style', 'SEO');
     }
-    
-
 
     private function normalizeKeyword($title) {
         // Convertir les accents
@@ -76,7 +68,6 @@ class CSB_Generator implements GeneratorInterface {
     }
 
     
-
     /**Utilise uniquement du texte brut sans mise en forme Markdown
      * Envoie une requête à l'API ChatGPT avec le prompt donne
      */
@@ -129,10 +120,7 @@ class CSB_Generator implements GeneratorInterface {
         }
 
         return $base64 ? base64_encode($result) : $result;
-    }
-
-
-        
+    }    
 
     public function generateStructure(string $keyword, int $depth, int $breadth, bool $test = false): string {
         $default = self::generateDefaultStructure($keyword, $depth, $breadth);
@@ -173,12 +161,6 @@ class CSB_Generator implements GeneratorInterface {
         return $this->generateTexte($title, $test, $default, $prompt);
     }
 
-
-    public function generateLeaf(string $title, string $structure, int $nb, bool $test = false): string {
-        $prompt = $this->promptProvider->leafParts($title, $structure, $nb);
-        $default = self::getDefaultLeafParts($title);
-        return $this->generateTexte($title, $test, $default, $prompt);
-    }
 
 
     private function generateTexte(string $title, bool $test, string $defaultContent, string $prompt, bool $preserveFormatting = false): string {

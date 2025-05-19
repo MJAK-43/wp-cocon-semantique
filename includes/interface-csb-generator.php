@@ -7,5 +7,4 @@ interface GeneratorInterface {
     public function generateIntro(string $title, string $structure, string $slug, bool $test): string;
     public function generateDevelopment(string $title, string $structure, bool $test): string;
     public function generateConclusion(string $title, string $structure, string $slug, bool $test): string;
-    public function generateLeaf(string $title, string $structure, int $nb, bool $test = false): string;
 }

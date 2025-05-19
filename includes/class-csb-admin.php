@@ -112,20 +112,20 @@ class CSB_Admin {
         if (empty($this->mapIdPost)) {
             $this->mapIdPost = get_option('csb_structure_map', []);
         }
-        if (isset($_POST['generate_single_node'])) {
-            $node_id = intval($_POST['generate_single_node']);
-            if (isset($this->mapIdPost[$node_id])) {
-                $keyword = reset($this->mapIdPost)['title'] ?? ''; // mot-clé racine
+        // if (isset($_POST['generate_single_node'])) {
+        //     $node_id = intval($_POST['generate_single_node']);
+        //     if (isset($this->mapIdPost[$node_id])) {
+        //         $keyword = reset($this->mapIdPost)['title'] ?? ''; // mot-clé racine
  
-            }
-            $url = esc_url($this->mapIdPost[$node_id]['link']);
-            $title = esc_html($this->mapIdPost[$node_id]['title']);
+        //     }
+        //     $url = esc_url($this->mapIdPost[$node_id]['link']);
+        //     $title = esc_html($this->mapIdPost[$node_id]['title']);
 
-            echo '<div class="notice notice-success is-dismissible">';
-            echo '<p>✅ Article généré : <a href="' . $url . '" target="_blank">🔗 ' . $title . '</a></p>';
-            echo '</div>';
+        //     echo '<div class="notice notice-success is-dismissible">';
+        //     echo '<p>✅ Article généré : <a href="' . $url . '" target="_blank">🔗 ' . $title . '</a></p>';
+        //     echo '</div>';
                 
-        }
+        // }
 
         // Traitement bouton Nettoyer
         if (isset($_POST['csb_clear_structure'])) {
@@ -352,34 +352,36 @@ class CSB_Admin {
         if (!current_user_can('manage_options') || !check_ajax_referer('csb_nonce', 'nonce', false)) {
             wp_send_json_error('Non autorisé', 403);
         }
-        session_write_close(); 
-
-        if (empty($this->mapIdPost)) {
-            $this->mapIdPost = get_option('csb_structure_map', []);
-        }
-
-
-        $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
-        $nb = $this->nb; // récupère la valeur définie en propriété
-
-        //error_log("🚀 processNode lancé pour post_id $post_id avec nb=$nb");
-
-        if (!$post_id || !isset($this->mapIdPost[$post_id])) {
-            wp_send_json_error('Post ID invalide ou introuvable');
-        }
         else{
-            $keyword = reset($this->mapIdPost)['title'] ?? '';
-            $this->processNode($post_id, $this->mapIdPost, $nb, $keyword);
+            session_write_close(); 
+            if (empty($this->mapIdPost)) {
+                $this->mapIdPost = get_option('csb_structure_map', []);
+            }
 
-            update_option('csb_structure_map', $this->mapIdPost);
 
-            wp_send_json_success([
-                'message' => 'Nœud généré avec succès',
-                'link' => $this->mapIdPost[$post_id]['link'] ?? '',
-                'tokens' => $this->generator->getTokensUsed()
-            ]);
-        }
-        
+            $this->updateMapFromPost($this->mapIdPost, $_POST['structure'] ?? []);
+
+
+            $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+            $nb = $this->nb; // récupère la valeur définie en propriété
+
+
+            if (!$post_id || !isset($this->mapIdPost[$post_id])) {
+                wp_send_json_error('Post ID invalide ou introuvable');
+            }
+            else{
+                $keyword = reset($this->mapIdPost)['title'] ?? '';
+                $this->processNode($post_id, $this->mapIdPost, $nb, $keyword);
+
+                update_option('csb_structure_map', $this->mapIdPost);
+
+                wp_send_json_success([
+                    'message' => 'Nœud généré avec succès',
+                    'link' => $this->mapIdPost[$post_id]['link'] ?? '',
+                    'tokens' => $this->generator->getTokensUsed()
+                ]);
+            }
+        }   
     }
 
 
@@ -472,21 +474,19 @@ class CSB_Admin {
                 }
             }
 
-            // 🔸 Conclusion
+            // Conclusion
             $conclusion = $this->generator->generateConclusion($title, $structure, $slug, $this->debugModContent);
             $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
 
-            // 🖼️ Image
+            // Image
             $image_url = $this->generator->generateImage($title, $keyword, $this->debugModImage);
             $this->publisher->setFeaturedImage($post_id, $image_url);
 
-            // 🔗 Liens + publication
+            // Liens + publication
             $links = $this->linker->generateStructuredLinks($map, $post_id);
             $final_html = $intro . $developments_html . $conclusion . $links;
             $this->publisher->fillAndPublishContent($post_id, $final_html);
-        }
-
-        
+        }   
     }
 
 
@@ -601,8 +601,6 @@ class CSB_Admin {
         $parsed_lines = $this->parseStructureLines($raw);
         return $this->buildMapFromParsedLines($parsed_lines, $forced_link);
     }
-
-
 
 
     private function updateMapFromPost(array &$map, array $posted_structure): void {
