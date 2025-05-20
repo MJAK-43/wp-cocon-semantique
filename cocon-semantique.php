@@ -20,9 +20,9 @@ require_once CSB_PATH . 'includes/class-csb-settings.php';
 require_once CSB_PATH . 'includes/class-csb-publisher.php';
 require_once CSB_PATH . 'includes/class-csb-generator.php';
 
-// if (function_exists('opcache_reset')) {
-//     opcache_reset();
-// }
+if (function_exists('opcache_reset')) {
+    opcache_reset();
+}
 
 
 

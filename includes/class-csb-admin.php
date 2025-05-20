@@ -162,6 +162,17 @@ class CSB_Admin {
                 // echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
                 // echo esc_html($raw);
                 // echo '</pre>';
+                if ($use_existing_root && !empty($existing_root_url)) {
+                    // Recherche de l’ID du post correspondant à l'URL
+                    $post = get_page_by_path(ltrim($existing_root_url, '/'), OBJECT, 'post');
+
+                    if ($post) {
+                        $post_id = $post->ID;
+                        // Enregistre les métadonnées pour que l’article apparaisse comme racine
+                        $this->publisher->storeMeta($post_id, 0, null);
+                    }
+                }
+
 
                 update_option('csb_structure_map', $this->mapIdPost);
             }
@@ -231,7 +242,7 @@ class CSB_Admin {
         echo '<legend>Structure générée</legend>';
 
         // Affichage à partir de la racine (parent_id null)
-        $this->renderStructureFields(null, $prefix, 0, !$use_existing_root);
+        $this->renderStructureFields(null, $prefix, 0, $use_existing_root==0);
 
         echo '</fieldset>';
 
@@ -313,7 +324,7 @@ class CSB_Admin {
                 echo '</div>';
 
                 // Récursion sur les enfants
-                $this->renderStructureFields($id, $prefix, $level + 1, $generation);
+                $this->renderStructureFields($id, $prefix, $level + 1, true);
                 echo '</li>';
             }
         }
@@ -558,7 +569,7 @@ class CSB_Admin {
 
         if ($post_id === null) {
             // Cas classique : création d’un vrai article WordPress
-            $post_id = $this->publisher->createPostDraft($title);
+            $post_id = $this->publisher->createPostDraft($title, $level, $parent_id);
             $this->publisher->storeMeta($post_id, $level, $parent_id);
             $link = '/' . get_post_field('post_name', $post_id);
         } else {

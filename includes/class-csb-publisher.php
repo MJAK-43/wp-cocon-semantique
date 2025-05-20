@@ -29,7 +29,7 @@ class CSB_Publisher {
     }
     
 
-    public function createPostDraft($title) {
+    public function createPostDraft(string $title, int $level = 0, ?int $parent_id = null){
         $slug = $this->generate_unique_slug($title);
         $post= wp_insert_post([
             'post_title'   => $title,
@@ -44,10 +44,16 @@ class CSB_Publisher {
         // print_r($post);
         // echo '<br>';echo '<br>';
         if (!is_wp_error($post)) {
-            update_post_meta($post, '_csb_generated', 1);
+            $this->markAsGenerated($post);
+            $this->storeMeta($post, $level, $parent_id);
+
         }
 
         return $post;
+    }
+
+    public function markAsGenerated(int $post_id): void {
+        update_post_meta($post_id, '_csb_generated', 1);
     }
 
     public function deletePost(int $post_id): void {
