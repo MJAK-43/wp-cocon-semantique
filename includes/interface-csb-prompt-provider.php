@@ -15,4 +15,6 @@ interface PromptProviderInterface
     public function development(string $title, string $structure): string;
 
     public function conclusion(string $title, string $structure): string;
+
+    public function fullArtical(string $keyword,string $title, string $structure, array $subparts): string;
 }

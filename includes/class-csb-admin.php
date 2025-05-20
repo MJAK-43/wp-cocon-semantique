@@ -23,6 +23,7 @@ class CSB_Admin {
     private static $minInputTime=1;
     private static $minSize=1;
 
+    private static $minExecutionTimeForSafe=60;
 
 
     private bool $debugModStructure=false;
@@ -256,7 +257,7 @@ class CSB_Admin {
         echo '<div class="csb-structure-actions">';
         echo '<button type="button" id="csb-generate-all" class="button button-primary">🚀 Tout générer</button> ';
         echo '<button type="submit" name="csb_stop_generation" class="button">🛑 Stopper la génération</button> ';
-        echo '<button type="submit" name="csb_clear_structure" class="button button-danger" onclick="return confirm(\'Supprimer la structure et tous les brouillons ?\');">🧹 Nettoyer la structure</button>';
+        echo '<button type="submit" name="csb_clear_structure" class="button button-danger" onclick="return confirm(\'Supprimer la structure et tous les brouillons ?\');">Supprimer le cocon</button>';
         echo '</div>';
 
         echo '</form>';
@@ -492,54 +493,122 @@ class CSB_Admin {
         return trim($text, '-');
     }
 
-
     private function processNode(int $post_id, array &$map, int $nb, string $keyword): void {
-        if (isset($map[$post_id])) {
-            $node = $map[$post_id];
-            $title = $node['title'];
-            $slug = get_post_field('post_name', $post_id);
-            $structure = $this->toBulletArchitecture($map);
+        $maxTime = (int) ini_get('max_execution_time');
+        
+        if(isset($map[$post_id])){
+            try {
+                if ($maxTime < self::$minExecutionTimeForSafe) {
+                    $result = $this->processNodeFast($post_id, $map, $nb, $keyword);
+                } else {
+                    $result = $this->processNodeSafe($post_id, $map, $nb, $keyword);
+                }
 
-            // 🔸 Introduction
-            $intro = $this->generator->generateIntro($title, $structure, $slug, $this->debugModContent);
-            $intro = "<div id='csb-intro-$slug' class='csb-content csb-intro'>$intro</div>";
+                $title = $map[$post_id]['title'];
 
-            // 🔸 Développements
-            $developments_html = '';
+                $image_url = $this->generator->generateImage($title, $keyword, $this->debugModImage);
+                $this->publisher->setFeaturedImage($post_id, $image_url);
 
-            if (!empty($node['children_ids'])) {
-                foreach ($node['children_ids'] as $child_id) {
-                    if (isset($map[$child_id])) {
-                        $child = $map[$child_id];
-                        $child_title = $child['title'];
-                        $child_slug = $this->slugify($child_title);
-                        $dev = $this->generator->generateDevelopment($child_title, $structure, $this->debugModContent);
-                        $block_id = ($child_id < 0) ? "csb-leaf-$child_slug" : "csb-development-$child_slug";
-                        $dev_html = "<div id='$block_id' class='csb-content csb-development'>$dev</div>";
+                $links = $this->linker->generateStructuredLinks($map, $post_id);
+                $content = $result . $links;
 
-                        if ($child_id >= 0) {
-                            $link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link']) . '">' . esc_html($child_title) . '</a>.</p>';
-                            $dev_html .= $link;
-                        }
+                $this->publisher->fillAndPublishContent($post_id, $content);
+                
+            } catch (\Throwable $e) {
+                error_log("Erreur dans processNode pour post_id $post_id : " . $e->getMessage());
+            }
+        }
+        
+    }
 
-                        $developments_html .= $dev_html;
+
+    private function processNodeSafe(int $post_id, array &$map, int $nb, string $keyword): string {
+        $node = $map[$post_id];
+        $title = $node['title'];
+        $slug = get_post_field('post_name', $post_id);
+        $structure = $this->toBulletArchitecture($map);
+
+        // 🔸 Introduction
+        $intro = $this->generator->generateIntro($title, $structure, $this->debugModContent);
+        $intro = "<div id='csb-intro-$slug' class='csb-content csb-intro'>$intro</div>";
+
+        // 🔸 Développements
+        $developments_html = '';
+
+        if (!empty($node['children_ids'])) {
+            foreach ($node['children_ids'] as $child_id) {
+                if (isset($map[$child_id])) {
+                    $child = $map[$child_id];
+                    $child_title = $child['title'];
+                    $child_slug = $this->slugify($child_title);
+                    $dev = $this->generator->generateDevelopment($child_title, $structure, $this->debugModContent);
+                    $block_id = ($child_id < 0) ? "csb-leaf-$child_slug" : "csb-development-$child_slug";
+                    $dev_html = "<div id='$block_id' class='csb-content csb-development'>$dev</div>";
+
+                    if ($child_id >= 0) {
+                        $link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link']) . '">' . esc_html($child_title) . '</a>.</p>';
+                        $dev_html .= $link;
                     }
+
+                    $developments_html .= $dev_html;
                 }
             }
+        }
 
-            // Conclusion
-            $conclusion = $this->generator->generateConclusion($title, $structure, $slug, $this->debugModContent);
-            $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
+        // Conclusion
+        $conclusion = $this->generator->generateConclusion($title, $structure, $this->debugModContent);
+        $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
+        return $intro . $developments_html . $conclusion . '<!-- Mode sécurisé -->';
+    }
 
-            // Image
-            $image_url = $this->generator->generateImage($title, $keyword, $this->debugModImage);
-            $this->publisher->setFeaturedImage($post_id, $image_url);
+    private function processNodeFast(int $post_id, array &$map, int $nb, string $keyword): string {        
+        $node = $map[$post_id];
+        $title = $node['title'];
+        $structure = $this->toBulletArchitecture($map);
+        $subparts = [];
 
-            // Liens + publication
-            $links = $this->linker->generateStructuredLinks($map, $post_id);
-            $final_html = $intro . $developments_html . $conclusion . $links;
-            $this->publisher->fillAndPublishContent($post_id, $final_html);
-        }   
+        $isLeaf = $this->isLeafNode($post_id, $map);
+
+        if ($isLeaf) {
+            // Feuille réelle : récupérer les titres des enfants virtuels (niveau 3)
+            foreach ($node['children_ids'] as $child_id) {
+                if (isset($map[$child_id]) && $map[$child_id]['post_id'] < 0) {
+                    $subparts[$map[$child_id]['title']] = null;
+                }
+            }
+        } 
+        else {
+            // Article non-feuille : récupérer les titres + liens des enfants réels
+            foreach ($node['children_ids'] as $child_id) {
+                if (isset($map[$child_id]) && $map[$child_id]['post_id'] >= 0) {
+                    $child = $map[$child_id];
+                    $subparts[$child['title']] = $child['link'];
+                }
+            }
+        }
+
+        // Génération du contenu HTML 
+        $content = $this->generator->generateFullContent(
+            keyword: $keyword,
+            title: $title,
+            structure: $structure,
+            subparts: $subparts,
+            test: $this->debugModContent
+        );
+        return '<article class="article-csb">' . $content . '<!-- Mode rapide -->' . '</article>';
+
+    
+    }
+
+    private function isLeafNode(int $node_id, array $map): bool {
+        foreach ($map[$node_id]['children_ids'] ?? [] as $child_id) {
+            if (isset($map[$child_id]) && $map[$child_id]['post_id'] >= 0) {
+                return false; // Il a au moins un enfant réel
+            }
+        }
+
+        // Aucun enfant réel trouvé ⇒ c’est une feuille
+        return true;
     }
 
 

@@ -67,7 +67,6 @@ class CSB_Generator implements GeneratorInterface {
         return strtolower(trim($clean));
     }
 
-    
     /**Utilise uniquement du texte brut sans mise en forme Markdown
      * Envoie une requête à l'API ChatGPT avec le prompt donne
      */
@@ -128,7 +127,6 @@ class CSB_Generator implements GeneratorInterface {
         return $this->generateTexte($keyword, $test, $default, $prompt, true);
     }
 
-
     public function generateImage(string $title, string $keyword, bool $test = false): string {
         $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
         $prompt = $this->promptProvider->image($keyword, $title);
@@ -141,12 +139,11 @@ class CSB_Generator implements GeneratorInterface {
         );
     }
 
-    public function generateIntro(string $title, string $structure, string $slug, bool $test): string {
+    public function generateIntro(string $title, string $structure, bool $test): string {
         $prompt = $this->promptProvider->intro($title, $structure);
         $default = self::getDefaultIntro($title);
         return $this->generateTexte($title, $test, $default, $prompt);
     }
-
 
     public function generateDevelopment(string $title, string $structure, bool $test): string {
         $prompt = $this->promptProvider->development($title, $structure);
@@ -154,14 +151,19 @@ class CSB_Generator implements GeneratorInterface {
         return $this->generateTexte($title, $test, $default, $prompt);
     }
 
-
-    public function generateConclusion(string $title, string $structure, string $slug, bool $test): string {
+    public function generateConclusion(string $title, string $structure, bool $test): string {
         $prompt = $this->promptProvider->conclusion($title, $structure);
         $default = self::getDefaultConclusion($title);
         return $this->generateTexte($title, $test, $default, $prompt);
     }
 
+    public function generateFullContent(string $keyword,string $title, string $structure, array $subparts, bool $test = false): string {
+        $prompt = $this->promptProvider->fullArtical($keyword, $title, $structure, $subparts);
+        $default = "<p><em>Contenu complet par défaut pour &laquo;&nbsp;$title&nbsp;&raquo;.</em></p>";
+        $html = $this->generateTexte($title, $test, $default, $prompt, true);
 
+        return $html;
+    }
 
     private function generateTexte(string $title, bool $test, string $defaultContent, string $prompt, bool $preserveFormatting = false): string {
         return $this->generate(fn($p) => $this->callApi($p, false, $preserveFormatting), $prompt, $test, $defaultContent);
