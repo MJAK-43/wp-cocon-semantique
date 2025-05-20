@@ -314,7 +314,9 @@ class CSB_Admin {
                 echo '<li class="csb-node-item">';
                 echo '<div class="csb-node-controls">';
                 echo '<span class="csb-node-indent">-</span>';
-                echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" required />';
+                
+                $readonly = $generation ? '' : 'readonly';
+                echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" ' . $readonly . ' required />';
 
                 if ($generation) {
                     echo '<button type="button" class="button csb-generate-node" data-post-id="' . esc_attr($id) . '">⚙️ Générer </button>';
@@ -564,6 +566,7 @@ class CSB_Admin {
     }
 
 
+    
     private function createMapEntry(string $title, ?int $parent_id, ?string $forced_link = null, int $level = 0, ?int $post_id = null): array {
         $link = '';
 
@@ -571,8 +574,16 @@ class CSB_Admin {
             // Cas classique : création d’un vrai article WordPress
             $post_id = $this->publisher->createPostDraft($title, $level, $parent_id);
             $this->publisher->storeMeta($post_id, $level, $parent_id);
-            $link = '/' . get_post_field('post_name', $post_id);
-        } else {
+
+            // Utilise le forced_link uniquement si c'est la racine (niveau 0)
+            if ($level === 0 && $forced_link !== null) {
+                $link = $forced_link;
+            } 
+            else {
+                $link = '/' . get_post_field('post_name', $post_id);
+            }
+        } 
+        else {
             // Cas d’une feuille virtuelle (pas de vrai post WP)
             $link = $forced_link ?? '/leaf-' . sanitize_title($title);
         }
@@ -586,6 +597,7 @@ class CSB_Admin {
             'level'        => $level
         ];
     }
+
 
     private function parseStructureLines(string $raw): array {
         $lines = explode("\n", trim($raw));
