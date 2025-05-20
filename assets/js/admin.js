@@ -12,17 +12,20 @@ jQuery(document).ready(function ($) {
         const postId = $(this).data('post-id');
         const button = $(this);
         const status = $('.csb-node-status[data-post-id="' + postId + '"]');
-
         const startTime = Date.now();
 
         button.prop('disabled', true).text('⏳ Génération...');
 
-        $.post(csbData.ajaxurl, {
-            action: 'csb_process_node',
-            nonce: csbData.nonce,
-            post_id: postId
-        }, function (response) {
-            const duration = ((Date.now() - startTime) / 1000).toFixed(1); // ⏱️ End
+        // ✅ Serialize tout le formulaire actif (avec structure[...])
+        const formData = $(button).closest('form').serializeArray();
+
+        // Ajout des champs AJAX obligatoires
+        formData.push({ name: 'action', value: 'csb_process_node' });
+        formData.push({ name: 'nonce', value: csbData.nonce });
+        formData.push({ name: 'post_id', value: postId });
+
+        $.post(csbData.ajaxurl, formData, function (response) {
+            const duration = ((Date.now() - startTime) / 1000).toFixed(1);
             if (response.success) {
                 const tokensUsed = response.data.tokens || 0;
                 const currentTotal = parseInt($('#csb-token-count').text()) || 0;
@@ -33,6 +36,7 @@ jQuery(document).ready(function ($) {
             } else {
                 status.text('❌ Erreur');
                 button.text('⚠️ Erreur');
+                console.warn('Erreur AJAX CSB :', response);
             }
 
             setTimeout(() => {

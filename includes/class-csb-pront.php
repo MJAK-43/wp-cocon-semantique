@@ -82,11 +82,11 @@ class CSB_Prompts implements PromptProviderInterface
     }
 
     protected function getRuleDevelopment(): string {
-        return "Consignes :\n" . implode("\n", array_merge($this->developmentRules, this->generalRules)) . "\n\n" . $this->developmentExemple;
+        return "Consignes :\n" . implode("\n", array_merge($this->developmentRules,$this->generalRules)) . "\n\n" . $this->developmentExemple;
     }
 
     protected function getRuleConclusion(): string {
-        return "Consignes :\n" . implode("\n", array_merge($this->conclusionRules, this->generalRules)) . "\n\n" . $this->conclusionExemple;
+        return "Consignes :\n" . implode("\n", array_merge($this->conclusionRules,$this->generalRules)) . "\n\n" . $this->conclusionExemple;
     }
 
     protected function getRuleStructure(int $depth, int $breadth, string $keyword): string {

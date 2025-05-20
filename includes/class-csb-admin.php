@@ -349,39 +349,74 @@ class CSB_Admin {
     }
 
     public function ajaxProcessNode() {
-        if (!current_user_can('manage_options') || !check_ajax_referer('csb_nonce', 'nonce', false)) {
-            wp_send_json_error('Non autorisé', 403);
-        }
+        $result = null;
+
+        if (!current_user_can('manage_options') || !check_ajax_referer('csb_nonce', 'nonce', false)){
+            $result = [
+                'success' => false,
+                'data' => ['message' => 'Non autorisé'],
+                'code' => 403
+            ];
+        } 
         else{
             session_write_close(); 
+
             if (empty($this->mapIdPost)) {
                 $this->mapIdPost = get_option('csb_structure_map', []);
             }
 
-
-            $this->updateMapFromPost($this->mapIdPost, $_POST['structure'] ?? []);
-
+            $structure = $_POST['structure'] ?? [];
+            $this->updateMapFromPost($this->mapIdPost, $structure);
 
             $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
-            $nb = $this->nb; // récupère la valeur définie en propriété
-
+            $nb = $this->nb;
 
             if (!$post_id || !isset($this->mapIdPost[$post_id])) {
-                wp_send_json_error('Post ID invalide ou introuvable');
-            }
+                $result = [
+                    'success' => false,
+                    'data' => ['message' => 'Post ID invalide ou introuvable'],
+                    'code' => 400
+                ];
+            } 
             else{
-                $keyword = reset($this->mapIdPost)['title'] ?? '';
-                $this->processNode($post_id, $this->mapIdPost, $nb, $keyword);
+                try{
+                    $keyword = reset($this->mapIdPost)['title'] ?? '';
+                    $this->processNode($post_id, $this->mapIdPost, $nb, $keyword);
 
-                update_option('csb_structure_map', $this->mapIdPost);
+                    update_option('csb_structure_map', $this->mapIdPost);
 
-                wp_send_json_success([
-                    'message' => 'Nœud généré avec succès',
-                    'link' => $this->mapIdPost[$post_id]['link'] ?? '',
-                    'tokens' => $this->generator->getTokensUsed()
-                ]);
+                    $result = [
+                        'success' => true,
+                        'data' => [
+                            'message' => 'Nœud généré avec succès',
+                            'link' => $this->mapIdPost[$post_id]['link'] ?? '',
+                            'tokens' => $this->generator->getTokensUsed()
+                        ],
+                        'code' => 200
+                    ];
+                } 
+                catch (\Throwable $e) {
+                    error_log("❌ Erreur lors de la génération du nœud $post_id : " . $e->getMessage());
+
+                    $result = [
+                        'success' => false,
+                        'data' => [
+                            'message' => '❌ Une erreur est survenue lors de la génération.',
+                            'details' => $e->getMessage()
+                        ],
+                        'code' => 500
+                    ];
+                }
             }
-        }   
+        }
+
+        
+        if ($result['success']){
+            wp_send_json_success($result['data'], $result['code']);
+        } 
+        else{
+            wp_send_json_error($result['data'], $result['code']);
+        }
     }
 
 
