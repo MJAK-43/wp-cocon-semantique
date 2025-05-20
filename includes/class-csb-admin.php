@@ -106,7 +106,7 @@ class CSB_Admin {
         $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
         $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
         $existing_root_url = isset($_POST['existing_root_url']) ? $_POST['existing_root_url'] : '';
-        $existing_root_url = $this->sanitizeToRelativeUrl($existing_root_url);
+        $existing_root_url = $this->saniupdatePostTitleAndSlugtizeToRelativeUrl($existing_root_url);
 
 
         if (empty($this->mapIdPost)) {
@@ -367,6 +367,11 @@ class CSB_Admin {
 
             $structure = $_POST['structure'] ?? [];
             $this->updateMapFromPost($this->mapIdPost, $structure);
+            // $stringmMapIdPost="";
+            // foreach ($array as $key => $value) {
+            //     $stringmMapIdPost .= "$key = $value; ";
+            // }
+            // error_log("$stringmMapIdPost");
 
             $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
             $nb = $this->nb;
@@ -639,19 +644,26 @@ class CSB_Admin {
 
 
     private function updateMapFromPost(array &$map, array $posted_structure): void {
-    
         foreach ($posted_structure as $post_id => $node_data) {
             if (isset($map[$post_id]) && isset($node_data['title'])) {
                 $new_title = sanitize_text_field($node_data['title']);
-    
-                if ($map[$post_id]['title'] !== $new_title) {
+
+                if ($map[$post_id]['title'] != $new_title) {
                     $this->publisher->updatePostTitleAndSlug($post_id, $new_title);
+                    if ($post_id > 0) {
+                        $map[$post_id]['link'] = '/' . get_post_field('post_name', $post_id);
+                    } 
+                    // else {
+                    //     $map[$post_id]['link'] = '/leaf-' . sanitize_title($new_title);
+                    // }
                 }
-    
+
                 $map[$post_id]['title'] = $new_title;
             }
         }
     }
+
+
     
 
     private function handleStructureActionsMap(&$map) {

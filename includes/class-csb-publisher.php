@@ -9,6 +9,8 @@ class CSB_Publisher {
 
     
     public function updatePostTitleAndSlug(int $post_id, string $new_title): void {
+        //error_log("updatePostTitleAndSlug $post_id , $new_title");
+
         wp_update_post([
             'ID'         => $post_id,
             'post_title' => $new_title,
