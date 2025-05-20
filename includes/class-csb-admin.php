@@ -106,7 +106,7 @@ class CSB_Admin {
         $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
         $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
         $existing_root_url = isset($_POST['existing_root_url']) ? $_POST['existing_root_url'] : '';
-        $existing_root_url = $this->saniupdatePostTitleAndSlugtizeToRelativeUrl($existing_root_url);
+        $existing_root_url = $this->sanitizeToRelativeUrl($existing_root_url);
 
 
         if (empty($this->mapIdPost)) {
