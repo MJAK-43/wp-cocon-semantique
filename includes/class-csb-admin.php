@@ -23,7 +23,7 @@ class CSB_Admin {
     private static $minInputTime=1;
     private static $minSize=1;
 
-    private static $minExecutionTimeForSafe=60;
+    private static $minExecutionTimeForSafe=60000;
 
 
     private bool $debugModStructure=false;
