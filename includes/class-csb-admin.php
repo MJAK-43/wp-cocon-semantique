@@ -19,11 +19,11 @@ class CSB_Admin {
     // private static $minSize=32;
 
 
-    private static $minExecutionTime=1;
+    private static $minExecutionTime=20;
     private static $minInputTime=1;
     private static $minSize=1;
 
-    private static $minExecutionTimeForSafe=60000;
+    private static $minExecutionTimeForSafe=60;
 
 
     private bool $debugModStructure=false;
@@ -101,6 +101,19 @@ class CSB_Admin {
     }
 
 
+    private function checkDegradedModeNotice(): void {
+        $maxTime = (int) ini_get('max_execution_time');
+
+        if ($maxTime < self::$minExecutionTimeForSafe) {
+            echo '<div class="notice notice-warning is-dismissible">';
+            echo '<p>⚠️ <strong>Mode dégradé activé</strong> : la génération des articles utilise un mode rapide (moins précis) car la configuration de votre serveur limite <code>max_execution_time</code> à <strong>' . esc_html($maxTime) . 's</strong>.';
+            echo ' Pour un fonctionnement optimal, augmentez cette valeur à au moins <strong>' . self::$minExecutionTimeForSafe . 's</strong>.</p>';
+            echo '</div>';
+        }
+    }
+
+
+
     public function render_admin_page() {
 
         $keyword =$this->capitalizeEachWord(isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '');
@@ -113,20 +126,6 @@ class CSB_Admin {
         if (empty($this->mapIdPost)) {
             $this->mapIdPost = get_option('csb_structure_map', []);
         }
-        // if (isset($_POST['generate_single_node'])) {
-        //     $node_id = intval($_POST['generate_single_node']);
-        //     if (isset($this->mapIdPost[$node_id])) {
-        //         $keyword = reset($this->mapIdPost)['title'] ?? ''; // mot-clé racine
- 
-        //     }
-        //     $url = esc_url($this->mapIdPost[$node_id]['link']);
-        //     $title = esc_html($this->mapIdPost[$node_id]['title']);
-
-        //     echo '<div class="notice notice-success is-dismissible">';
-        //     echo '<p>✅ Article généré : <a href="' . $url . '" target="_blank">🔗 ' . $title . '</a></p>';
-        //     echo '</div>';
-                
-        // }
 
         // Traitement bouton Nettoyer
         if (isset($_POST['csb_clear_structure'])) {
@@ -208,6 +207,7 @@ class CSB_Admin {
             echo '</ul></div>';
         }
         else{
+            $this->checkDegradedModeNotice(); 
             $this->renderKeywordForm($keyword, $this->nb);
             $this->renderStructureForm('structure', 0, $use_existing_root, $existing_root_url);
         }
