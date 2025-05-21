@@ -154,11 +154,13 @@ class CSB_Generator implements GeneratorInterface {
         return $this->generateTexte($title, $test, $default, $prompt);
     }
 
+    
     public function generateConclusion(string $title, string $structure, bool $test): string {
         $prompt = $this->promptProvider->conclusion($title, $structure);
         $default = self::getDefaultConclusion($title);
         return $this->generateTexte($title, $test, $default, $prompt);
     }
+
 
     public function generateFullContent(string $keyword,string $title, string $structure, array $subparts, bool $test = false): string {
         $prompt = $this->promptProvider->fullArticle($keyword, $title, $structure, $subparts);
@@ -167,9 +169,11 @@ class CSB_Generator implements GeneratorInterface {
         return $html;
     }
 
+
     private function generateTexte(string $title, bool $test, string $defaultContent, string $prompt, bool $preserveFormatting = false): string {
         return $this->generate(fn($p) => $this->callApi($p, false, $preserveFormatting), $prompt, $test, $defaultContent);
     }
+
 
     private function generate(callable $method, string $prompt, bool $test = false, string $default = ''): string {
         $content = $default;
@@ -185,11 +189,6 @@ class CSB_Generator implements GeneratorInterface {
         return $content;
     }
 
-    /***
-     * 
-     * Récupération Image
-     */
-   
 
     private function fetchImageFromPosteria(string $title, string $text): ?string {
         // 🔥 Normalisation du titre et du texte
