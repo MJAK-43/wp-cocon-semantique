@@ -15,7 +15,9 @@ class CSB_Prompts implements PromptProviderInterface
     ];
 
     private array $fullRules = [
-        "- L'article doit contenir une <strong>introduction</strong>, EXACTEMENT N parties, et une <strong>conclusion</strong>.",
+        "- L'article doit contenir une introduction, EXACTEMENT N parties, et une conclusion.",
+        "- Ne commence jamais l’introduction par un titre comme « Introduction » (même sans balise HTML).",
+        "- Ne commence jamais la conclusion par un titre comme « Conclusion » (même sans balise HTML).",
         "- Tu dois générer EXACTEMENT N parties. Ne regroupe pas, ne divise pas, ne rajoute pas d'autres sections.",
         "- Tu dois utiliser **exactement** les titres fournis pour chaque partie. Ne les reformule pas.",
         "- Si un lien est associé à une partie, ajoute **à la fin de cette partie** un paragraphe HTML au format strict suivant :",
