@@ -16,5 +16,5 @@ interface PromptProviderInterface
 
     public function conclusion(string $title, string $structure): string;
 
-    public function fullArtical(string $keyword,string $title, string $structure, array $subparts): string;
+    public function fullArticle(string $keyword,string $title, string $structure, array $subparts): string;
 }

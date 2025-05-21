@@ -158,10 +158,9 @@ class CSB_Generator implements GeneratorInterface {
     }
 
     public function generateFullContent(string $keyword,string $title, string $structure, array $subparts, bool $test = false): string {
-        $prompt = $this->promptProvider->fullArtical($keyword, $title, $structure, $subparts);
+        $prompt = $this->promptProvider->fullArticle($keyword, $title, $structure, $subparts);
         $default = "<p><em>Contenu complet par défaut pour &laquo;&nbsp;$title&nbsp;&raquo;.</em></p>";
         $html = $this->generateTexte($title, $test, $default, $prompt, true);
-
         return $html;
     }
 

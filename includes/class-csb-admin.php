@@ -415,7 +415,7 @@ class CSB_Admin {
                     ];
                 } 
                 catch (\Throwable $e) {
-                    error_log("❌ Erreur lors de la génération du nœud $post_id : " . $e->getMessage());
+                    //error_log("❌ Erreur lors de la génération du nœud $post_id : " . $e->getMessage());
 
                     $result = [
                         'success' => false,
