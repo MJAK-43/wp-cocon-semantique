@@ -30,7 +30,7 @@ class CSB_Publisher {
     
 
     public function createPostDraft(string $title, int $level = 0, ?int $parent_id = null){
-        $slug = $this->generate_unique_slug($title);
+        $slug = $this->generateUniqueSlug($title);
         $post= wp_insert_post([
             'post_title'   => $title,
             'post_name'    => $slug,
@@ -55,6 +55,10 @@ class CSB_Publisher {
     public function markAsGenerated(int $post_id): void {
         update_post_meta($post_id, '_csb_generated', 1);
     }
+    public function markAsRoot(int $post_id): void {
+        $this->storeMeta($post_id, 0, 0);
+        $this->markAsGenerated($post_id);
+    }
 
     public function deletePost(int $post_id): void {
         if ($post_id > 0 && get_post($post_id)) {
@@ -63,12 +67,12 @@ class CSB_Publisher {
     }
 
 
-    private function generate_unique_slug(string $title): string {
+    private function generateUniqueSlug(string $title): string {
         $base_slug = sanitize_title($title);
         $slug = $base_slug;
         $i = 1;
 
-        while ($this->slug_exists($slug)) {
+        while ($this->slugExists($slug)) {
             $slug = $base_slug . '-' . $i;
             $i++;
         }
@@ -76,7 +80,7 @@ class CSB_Publisher {
         return $slug;
     }
 
-    private function slug_exists(string $slug): bool {
+    private function slugExists(string $slug): bool {
         global $wpdb;
         $query = $wpdb->prepare(
             "SELECT post_name FROM $wpdb->posts WHERE post_name = %s AND post_status != 'trash' LIMIT 1",
@@ -96,36 +100,48 @@ class CSB_Publisher {
 
 
     public function setFeaturedImage(int $post_id, string $image_url): void {
+        $attachment_id = null;
+
         if (empty($image_url) || str_starts_with($image_url, '❌')) {
             error_log("❌ Image invalide pour mise en avant : $image_url");
-            return;
+        } 
+        else {
+            $site_url = get_site_url();
+
+            // Si l'image est locale (dans WordPress ou dans le plugin)
+            if (!str_starts_with($image_url, 'http') || str_starts_with($image_url, $site_url)) {
+                $attachment_id = attachment_url_to_postid($image_url);
+            } 
+            else {
+                // Sinon, on tente de la télécharger (image distante)
+                $tmp = download_url($image_url);
+
+                if (is_wp_error($tmp)) {
+                    error_log("❌ Erreur téléchargement image : " . $tmp->get_error_message());
+                } 
+                else {
+                    $file_array = [
+                        'name'     => basename($image_url),
+                        'tmp_name' => $tmp,
+                    ];
+
+                    $attachment = media_handle_sideload($file_array, $post_id);
+
+                    if (is_wp_error($attachment)) {
+                        @unlink($tmp);
+                        error_log("❌ Erreur media_handle_sideload : " . $attachment->get_error_message());
+                    } 
+                    else {
+                        $attachment_id = $attachment;
+                    }
+                }
+            }
         }
-    
-        // Téléchargement de l'image
-        $tmp = download_url($image_url);
-    
-        if (is_wp_error($tmp)) {
-            error_log("❌ Erreur téléchargement image : " . $tmp->get_error_message());
-            return;
+
+        // ✅ Un seul return, on définit la miniature si tout s'est bien passé
+        if (!empty($attachment_id)) {
+            set_post_thumbnail($post_id, $attachment_id);
         }
-    
-        // Prépare un tableau pour insérer le fichier dans la médiathèque
-        $file_array = [
-            'name'     => basename($image_url),
-            'tmp_name' => $tmp,
-        ];
-    
-        // Si media_handle_sideload() échoue, nettoyage manuel
-        $attachment_id = media_handle_sideload($file_array, $post_id);
-    
-        if (is_wp_error($attachment_id)) {
-            @unlink($tmp); // Nettoyer le fichier temporaire
-            error_log("❌ Erreur media_handle_sideload : " . $attachment_id->get_error_message());
-            return;
-        }
-    
-        // Définir comme image mise en avant
-        set_post_thumbnail($post_id, $attachment_id);
     }
 
 

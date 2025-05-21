@@ -13,6 +13,7 @@ class CSB_Generator implements GeneratorInterface {
     private $tokens_used = 0;
 
 
+
     private static function getDefaultIntro(string $title): string {
         return "<p><em>Introduction par défaut sur «&nbsp;$title&nbsp;».</em></p>";
     }
@@ -45,6 +46,8 @@ class CSB_Generator implements GeneratorInterface {
 
         return $structure;
     }
+
+    private static function getDefaultImage(){return plugin_dir_url(dirname(__DIR__)) . 'image_test.png';}
 
     public function getTokensUsed() {
         return $this->tokens_used;
@@ -128,7 +131,7 @@ class CSB_Generator implements GeneratorInterface {
     }
 
     public function generateImage(string $title, string $keyword, bool $test = false): string {
-        $default_image_url = plugin_dir_url(__FILE__) . './image_test.png';
+        $default_image_url = self::getDefaultImage();
         $prompt = $this->promptProvider->image($keyword, $title);
 
         return $this->generate(
@@ -159,7 +162,7 @@ class CSB_Generator implements GeneratorInterface {
 
     public function generateFullContent(string $keyword,string $title, string $structure, array $subparts, bool $test = false): string {
         $prompt = $this->promptProvider->fullArticle($keyword, $title, $structure, $subparts);
-        $default = "<p><em>Contenu complet par défaut pour &laquo;&nbsp;$title&nbsp;&raquo;.</em></p>";
+        $default = self::getDefaultIntro($title).self::getDefaultDevelopment($title).self::getDefaultConclusion($title);
         $html = $this->generateTexte($title, $test, $default, $prompt, true);
         return $html;
     }

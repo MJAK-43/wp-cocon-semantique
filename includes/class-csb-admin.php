@@ -26,9 +26,9 @@ class CSB_Admin {
     private static $minExecutionTimeForSafe=60;
 
 
-    private bool $debugModStructure=true;
-    private bool $debugModContent=true;
-    private bool $debugModImage=true;
+    private bool $debugModStructure=false;
+    private bool $debugModContent=false;
+    private bool $debugModImage=false;
 
 
     public function __construct(GeneratorInterface $generator) {
@@ -148,6 +148,7 @@ class CSB_Admin {
 
         if (isset($_POST['load_existing_cocon'])) {
             $root_post_id = intval($_POST['load_existing_cocon']);
+            $this->publisher->markAsRoot($root_post_id);
             $this->mapIdPostLoaded = $this->rebuildCoconFromRoot($root_post_id);
             update_option('csb_structure_map', $this->mapIdPost);
         }
@@ -162,18 +163,7 @@ class CSB_Admin {
                 // echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
                 // echo esc_html($raw);
                 // echo '</pre>';
-                if ($use_existing_root && !empty($existing_root_url)) {
-                    // Recherche de l’ID du post correspondant à l'URL
-                    $post = get_page_by_path(ltrim($existing_root_url, '/'), OBJECT, 'post');
-
-                    if ($post) {
-                        $post_id = $post->ID;
-                        // Enregistre les métadonnées pour que l’article apparaisse comme racine
-                        $this->publisher->storeMeta($post_id, 0, null);
-                    }
-                }
-
-
+                
                 update_option('csb_structure_map', $this->mapIdPost);
             }
 
@@ -187,6 +177,15 @@ class CSB_Admin {
 
             }
         }
+
+
+        if ($use_existing_root && !empty($existing_root_url)) {
+            $first_node = reset($this->mapIdPost);
+            if ($first_node && isset($first_node['post_id']) && $first_node['post_id'] > 0) {
+                $this->publisher->markAsRoot($first_node['post_id']);
+            }
+        }
+
 
         // echo '<div id="csb-token-tracker">';
         // echo '<strong>🧠 Tokens utilisés :</strong> <span id="csb-token-count">0</span>';
@@ -492,6 +491,7 @@ class CSB_Admin {
         return trim($text, '-');
     }
 
+
     private function processNode(int $post_id, array &$map, int $nb, string $keyword): void {
         $maxTime = (int) ini_get('max_execution_time');
         
@@ -504,9 +504,11 @@ class CSB_Admin {
                 }
 
                 $title = $map[$post_id]['title'];
-
-                $image_url = $this->generator->generateImage($title, $keyword, $this->debugModImage);
-                $this->publisher->setFeaturedImage($post_id, $image_url);
+                if(!$this->debugModImage){
+                    $image_url = $this->generator->generateImage($title, $keyword, $this->debugModImage);
+                    $this->publisher->setFeaturedImage($post_id, $image_url);
+                }
+                
 
                 $links = $this->linker->generateStructuredLinks($map, $post_id);
                 $content = $result . $links;
@@ -514,7 +516,7 @@ class CSB_Admin {
                 $this->publisher->fillAndPublishContent($post_id, $content);
                 
             } catch (\Throwable $e) {
-                error_log("Erreur dans processNode pour post_id $post_id : " . $e->getMessage());
+                //error_log("Erreur dans processNode pour post_id $post_id : " . $e->getMessage());
             }
         }
         
@@ -560,6 +562,7 @@ class CSB_Admin {
         return $intro . $developments_html . $conclusion . '<!-- Mode sécurisé -->';
     }
 
+
     private function processNodeFast(int $post_id, array &$map, int $nb, string $keyword): string {        
         $node = $map[$post_id];
         $title = $node['title'];
@@ -599,6 +602,7 @@ class CSB_Admin {
     
     }
 
+
     private function isLeafNode(int $node_id, array $map): bool {
         foreach ($map[$node_id]['children_ids'] ?? [] as $child_id) {
             if (isset($map[$child_id]) && $map[$child_id]['post_id'] >= 0) {
@@ -636,14 +640,14 @@ class CSB_Admin {
 
     private function createMapEntry(string $title, ?int $parent_id, ?string $forced_link = null, int $level = 0, ?int $post_id = null): array {
         $link = '';
-
+        
         if ($post_id === null) {
             // Cas classique : création d’un vrai article WordPress
             $post_id = $this->publisher->createPostDraft($title, $level, $parent_id);
             $this->publisher->storeMeta($post_id, $level, $parent_id);
 
-            // Utilise le forced_link uniquement si c'est la racine (niveau 0)
             if ($level === 0 && $forced_link !== null) {
+                //error_log("voici le titre $title");
                 $link = $forced_link;
             } 
             else {
@@ -651,8 +655,26 @@ class CSB_Admin {
             }
         } 
         else {
+            //error_log( "voici le titre $title");
             // Cas d’une feuille virtuelle (pas de vrai post WP)
-            $link = $forced_link ?? '/leaf-' . sanitize_title($title);
+            if ($forced_link !== null) {
+                $post = get_page_by_path(ltrim($forced_link, '/'), OBJECT, 'post');
+                if ($post) {
+                    $post_id = $post->ID;
+                    $link = $forced_link;
+
+                    // 🎯 Si c'est une racine, marquer comme telle
+                    if ($level === 0) {
+                        $this->publisher->markAsRoot($post_id);
+                    }
+                } 
+                else {
+                    $link = '/leaf-' . sanitize_title($title);
+                }
+            }
+            else {
+                $link = '/leaf-' . sanitize_title($title);
+            }
         }
 
         return [
@@ -700,19 +722,30 @@ class CSB_Admin {
 
             $parent_id = $level === 0 ? null : ($stack[$level - 1]['post_id'] ?? null);
 
-            // Détermine si c’est une feuille
+            //Détermine si c’est une feuille
             $isLeaf = true;
             if ($i + 1 < $total && $parsed_lines[$i + 1]['level'] > $level) {
                 $isLeaf = false;
             }
 
-            // Crée l’entrée
+            //Résolution préalable du post existant pour level 0
+            $resolved_post_id = null;
+            if ($level === 0 && $forced_link !== null) {
+                $post = get_page_by_path(ltrim($forced_link, '/'), OBJECT, ['post', 'page']);
+                if ($post) {
+                    $resolved_post_id = $post->ID;
+                }
+                //error_log(" voici l'id $resolved_post_id");
+                //error_log("forced_link reçu : $forced_link");
+            }
+
+            //Crée l’entrée
             if ($isLeaf) {
                 $entry = $this->createMapEntry($title, $parent_id, null, $level, $virtualId);
                 $post_id = $virtualId;
                 $virtualId--;
             } else {
-                $entry = $this->createMapEntry($title, $parent_id, $level === 0 ? $forced_link : null, $level);
+                $entry = $this->createMapEntry($title, $parent_id, $level === 0 ? $forced_link : null, $level, $resolved_post_id);
                 $post_id = $entry['post_id'];
             }
 
@@ -723,9 +756,9 @@ class CSB_Admin {
                 $map[$parent_id]['children_ids'][] = $post_id;
             }
         }
-
         return $map;
     }
+
 
 
     public function convertStructureToMap(string $raw, ?string $forced_link = null): array {
@@ -872,38 +905,6 @@ class CSB_Admin {
         }
     }
    
-    /*
-    private function rebuildCoconRecursive(int $post_id, array &$map): void {
-        $title = get_the_title($post_id);
-        $parent_id = intval(get_post_meta($post_id, '_csb_parent_id', true));
-        $level = intval(get_post_meta($post_id, '_csb_level', true));
-    
-        $map[$post_id] = [
-            'post_id'      => $post_id,
-            'title'        => $title,
-            'link'         => wp_make_link_relative(get_permalink($post_id)),
-            'parent_id'    => $parent_id ?: null,
-            'children_ids' => [],
-            'level'        => $level,
-        ];
-    
-        $args = [
-            'post_type'      => 'post',
-            'post_status'    => ['publish', 'draft'],
-            'meta_key'       => '_csb_parent_id',
-            'meta_value'     => $post_id,
-            'posts_per_page' => -1,
-            'orderby'        => 'menu_order',
-            'order'          => 'ASC',
-        ];
-    
-        $children = get_posts($args);
-    
-        foreach ($children as $child) {
-            $map[$post_id]['children_ids'][] = $child->ID;
-            $this->rebuildCoconRecursive($child->ID, $map);
-        }
-    }
-    */
+  
 }
 
