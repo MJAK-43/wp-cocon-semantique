@@ -15,17 +15,22 @@ class CSB_Prompts implements PromptProviderInterface
     ];
 
     private array $fullRules = [
-        "- L'article doit contenir trois sections : une <strong>introduction</strong>, EXACTEMENT N parties, et une <strong>conclusion</strong>.",        "- Tu dois utiliser **exactement** les titres fournis pour chaque partie. Ne les reformule pas.",
+        "- L'article doit contenir une <strong>introduction</strong>, EXACTEMENT N parties, et une <strong>conclusion</strong>.",
+        "- Tu dois générer EXACTEMENT N parties. Ne regroupe pas, ne divise pas, ne rajoute pas d'autres sections.",
+        "- Tu dois utiliser **exactement** les titres fournis pour chaque partie. Ne les reformule pas.",
         "- Si un lien est associé à une partie, ajoute **à la fin de cette partie** un paragraphe HTML au format strict suivant :",
         "  <p>Pour en savoir plus, découvrez notre article sur <a href=\"URL\">Titre</a></p>",
         "- Ne modifie ni le texte du lien ni sa structure HTML.",
+        "- N’ajoute jamais de lien HTML dans l’introduction ni dans la conclusion.",
     ];
+
 
 
     // === Règles spécifiques par type ===
     private array $introRules = [
         "- Structure en 2 à 3 paragraphes <p>, sans utiliser de <div>.",
         "- Ne commence jamais par un titre comme « Introduction » (même sans balise HTML).",
+        "- Ne jamais inclure de lien dans l’introduction ni dans la conclusion.",
         "- Utilise un ton engageant, fluide, accessible, qui donne envie de lire la suite.",
         "- Pas de titres <h1> ou <h2>.",
         "- Ne commence jamais par « Cet article va parler de… ».",
