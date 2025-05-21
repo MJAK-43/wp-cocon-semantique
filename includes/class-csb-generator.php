@@ -128,7 +128,7 @@ class CSB_Generator implements GeneratorInterface {
     }
 
     public function generateImage(string $title, string $keyword, bool $test = false): string {
-        $default_image_url = plugin_dir_url(__FILE__) . '../image_test.png';
+        $default_image_url = plugin_dir_url(__FILE__) . './image_test.png';
         $prompt = $this->promptProvider->image($keyword, $title);
 
         return $this->generate(

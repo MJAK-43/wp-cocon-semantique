@@ -26,9 +26,9 @@ class CSB_Admin {
     private static $minExecutionTimeForSafe=60;
 
 
-    private bool $debugModStructure=false;
-    private bool $debugModContent=false;
-    private bool $debugModImage=false;
+    private bool $debugModStructure=true;
+    private bool $debugModContent=true;
+    private bool $debugModImage=true;
 
 
     public function __construct(GeneratorInterface $generator) {
