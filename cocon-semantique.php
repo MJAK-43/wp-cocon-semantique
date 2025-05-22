@@ -13,12 +13,17 @@ define('CSB_URL', plugin_dir_url(__FILE__));
 
 // Inclure les fichiers du plugin
 
-require_once CSB_PATH . 'includes/class-csb-pront.php';
+//require_once CSB_PATH . 'includes/class-csb-pront.php';
 require_once CSB_PATH . 'includes/class-csb-linker.php';
 require_once CSB_PATH . 'includes/class-csb-admin.php';
 require_once CSB_PATH . 'includes/class-csb-settings.php';
 require_once CSB_PATH . 'includes/class-csb-publisher.php';
 require_once CSB_PATH . 'includes/class-csb-generator.php';
+require_once CSB_PATH . 'includes/pront/class-csb-context-pront.php';
+require_once CSB_PATH . 'includes/pront/class-prompt-context.php';
+require_once CSB_PATH . 'includes/pront/trait-prompt-rules.php';
+require_once CSB_PATH . 'includes/pront/interface-csb-prompt-provider.php';
+
 
 if (function_exists('opcache_reset')) {
     opcache_reset();
@@ -30,7 +35,7 @@ remove_filter('the_content', 'your_theme_category_display_function');
 
 // Initialisation différée
 add_action('plugins_loaded', function () {
-    new CSB_Admin(new CSB_Generator(new CSB_Prompts()));
+    new CSB_Admin(new CSB_Generator(new CSB_CustomPrompts()));
     new CSB_Settings();
 });
 add_action('wp_enqueue_scripts', function () {

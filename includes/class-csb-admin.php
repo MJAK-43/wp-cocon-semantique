@@ -1,5 +1,6 @@
 <?php
 if (!defined('ABSPATH')) exit;
+require_once __DIR__ . '/pront/class-prompt-context.php';
 
 class CSB_Admin {
     private int $nb;
@@ -20,8 +21,8 @@ class CSB_Admin {
 
 
     private static $minExecutionTime=20;
-    private static $minInputTime=1;
-    private static $minSize=1;
+    private static $minInputTime=0;
+    private static $minSize=0;
 
     private static $minExecutionTimeForSafe=60;
 
@@ -35,7 +36,7 @@ class CSB_Admin {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('wp_ajax_csb_process_node', [$this, 'ajaxProcessNode']); 
-        $this->nb=2;
+        $this->nb=3;
 
         //echo "DOG";
         // add_action('admin_init', [$this, 'maybe_delete_author_posts']);
@@ -157,7 +158,14 @@ class CSB_Admin {
             if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
 
                 //$this->generator->setKeyword($keyword);
-                $raw = $this->generator->generateStructure($keyword,self::$depth,$this->nb,$this->debugModStructure);
+                $product = isset($_POST['csb_product']) ? sanitize_text_field($_POST['csb_product']) : null;
+                $demographic = isset($_POST['csb_demographic']) ? sanitize_text_field($_POST['csb_demographic']) : null;
+
+                $context_data = ['keyword' => $keyword];
+                if (!empty($product)) $context_data['product'] = $product;
+                if (!empty($demographic)) $context_data['demographic'] = $demographic;
+                $context = new PromptContext($context_data);
+                $raw = $this->generator->generateStructure($keyword, self::$depth, $this->nb, $context, $this->debugModStructure);
                 $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
 
                 // echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
@@ -268,7 +276,11 @@ class CSB_Admin {
 
         $original_url = isset($_POST['existing_root_url']) ? sanitize_text_field($_POST['existing_root_url']) : '';
         $existing_root_url = $this->sanitizeToRelativeUrl($original_url); // <-- Conversion ici
+        
+        $product = isset($_POST['csb_product']) ? sanitize_text_field($_POST['csb_product']) : '';
+        $demographic = isset($_POST['csb_demographic']) ? sanitize_text_field($_POST['csb_demographic']) : '';
 
+        
         echo '<form method="post">';
         echo '<table class="form-table">';
 
@@ -294,6 +306,23 @@ class CSB_Admin {
         }
 
         echo '</td></tr>';
+
+        // // Champ Activité
+        // echo '<tr><th><label for="csb_activity">Activité</label></th>';
+        // echo '<td><input type="text" id="csb_activity" name="csb_activity" value="' . esc_attr($activity) . '" class="regular-text">';
+        // echo '<p class="description">Ex : artisan, e-commerçant, coach, etc.</p></td></tr>';
+
+        // Champ Produit
+        echo '<tr><th><label for="csb_product">Produit vendu</label></th>';
+        echo '<td><input type="text" id="csb_product" name="csb_product" value="' . esc_attr($product) . '" class="regular-text">';
+        echo '<p class="description">Ex : formations, bijoux, vêtements, accompagnement, etc.</p></td></tr>';
+
+
+        // Champ Démographique
+        echo '<tr><th><label for="csb_demographic">Démographique</label></th>';
+        echo '<td><input type="text" id="csb_demographic" name="csb_demographic" value="' . esc_attr($demographic) . '" class="regular-text">';
+        echo '<p class="description">Ex : parents, retraités, étudiants, etc.</p></td></tr>';
+
         echo '</table>';
         submit_button('Générer la structure', 'primary', 'submit');
         echo '</form>';
@@ -398,7 +427,10 @@ class CSB_Admin {
             else{
                 try{
                     $keyword = reset($this->mapIdPost)['title'] ?? '';
-                    $this->processNode($post_id, $this->mapIdPost, $nb, $keyword);
+                    $product = !empty($_POST['csb_product']) ? sanitize_text_field($_POST['csb_product']) : null;
+                    $demographic = !empty($_POST['csb_demographic']) ? sanitize_text_field($_POST['csb_demographic']) : null;
+
+                    $this->processNode($post_id, $this->mapIdPost, $nb, $keyword, $product, $demographic);
 
                     update_option('csb_structure_map', $this->mapIdPost);
 
@@ -491,46 +523,64 @@ class CSB_Admin {
         return trim($text, '-');
     }
 
-
-    private function processNode(int $post_id, array &$map, int $nb, string $keyword): void {
+    private function processNode(
+        int $post_id,
+        array &$map,
+        int $nb,
+        string $keyword,
+        ?string $product = null,
+        ?string $demographic = null): void {
         $maxTime = (int) ini_get('max_execution_time');
-        
-        if(isset($map[$post_id])){
+
+        if (isset($map[$post_id])) {
             try {
+                // Construction du PromptContext avec uniquement les champs utiles
+                $context_data = ['keyword' => $keyword];
+                if (!empty($product)) {
+                    $context_data['product'] = $product;
+                }
+                if (!empty($demographic)) {
+                    $context_data['demographic'] = $demographic;
+                }
+                $context = new PromptContext($context_data);
+
+                // Choix du mode de génération
                 if ($maxTime < self::$minExecutionTimeForSafe) {
-                    $result = $this->processNodeFast($post_id, $map, $nb, $keyword);
+                    $result = $this->processNodeFast($post_id, $map, $nb, $keyword, $context);
                 } else {
-                    $result = $this->processNodeSafe($post_id, $map, $nb, $keyword);
+                    $result = $this->processNodeSafe($post_id, $map, $nb, $keyword, $context);
                 }
 
+                // Génération de l’image
                 $title = $map[$post_id]['title'];
-                if(!$this->debugModImage){
-                    $image_url = $this->generator->generateImage($title, $keyword, $this->debugModImage);
+                if (!$this->debugModImage) {
+                    $image_url = $this->generator->generateImage($title, $keyword, $context, $this->debugModImage);
                     $this->publisher->setFeaturedImage($post_id, $image_url);
                 }
-                
 
+                // Ajout des liens internes
                 $links = $this->linker->generateStructuredLinks($map, $post_id);
                 $content = $result . $links;
 
                 $this->publisher->fillAndPublishContent($post_id, $content);
-                
+
             } catch (\Throwable $e) {
                 //error_log("Erreur dans processNode pour post_id $post_id : " . $e->getMessage());
             }
         }
-        
     }
 
 
-    private function processNodeSafe(int $post_id, array &$map, int $nb, string $keyword): string {
+
+
+    private function processNodeSafe(int $post_id, array &$map, int $nb, string $keyword,PromptContext $context): string {
         $node = $map[$post_id];
         $title = $node['title'];
         $slug = get_post_field('post_name', $post_id);
         $structure = $this->toBulletArchitecture($map);
 
         // 🔸 Introduction
-        $intro = $this->generator->generateIntro($title, $structure, $this->debugModContent);
+        $intro = $this->generator->generateIntro($title, $structure, $context, $this->debugModContent);
         $intro = "<div id='csb-intro-$slug' class='csb-content csb-intro'>$intro</div>";
 
         // 🔸 Développements
@@ -542,7 +592,7 @@ class CSB_Admin {
                     $child = $map[$child_id];
                     $child_title = $child['title'];
                     $child_slug = $this->slugify($child_title);
-                    $dev = $this->generator->generateDevelopment($child_title, $structure, $this->debugModContent);
+                    $dev = $this->generator->generateDevelopment($child_title, $structure, $context,$this->debugModContent);
                     $block_id = ($child_id < 0) ? "csb-leaf-$child_slug" : "csb-development-$child_slug";
                     $dev_html = "<div id='$block_id' class='csb-content csb-development'>$dev</div>";
 
@@ -557,13 +607,13 @@ class CSB_Admin {
         }
 
         // Conclusion
-        $conclusion = $this->generator->generateConclusion($title, $structure, $this->debugModContent);
+        $conclusion = $this->generator->generateConclusion($title, $structure,  $context,$this->debugModContent);
         $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
         return $intro . $developments_html . $conclusion . '<!-- Mode sécurisé -->';
     }
 
 
-    private function processNodeFast(int $post_id, array &$map, int $nb, string $keyword): string {        
+    private function processNodeFast(int $post_id, array &$map, int $nb, string $keyword,PromptContext $context): string {        
         $node = $map[$post_id];
         $title = $node['title'];
         $structure = $this->toBulletArchitecture($map);
@@ -595,6 +645,7 @@ class CSB_Admin {
             title: $title,
             structure: $structure,
             subparts: $subparts,
+            context: $context,
             test: $this->debugModContent
         );
         return '<article class="article-csb">' . $content . '<!-- Mode rapide -->' . '</article>';
