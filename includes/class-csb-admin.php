@@ -69,11 +69,11 @@ class CSB_Admin {
         $postMaxSize = self::convertBytes($postMaxSizeRaw);
 
         // Comparaisons
-        if ($maxExecutionTime < self::$minExecutionTime) {
+        if (($maxExecutionTime < self::$minExecutionTime)&&($maxExecutionTime>0)) {
             $errors[] = "⏱️ `max_execution_time` est trop bas : $maxExecutionTime (minimum requis : " . self::$minExecutionTime . ")";
         }
 
-        if ($maxInputTime < self::$minInputTime) {
+        if (($maxInputTime < self::$minInputTime)&&($maxExecutionTime>0)) {
             $errors[] = "📥 `max_input_time` est trop bas : $maxInputTime (minimum requis : " . self::$minInputTime . ")";
         }
 
