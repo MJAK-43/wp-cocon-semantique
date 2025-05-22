@@ -24,10 +24,11 @@ trait PromptRulesTrait
         "- N’ajoute jamais de lien HTML dans l’introduction ni dans la conclusion.",
     ];
 
+
     protected array $introRules = [
         "- Structure en 2 à 3 paragraphes <p>, sans utiliser de <div>.",
         "- Ne commence jamais par un titre comme « Introduction » (même sans balise HTML).",
-        "- Ne jamais inclure de lien dans l’introduction ni dans la conclusion.",
+        "- Ne jamais inclure de lien",
         "- Utilise un ton engageant, fluide, accessible, qui donne envie de lire la suite.",
         "- Pas de titres <h1> ou <h2>.",
         "- Ne commence jamais par « Cet article va parler de… ».",
@@ -37,6 +38,7 @@ trait PromptRulesTrait
         "- Ne pas utiliser de <div>.",
         "- Ajoute un titre unique en <h3> : exactement celui fourni, sans reformulation.",
         "- Ajoute 1 ou 2 paragraphes <p> clairs et optimisés SEO.",
+        "- Ne jamais inclure de lien",
         "- Ajoute une <ul><li> si tu présentes plusieurs éléments concrets à énumérer.",
         "- Structure uniquement avec <h3>, <p> et éventuellement <ul><li>.",
     ];
@@ -44,6 +46,7 @@ trait PromptRulesTrait
     protected array $conclusionRules = [
         "- Résume en 2 paragraphes maximum.",
         "- Ne commence jamais par un titre comme « Conclusion » (même sans balise HTML).",
+        "- Ne jamais inclure de lien",
         "- Rappelle les mots-clés importants en <strong>.",
         "- Termine par une phrase engageante qui incite à la réflexion ou à l’action.",
         "- Structure uniquement avec <p> et <strong>, sans <div>.",
