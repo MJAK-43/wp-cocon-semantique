@@ -42,25 +42,31 @@ foreach ($includes as $file) {
 // }
 
 
+function csb_initialize_plugin() {
+    $defaultImage = plugin_dir_url(__FILE__) . 'assets/img/defaultImage.png';
+    $api_key = get_option('csb_openai_api_key');
 
-remove_filter('the_content', 'your_theme_category_display_function');
+
+    $generator = new CSB_Generator(
+        new CSB_CustomPrompts(),
+        $defaultImage,
+        $api_key
+        
+    );
+
+    new CSB_Admin($generator);
+    new CSB_Settings();
+}
+
 
 // Initialisation différée
 add_action('plugins_loaded', function () {
     try {
-        $defaultImage = plugin_dir_url(__FILE__) . 'assets/img/defaultImage.png';
-
-        $generator = new CSB_Generator(
-            new CSB_CustomPrompts(),
-            $defaultImage
-        );
-
-        new CSB_Admin($generator);
-        new CSB_Settings();
-
-    } catch (Throwable $e) {
+        csb_initialize_plugin();
+    } 
+    catch (Throwable $e) {
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('[CSB ERROR] ' . $e->getMessage());
+            error_log('[CSB ERROR] ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
         }
     }
 });
