@@ -1,7 +1,7 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-require_once __DIR__ . '/interface-csb-generator.php';
+require_once __DIR__ . '../Interfaces/interface-csb-generator.php';
 
 class CSB_Generator implements GeneratorInterface {
     private $api_key;
@@ -11,10 +11,6 @@ class CSB_Generator implements GeneratorInterface {
     //private $image_description;
     private PromptProviderInterface $promptProvider;
     private $tokens_used = 0;
-
-    private string $defaultImage;
-
-
 
     private static function getDefaultIntro(string $title): string {
         return "<p><em>Introduction par défaut sur «&nbsp;$title&nbsp;».</em></p>";
@@ -49,23 +45,20 @@ class CSB_Generator implements GeneratorInterface {
         return $structure;
     }
 
-    private function getDefaultImage(){return $defaultContent;}
+    private static function getDefaultImage(){
+        return plugin_dir_url(dirname(__DIR__)) . 'image_test.png';
+    }
 
     public function getTokensUsed() {
         return $this->tokens_used;
     }
 
-    public function __construct(PromptProviderInterface $promptProvider,
-                                string $defaultImage, 
-                                $api_key = null, 
-                                $freepik_api_key = null
-    ) {
+    public function __construct(PromptProviderInterface $promptProvider, $api_key = null, $freepik_api_key = null) {
         $this->promptProvider = $promptProvider;
         $this->api_key = $api_key ?: get_option('csb_openai_api_key');
         $this->model = get_option('csb_model', 'gpt-3.5-turbo');
         $this->temperature = floatval(get_option('csb_temperature', 0.7));
         $this->style = get_option('csb_writing_style', 'SEO');
-        $this->defaultImage=$defaultImage;
     }
 
     private function normalizeKeyword($title) {
@@ -131,17 +124,16 @@ class CSB_Generator implements GeneratorInterface {
         return $base64 ? base64_encode($result) : $result;
     }    
 
-    public function generateStructure(string $keyword, int $depth, int $breadth, PromptContext $context, bool $test = false): string {
+    public function generateStructure(string $keyword, int $depth, int $breadth, bool $test = false): string {
         $default = self::generateDefaultStructure($keyword, $depth, $breadth);
-        $prompt = $this->promptProvider->structure($keyword, $depth, $breadth, $context);
-        //error_log("Pront Structure $prompt");
+        $prompt = $this->promptProvider->structure($keyword, $depth, $breadth);
         return $this->generateTexte($keyword, $test, $default, $prompt, true);
     }
 
-    public function generateImage(string $title, string $keyword, PromptContext $context, bool $test = false): string {
-        $default_image_url = $this->getDefaultImage();
-        $prompt = $this->promptProvider->image($keyword, $title, $context);
-        //error_log("Image Structure $prompt");
+    public function generateImage(string $title, string $keyword, bool $test = false): string {
+        $default_image_url = self::getDefaultImage();
+        $prompt = $this->promptProvider->image($keyword, $title);
+
         return $this->generate(
             fn($p) => $this->fetchImageFromPosteria($title, $this->callApi($p), 15),
             $prompt,
@@ -150,36 +142,32 @@ class CSB_Generator implements GeneratorInterface {
         );
     }
 
-    public function generateIntro(string $title, string $structure, PromptContext $context, bool $test): string {
-        $prompt = $this->promptProvider->intro($title, $structure, $context);
+    public function generateIntro(string $title, string $structure, bool $test): string {
+        $prompt = $this->promptProvider->intro($title, $structure);
         $default = self::getDefaultIntro($title);
-        //error_log("Pront Intro $prompt");
         return $this->generateTexte($title, $test, $default, $prompt);
     }
 
-    public function generateDevelopment(string $title, string $structure, PromptContext $context, bool $test): string {
-        $prompt = $this->promptProvider->development($title, $structure, $context);
+    public function generateDevelopment(string $title, string $structure, bool $test): string {
+        $prompt = $this->promptProvider->development($title, $structure);
         $default = self::getDefaultDevelopment($title);
-        //error_log("Pront Development $prompt");
         return $this->generateTexte($title, $test, $default, $prompt);
     }
 
-    public function generateConclusion(string $title, string $structure, PromptContext $context, bool $test): string {
-        $prompt = $this->promptProvider->conclusion($title, $structure, $context);
+    
+    public function generateConclusion(string $title, string $structure, bool $test): string {
+        $prompt = $this->promptProvider->conclusion($title, $structure);
         $default = self::getDefaultConclusion($title);
-        error_log("Pront Conclution $prompt");
         return $this->generateTexte($title, $test, $default, $prompt);
     }
 
-    public function generateFullContent(string $keyword, string $title, string $structure, array $subparts, PromptContext $context, bool $test = false): string {
-        $prompt = $this->promptProvider->fullArticle($keyword, $title, $structure, $subparts, $context);
-        error_log("Pront Full $prompt");
-        $default = self::getDefaultIntro($title)
-                . self::getDefaultDevelopment($title)
-                . self::getDefaultConclusion($title);
-        return $this->generateTexte($title, $test, $default, $prompt, true);
-    }
 
+    public function generateFullContent(string $keyword,string $title, string $structure, array $subparts, bool $test = false): string {
+        $prompt = $this->promptProvider->fullArticle($keyword, $title, $structure, $subparts);
+        $default = self::getDefaultIntro($title).self::getDefaultDevelopment($title).self::getDefaultConclusion($title);
+        $html = $this->generateTexte($title, $test, $default, $prompt, true);
+        return $html;
+    }
 
 
     private function generateTexte(string $title, bool $test, string $defaultContent, string $prompt, bool $preserveFormatting = false): string {

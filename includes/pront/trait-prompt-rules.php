@@ -54,15 +54,16 @@ trait PromptRulesTrait
     ];
 
     protected array $structureRules = [
-        "- EXACTEMENT {depth} niveaux de profondeur hiérarchique.",
-        "- Chaque nœud NON-FEUILLE doit contenir EXACTEMENT {breadth} sous-éléments.",
-        "- Chaque nœud FEUILLE se trouve uniquement au niveau {depth}.",
-        "- La structure doit former un arbre complet et équilibré : pas de niveaux manquants.",
-        "- Format en texte brut avec indentation de 4 espaces par niveau.",
-        "- Chaque ligne commence par « - » suivi du titre du nœud.",
-        "- Les titres sont en français, uniques, explicites, sans termes génériques, et avec Majuscule À Chaque Mot.",
-        "- AUCUN commentaire, AUCUNE balise, AUCUNE ligne vide.",
+        "- Arbre équilibré de {depth} niveaux.",
+        "- Chaque nœud non-feuille a {breadth} sous-nœuds.",
+        "- Tous les nœuds de niveau 4 sont des feuilles",
+        "- Pas de commentaires, balises ou lignes vides.",
+        "- Format texte brut avec indentation de 4 espaces.",
+        "- Chaque ligne commence par « - » suivi d’un titre en français, clair, unique, avec Majuscule À Chaque Mot.",
     ];
+
+        
+
 
     protected array $imageRules = [
         "- Donne une description visuelle concise (moins de 12 mots).",

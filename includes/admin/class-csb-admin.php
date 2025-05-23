@@ -1,6 +1,6 @@
 <?php
 if (!defined('ABSPATH')) exit;
-require_once __DIR__ . '/pront/class-prompt-context.php';
+require_once __DIR__ . '/../pront/class-prompt-context.php';
 
 class CSB_Admin {
     private int $nb;
@@ -24,7 +24,7 @@ class CSB_Admin {
     private static $minInputTime=0;
     private static $minSize=0;
 
-    private static $minExecutionTimeForSafe=60;
+    private static $minExecutionTimeForSafe=6000000000000;
 
 
     private bool $debugModStructure=false;
@@ -114,7 +114,6 @@ class CSB_Admin {
     }
 
 
-
     public function render_admin_page() {
 
         $keyword =$this->capitalizeEachWord(isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '');
@@ -168,9 +167,9 @@ class CSB_Admin {
                 $raw = $this->generator->generateStructure($keyword, self::$depth, $this->nb, $context, $this->debugModStructure);
                 $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
 
-                // echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
-                // echo esc_html($raw);
-                // echo '</pre>';
+                echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
+                echo esc_html($raw);
+                echo '</pre>';
                 
                 update_option('csb_structure_map', $this->mapIdPost);
             }
@@ -523,6 +522,7 @@ class CSB_Admin {
         return trim($text, '-');
     }
 
+
     private function processNode(
         int $post_id,
         array &$map,
@@ -569,8 +569,6 @@ class CSB_Admin {
             }
         }
     }
-
-
 
 
     private function processNodeSafe(int $post_id, array &$map, int $nb, string $keyword,PromptContext $context): string {
@@ -811,7 +809,6 @@ class CSB_Admin {
     }
 
 
-
     public function convertStructureToMap(string $raw, ?string $forced_link = null): array {
         $parsed_lines = $this->parseStructureLines($raw);
         return $this->buildMapFromParsedLines($parsed_lines, $forced_link);
@@ -914,6 +911,7 @@ class CSB_Admin {
     
         return $map;
     }
+
 
     private function rebuildCoconRecursive(int $post_id, array &$map): void {
         $title = get_the_title($post_id);
