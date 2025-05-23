@@ -28,8 +28,8 @@ class CSB_Admin {
 
 
     private bool $debugModStructure=false;
-    private bool $debugModContent=false;
-    private bool $debugModImage=false;
+    private bool $debugModContent=true;
+    private bool $debugModImage=true;
 
 
     public function __construct(GeneratorInterface $generator) {
@@ -168,9 +168,9 @@ class CSB_Admin {
                 $raw = $this->generator->generateStructure($keyword, self::$depth, $this->nb, $context, $this->debugModStructure);
                 $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
 
-                // echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
-                // echo esc_html($raw);
-                // echo '</pre>';
+                echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
+                echo esc_html($raw);
+                echo '</pre>';
                 
                 update_option('csb_structure_map', $this->mapIdPost);
             }
@@ -498,7 +498,7 @@ class CSB_Admin {
 
         foreach ($map as $id => $node) {
             if ($node['parent_id'] === $current_id) {
-                $out .= str_repeat('    ', $indent) . "- {$node['title']} [ID: {$id}]\n";
+                $out .= str_repeat('    ', $indent) . "- {$node['title']}\n";
 
                 if (!empty($node['children_ids'])) {
                     $out .= $this->toBulletArchitecture($map, $id, $indent + 1);
