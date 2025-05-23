@@ -10,6 +10,8 @@ class CSB_Admin {
     private $publisher;
     private $linker; 
     private static int $depth=4;
+    private string $jsFile;
+    private string $cssFile;
     //private int $breadth;
 
 
@@ -32,11 +34,13 @@ class CSB_Admin {
     private bool $debugModImage=true;
 
 
-    public function __construct(GeneratorInterface $generator) {
+    public function __construct(GeneratorInterface $generator,string $jsFile,string $cssFile) {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('wp_ajax_csb_process_node', [$this, 'ajaxProcessNode']); 
         $this->nb=3;
+        $this->jsFile=$jsFile;
+        $this->cssFile=$cssFile;
 
         //echo "DOG";
         // add_action('admin_init', [$this, 'maybe_delete_author_posts']);
@@ -456,18 +460,18 @@ class CSB_Admin {
     public function enqueue_admin_assets() {
         wp_enqueue_script(
             'csb-admin',
-            plugin_dir_url(__DIR__) . 'assets/js/admin.js',
+            plugin_dir_url(__DIR__) . $this->jsFile,
             ['jquery'],
-            filemtime(plugin_dir_path(__DIR__) . 'assets/js/admin.js'),
+            filemtime(plugin_dir_path(__DIR__) . $this->jsFile),
             true
         );
 
         // CSS
         wp_enqueue_style(
             'csb-admin-style',
-            plugin_dir_url(__DIR__) . 'assets/css/csb-front.css',
+            plugin_dir_url(__DIR__) . $this->cssFile,
             [],
-            filemtime(plugin_dir_path(__DIR__) . 'assets/css/csb-front.css')
+            filemtime(plugin_dir_path(__DIR__) . $this->cssFile)
         );
 
         wp_localize_script('csb-admin', 'csbData', [
