@@ -73,7 +73,7 @@ class CSB_Admin {
             $errors[] = "⏱️ `max_execution_time` est trop bas : $maxExecutionTime (minimum requis : " . self::$minExecutionTime . ")";
         }
 
-        if (($maxInputTime < self::$minInputTime)&&($maxExecutionTime>0)) {
+        if (($maxInputTime < self::$minInputTime)&&($maxInputTime>0)) {
             $errors[] = "📥 `max_input_time` est trop bas : $maxInputTime (minimum requis : " . self::$minInputTime . ")";
         }
 
