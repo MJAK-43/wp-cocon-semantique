@@ -181,7 +181,8 @@ class CSB_Generator implements GeneratorInterface {
     }
 
     public function generateFullContent(string $keyword, string $title, string $structure, array $subparts, PromptContext $context, bool $test = false): string {
-        $prompt = $this->promptProvider->fullArticle($keyword, $title, $structure, $subparts, $context);
+        $prompt = $this->promptProvider->fullArticle($keyword, $title,$subparts, $context);
+        error_log("$prompt");
         $default = self::getDefaultIntro($title)
                 . self::getDefaultDevelopment($title)
                 . self::getDefaultConclusion($title);

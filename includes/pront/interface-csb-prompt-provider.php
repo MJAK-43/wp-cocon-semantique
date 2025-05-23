@@ -14,5 +14,5 @@ interface PromptProviderInterface
     public function conclusion(string $title, string $structure, PromptContext $context): string;
     public function image(string $keyword, string $title, PromptContext $context): string;
     public function structure(string $keyword, int $depth, int $breadth, PromptContext $context): string;
-    public function fullArticle(string $keyword, string $title, string $structure, array $subparts, PromptContext $context): string;
+    public function fullArticle(string $keyword, string $title,array $subparts, PromptContext $context): string;
 }

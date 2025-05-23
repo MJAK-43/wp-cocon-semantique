@@ -4,24 +4,17 @@ if (!defined('ABSPATH')) exit;
 trait PromptRulesTrait
 {
     protected array $generalRulesContents = [
-        "- N'utilise jamais de blocs de code Markdown (comme ```html ou ```), ni aucun format similaire.",
-        "- Génère uniquement du HTML pur. Aucune balise <div>, aucun commentaire, aucun Markdown.",
-        "- Utilise uniquement les balises HTML suivantes : <p>, <h3>, <strong>, <u>, <ul>, <li>, <a>.",
-        "- Mets en <strong> les mots-clés importants pour le SEO.",
-        "- Mets en <u> les idées clés qui renforcent l’intention SEO ou la stratégie de conversion.",
-        "- Adopte un style fluide, naturel, engageant et professionnel, avec un vocabulaire riche et adapté à la lecture web.",
+        "- HTML pur compatible WordPress (pas de <div>, commentaires ou Markdown).",
+        "- Balises autorisées : <p>, <h3>, <strong>, <u>, <ul>, <li>, <a>.",
+        //"- Style fluide, professionnel, engageant, adapté aux courtiers en assurance.",
     ];
 
+
     protected array $fullRules = [
-        "- L'article doit contenir une introduction, EXACTEMENT N parties, et une conclusion.",
-        "- Ne commence jamais l’introduction par un titre comme « Introduction » (même sans balise HTML).",
-        "- Ne commence jamais la conclusion par un titre comme « Conclusion » (même sans balise HTML).",
-        "- Tu dois générer EXACTEMENT N parties. Ne regroupe pas, ne divise pas, ne rajoute pas d'autres sections.",
-        "- Tu dois utiliser **exactement** les titres fournis pour chaque partie. Ne les reformule pas.",
-        "- Si un lien est associé à une partie, ajoute **à la fin de cette partie** un paragraphe HTML au format strict suivant :",
-        "  <p>Pour en savoir plus, découvrez notre article sur <a href=\"URL\">Titre</a></p>",
-        "- Ne modifie ni le texte du lien ni sa structure HTML.",
-        "- N’ajoute jamais de lien HTML dans l’introduction ni dans la conclusion.",
+        "- L'article commence par une introduction (sans titre), suivie de {n} parties (titres en <h3>), puis d’une conclusion (sans titre).",
+        "- Utilise exactement les titres fournis, sans les reformuler.",
+        "- Aucun lien dans l’introduction ni dans la conclusion.",
+        //"- Chaque partie contient 1 ou 2 paragraphes <p> (ajoute <ul><li> si utile).",
     ];
 
 
@@ -34,6 +27,7 @@ trait PromptRulesTrait
         "- Ne commence jamais par « Cet article va parler de… ».",
     ];
 
+
     protected array $developmentRules = [
         "- Ne pas utiliser de <div>.",
         "- Ajoute un titre unique en <h3> : exactement celui fourni, sans reformulation.",
@@ -43,6 +37,7 @@ trait PromptRulesTrait
         "- Structure uniquement avec <h3>, <p> et éventuellement <ul><li>.",
     ];
 
+    
     protected array $conclusionRules = [
         "- Résume en 2 paragraphes maximum.",
         "- Ne commence jamais par un titre comme « Conclusion » (même sans balise HTML).",
@@ -76,25 +71,7 @@ trait PromptRulesTrait
     protected string $roleStructure = "un expert SEO spécialisé en cocon sémantique.";
     protected string $roleImage = "un expert en iconographie et banques d’images comme Freepik.";
 
-    protected string $structureExample = <<<TXT
-        Exemple pour profondeur = 4 et largeur = 2 :
-
-        - Sujet Principal
-            - Thème A
-                - Sous-thème A1
-                    - Point A1a
-                    - Point A1b
-                - Sous-thème A2
-                    - Point A2a
-                    - Point A2b
-            - Thème B
-                - Sous-thème B1
-                    - Point B1a
-                    - Point B1b
-                - Sous-thème B2
-                    - Point B2a
-                    - Point B2b
-    TXT;
+    protected string $structureExample = "";
 
     protected string $introExemple = "";
     protected string $developmentExemple = "";
@@ -139,12 +116,29 @@ trait PromptRulesTrait
         return "Consignes :\n" . implode("\n", $this->imageRules) . "\n\n" . $this->imageExemple;
     }
 
-    protected function getRuleFull(string $keyword, int $nbParties): string {
+    protected function getRuleFull(string $keyword, array $subparts): string {
+        $nbParties = count($subparts);
+        
+
+        // Génère les règles statiques
         $rules = array_map(
-            fn($line) => str_replace(['{keyword}', 'N'], [$keyword, $nbParties], $line),
-            array_merge($this->fullRules, $this->generalRulesContents)
+            fn($line) => str_replace('{n}', $nbParties, $line),
+            $this->fullRules
         );
+
+        // Ajoute les règles dynamiques pour chaque lien
+        foreach ($subparts as $titre => $url) {
+            if (!empty($url)) {
+                $rules[] = "- Pour la partie « $titre », tu dois intégrer le lien suivant de façon naturelle et pertinente dans le texte : $url";
+                $rules[] = "- Le lien HTML doit respecter strictement ce format : <a href=\"$url\">$titre</a>";
+            }
+        }
+
+        // Ajoute les règles générales
+        $rules = array_merge($rules, $this->generalRulesContents);
 
         return "Consignes générales :\n" . implode("\n", $rules);
     }
+
+
 }

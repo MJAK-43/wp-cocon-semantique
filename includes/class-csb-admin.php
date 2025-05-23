@@ -28,7 +28,7 @@ class CSB_Admin {
 
 
     private bool $debugModStructure=false;
-    private bool $debugModContent=true;
+    private bool $debugModContent=false;
     private bool $debugModImage=true;
 
 
@@ -47,26 +47,10 @@ class CSB_Admin {
     }
 
 
-    private static function convertBytes($size) {
-        $unit = strtoupper(substr($size, -1));
-        $value = (int) $size;
-
-        switch($unit) {
-            case 'G': return $value * 1024 * 1024 * 1024;
-            case 'M': return $value * 1024 * 1024;
-            case 'K': return $value * 1024;
-            default:  return (int) $size;
-        }
-    }
-
-
     private static function checkServerRequirements(): array {
         $errors = [];
-
         $maxExecutionTime = (int) ini_get('max_execution_time');
         $maxInputTime = (int) ini_get('max_input_time');
-        $postMaxSizeRaw = ini_get('post_max_size');
-        $postMaxSize = self::convertBytes($postMaxSizeRaw);
 
         // Comparaisons
         if (($maxExecutionTime < self::$minExecutionTime)&&($maxExecutionTime>0)) {
@@ -168,9 +152,9 @@ class CSB_Admin {
                 $raw = $this->generator->generateStructure($keyword, self::$depth, $this->nb, $context, $this->debugModStructure);
                 $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
 
-                echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
-                echo esc_html($raw);
-                echo '</pre>';
+                // echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
+                // echo esc_html($raw);
+                // echo '</pre>';
                 
                 update_option('csb_structure_map', $this->mapIdPost);
             }

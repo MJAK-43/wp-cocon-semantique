@@ -43,7 +43,7 @@ class CSB_CustomPrompts implements PromptProviderInterface
             . $this->getRuleConclusion();
     }
 
-    public function fullArticle(string $keyword, string $title, string $structure, array $subparts, PromptContext $context): string {
+    public function fullArticle(string $keyword, string $title,array $subparts, PromptContext $context): string {
         $parties_formatees = '';
         $index = 1;
         foreach ($subparts as $titre => $lien) {
@@ -58,11 +58,9 @@ class CSB_CustomPrompts implements PromptProviderInterface
         return "Tu es {$this->roleStructure}\n\n"
             . $context->toString()
             . "Titre de l’article : « $title »\n\n"
-            . "Voici la structure du cocon sémantique auquel appartient cet article :\n\n"
-            . "$structure\n\n"
             . "Parties à respecter :\n"
             . "$parties_formatees\n\n"
-            . $this->getRuleFull($keyword, count($subparts));
+            . $this->getRuleFull($keyword, $subparts);
     }
     
     public function image(string $keyword, string $title, PromptContext $context): string {
