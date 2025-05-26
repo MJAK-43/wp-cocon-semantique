@@ -16,13 +16,26 @@ jQuery(document).ready(function ($) {
 
         button.prop('disabled', true).text('⏳ Génération...');
 
-        // ✅ Serialize tout le formulaire actif (avec structure[...])
+        // // ✅ Serialize tout le formulaire actif (avec structure[...])
+        // const formData = $(button).closest('form').serializeArray();
+
+        // // Ajout des champs AJAX obligatoires
+        // formData.push({ name: 'action', value: 'csb_process_node' });
+        // formData.push({ name: 'nonce', value: csbData.nonce });
+        // formData.push({ name: 'post_id', value: postId });
+
+
         const formData = $(button).closest('form').serializeArray();
 
-        // Ajout des champs AJAX obligatoires
+        // 🔧 Ajouter manuellement les champs globaux
+        formData.push({ name: 'csb_product', value: $('#csb_product').val() });
+        formData.push({ name: 'csb_demographic', value: $('#csb_demographic').val() });
+
+        // ✅ Ajouter les autres champs AJAX
         formData.push({ name: 'action', value: 'csb_process_node' });
         formData.push({ name: 'nonce', value: csbData.nonce });
         formData.push({ name: 'post_id', value: postId });
+
 
         $.post(csbData.ajaxurl, formData, function (response) {
             const duration = ((Date.now() - startTime) / 1000).toFixed(1);

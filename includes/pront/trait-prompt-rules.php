@@ -72,16 +72,10 @@ trait PromptRulesTrait
     protected string $roleImage = "un expert en iconographie et banques d’images comme Freepik.";
 
     protected string $structureExample = "";
-
     protected string $introExemple = "";
     protected string $developmentExemple = "";
     protected string $conclusionExemple = "";
-    protected string $imageExemple = <<<TXT
-        Exemples :
-        - Femme concentrée écrivant sur un ordinateur portable dans un café
-        - Carte mentale colorée sur tableau blanc avec post-it
-        - Jeune homme souriant montrant écran de téléphone
-    TXT;
+    protected string $imageExemple = "";
 
     protected function getRuleIntro(): string {
         return "Consignes :\n" . implode("\n", array_merge($this->introRules, $this->generalRulesContents)) . "\n\n" . $this->introExemple;

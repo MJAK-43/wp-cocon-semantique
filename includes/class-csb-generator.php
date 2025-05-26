@@ -147,6 +147,7 @@ class CSB_Generator implements GeneratorInterface {
     public function generateStructure(string $keyword, int $depth, int $breadth, PromptContext $context, bool $test = false): string {
         $default = self::generateDefaultStructure($keyword, $depth, $breadth);
         $prompt = $this->promptProvider->structure($keyword, $depth, $breadth, $context);
+        error_log($prompt);
         return $this->generateTexte($keyword, $test, $default, $prompt, true);
     }
 

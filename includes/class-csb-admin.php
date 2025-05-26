@@ -85,6 +85,7 @@ class CSB_Admin {
 
     private function capitalizeEachWord($text) {
         $text = strtolower($text);
+        $text = preg_replace('#[/\\\\]+#', ' ', $text);
         $text = ucwords($text);
         return $text;
     }
@@ -149,9 +150,10 @@ class CSB_Admin {
                 $product = isset($_POST['csb_product']) ? sanitize_text_field($_POST['csb_product']) : null;
                 $demographic = isset($_POST['csb_demographic']) ? sanitize_text_field($_POST['csb_demographic']) : null;
 
-                $context_data = ['keyword' => $keyword];
-                if (!empty($product)) $context_data['product'] = $product;
-                if (!empty($demographic)) $context_data['demographic'] = $demographic;
+                $context_data = [];
+                if (!empty($product)) $context_data['produit'] = $product;
+                if (!empty($demographic)) $context_data['public'] = $demographic;
+                error_log(print_r($context));
                 $context = new PromptContext($context_data);
                 $raw = $this->generator->generateStructure($keyword, self::$depth, $this->nb, $context, $this->debugModStructure);
                 $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
@@ -735,6 +737,7 @@ class CSB_Admin {
             if (preg_match('/^(\s*)-\s*(.+)$/', $line, $matches)) {
                 $indent = strlen($matches[1]);
                 $title = trim($matches[2]);
+                $title = $this->capitalizeEachWord($title);
                 $level = intval($indent / 4);
                 $parsed[] = [
                     'index' => $index,
@@ -821,7 +824,7 @@ class CSB_Admin {
                     // }
                 }
 
-                $map[$post_id]['title'] = $new_title;
+                $map[$post_id]['title'] = $this->capitalizeEachWord($new_title);
             }
         }
     }
