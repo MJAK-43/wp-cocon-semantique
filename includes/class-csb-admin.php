@@ -153,14 +153,26 @@ class CSB_Admin {
                 $context_data = [];
                 if (!empty($product)) $context_data['produit'] = $product;
                 if (!empty($demographic)) $context_data['public'] = $demographic;
-                error_log(print_r($context));
+                //error_log(print_r($context));
                 $context = new PromptContext($context_data);
-                $raw = $this->generator->generateStructure($keyword, self::$depth, $this->nb, $context, $this->debugModStructure);
-                $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
+                $this->processStructure(
+                    $this->mapIdPost,
+                    $this->nb,
+                    $keyword,
+                    $context,
+                    $use_existing_root,
+                    $existing_root_url
+                );
+
+                foreach ($this->mapIdPost as $post_id => $node) {
+                    $this->processImage($post_id, $this->mapIdPost, $keyword, $context);
+                }
+                
 
                 // echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
                 // echo esc_html($raw);
                 // echo '</pre>';
+                
                 
                 update_option('csb_structure_map', $this->mapIdPost);
             }
@@ -513,6 +525,29 @@ class CSB_Admin {
         return trim($text, '-');
     }
 
+    private function processStructure(array &$map,$breadth,string $keyword,PromptContext $context,bool $use_existing_root=false,string $existing_root_url=null){
+        $raw = $this->generator->generateStructure($keyword, self::$depth, $this->nb, $context, $this->debugModStructure);
+        $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
+    }
+
+    private function processImage(int $post_id, array &$map,string $keyword,PromptContext $context): string {
+        $title = $map[$post_id]['title'];
+        if (!$this->debugModImage) {
+            $image_url = $this->generator->generateImage($title, $keyword, $context, $this->debugModImage);
+            $this->publisher->setFeaturedImage($post_id, $image_url);
+        }
+    }
+
+    private function processAllImage(int $post_id, array &$map,string $keyword,PromptContext $context): string {
+        foreach ($map as $id => $node) {
+            $this->processImage($post_id,$map,$keyword,$context);
+        }
+    
+    }
+
+
+
+
     private function processNode(
         int $post_id,
         array &$map,
@@ -543,11 +578,7 @@ class CSB_Admin {
 
                 // Génération de l’image
                 $title = $map[$post_id]['title'];
-                if (!$this->debugModImage) {
-                    $image_url = $this->generator->generateImage($title, $keyword, $context, $this->debugModImage);
-                    $this->publisher->setFeaturedImage($post_id, $image_url);
-                }
-
+    
                 // Ajout des liens internes
                 $links = $this->linker->generateStructuredLinks($map, $post_id);
                 $content = $result . $links;
@@ -602,7 +633,7 @@ class CSB_Admin {
         return $intro . $developments_html . $conclusion . '<!-- Mode sécurisé -->';
     }
 
-
+    
     private function processNodeFast(int $post_id, array &$map, int $nb, string $keyword,PromptContext $context): string {        
         $node = $map[$post_id];
         $title = $node['title'];
@@ -750,6 +781,7 @@ class CSB_Admin {
 
         return $parsed;
     }
+    
 
 
     private function buildMapFromParsedLines(array $parsed_lines, ?string $forced_link = null): array {
@@ -797,7 +829,9 @@ class CSB_Admin {
             if ($parent_id !== null && isset($map[$parent_id])) {
                 $map[$parent_id]['children_ids'][] = $post_id;
             }
+            
         }
+
         return $map;
     }
 
