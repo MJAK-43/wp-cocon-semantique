@@ -11,7 +11,7 @@ require_once __DIR__ . '/pront/class-prompt-context.php';
 interface GeneratorInterface
 {
 
-    public function generateImage(string $title, string $keyword, PromptContext $context,bool $test = false,string $getDefaultImage): string ;
+    public function generateImage(string $title, string $prompt, PromptContext $context, string $defaultImage, bool $test = false): string;
     public function generateTexte(string $title, bool $test, 
     string $defaultContent, string $prompt, bool $preserveFormatting = false): string;
     

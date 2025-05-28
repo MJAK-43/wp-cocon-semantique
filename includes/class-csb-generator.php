@@ -11,14 +11,13 @@ class CSB_Generator implements GeneratorInterface {
     //private $image_description;
     //private PromptProviderInterface $promptProvider;
     private $tokens_used = 0;
-    private $defaultImage;
+    //private $defaultImage;
 
     
     public function __construct($api_key = null) {
-        $this->promptProvider = $promptProvider;
         $this->api_key = $api_key ?: get_option('csb_openai_api_key');
         $this->model = get_option('csb_model', 'gpt-3.5-turbo');
-        $this->defaultImage=$defaultImage;
+        //$this->defaultImage=$defaultImage;
         $this->temperature = floatval(get_option('csb_temperature', 0.7));
         $this->style = get_option('csb_writing_style', 'SEO');
         
@@ -106,17 +105,15 @@ class CSB_Generator implements GeneratorInterface {
     }
 
 
-    public function generateImage(string $title, string $keyword, PromptContext $context,bool $test = false,string $getDefaultImage): string {
-        $default_image_url = $this->getDefaultImage();
-        $prompt = $this->promptProvider->image($keyword, $title, $context);
-
+    public function generateImage(string $title, string $imageDescription, PromptContext $context, string $defaultImage, bool $test = false): string {
         return $this->generate(
-            fn($p) => $this->fetchImageFromPosteria($title, $this->callApi($p), 15),
-            $prompt,
+            fn($desc) => $this->fetchImageFromPosteria($title, $desc),
+            $imageDescription,
             $test,
-            $default_image_url
+            $defaultImage
         );
     }
+
 
 
 

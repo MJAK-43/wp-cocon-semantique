@@ -56,7 +56,7 @@ function csb_initialize_plugin() {
     $cssPath = 'assets/css/csb-front.css';
 
     // Instanciation avec les chemins
-    new CSB_Admin($generator,$prompter,$jsPath, $cssPath);
+    new CSB_Admin($generator,$prompter,$jsPath, $cssPath,$defaultImage);
     new CSB_Settings();
 }
 

@@ -13,6 +13,7 @@ class CSB_Admin {
     private static int $depth=4;
     private string $jsFile;
     private string $cssFile;
+    private string $defaultImage;
     //private int $breadth;
 
 
@@ -35,7 +36,7 @@ class CSB_Admin {
     private bool $debugModImage=false;
 
 
-    public function __construct(GeneratorInterface $generator,PromptProviderInterface $prompter,string $jsFile,string $cssFile) {
+    public function __construct(GeneratorInterface $generator,PromptProviderInterface $prompter,string $jsFile,string $cssFile,string $defaultImage) {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('wp_ajax_csb_process_node', [$this, 'ajaxProcessNode']); 
@@ -43,6 +44,7 @@ class CSB_Admin {
         $this->jsFile=$jsFile;
         $this->cssFile=$cssFile;
         $this->prompter=$prompter;
+        $this->defaultImage=$defaultImage;
 
         //echo "DOG";
         // add_action('admin_init', [$this, 'maybe_delete_author_posts']);
@@ -167,13 +169,11 @@ class CSB_Admin {
 
 
                 foreach ($this->mapIdPost as $post_id => $node) {
-
-                    echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
-                    print_r($this->processImageDescription($post_id, $this->mapIdPost, $keyword, $context));
-                    echo '</pre>';
+                    $this->mapIdPost[$post_id]["imageDescription"]=$this->processImageDescription($post_id, $this->mapIdPost, $keyword, $context);
                     //$this->processImageDescription($post_id, $this->mapIdPost, $keyword, $context);
                 }
                 
+
 
                 // echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
                 // echo esc_html($raw);
@@ -341,31 +341,33 @@ class CSB_Admin {
         echo '<ul class="csb-structure-list level-' . $level . '" style="--level: ' . $level . ';">';
 
         foreach ($this->mapIdPost as $id => $node) {
-            $isChild = ($node['parent_id'] === $parent_id);
+            if ($node['parent_id'] !== $parent_id) continue;
+
             $isLeaf = empty($node['children_ids']);
             $isVirtual = $id < 0;
+            $node_prefix = $prefix . "[" . $id . "]";
+            $readonly = $generation ? '' : 'readonly';
 
-            if ($isChild && !$isLeaf && !$isVirtual) {
-                $node_prefix = $prefix . "[" . strval($id) . "]";
+            echo '<li class="csb-node-item">';
+            echo '<div class="csb-node-controls">';
+            echo '<span class="csb-node-indent">-</span>';
 
-                echo '<li class="csb-node-item">';
-                echo '<div class="csb-node-controls">';
-                echo '<span class="csb-node-indent">-</span>';
-                
-                $readonly = $generation ? '' : 'readonly';
-                echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" ' . $readonly . ' required />';
+            echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" ' . $readonly . ' required />';
 
-                if ($generation) {
-                    echo '<button type="button" class="button csb-generate-node" data-post-id="' . esc_attr($id) . '">⚙️ Générer </button>';
-                }
-
-                echo '<span class="csb-node-status" data-post-id="' . esc_attr($id) . '"></span>';
-                echo '</div>';
-
-                // Récursion sur les enfants
-                $this->renderStructureFields($id, $prefix, $level + 1, true);
-                echo '</li>';
+            if ($isLeaf) {
+                //echo ' <em>(feuille)</em>';
             }
+
+            if ($generation) {
+                echo '<button type="button" class="button csb-generate-node" data-post-id="' . esc_attr($id) . '">⚙️ Générer </button>';
+            }
+
+            echo '<span class="csb-node-status" data-post-id="' . esc_attr($id) . '"></span>';
+            echo '</div>';
+
+            // Récursion
+            $this->renderStructureFields($id, $prefix, $level + 1, $generation);
+            echo '</li>';
         }
 
         echo '</ul>';
@@ -477,7 +479,6 @@ class CSB_Admin {
     }
 
 
-
     public function enqueue_admin_assets() {
         wp_enqueue_script(
             'csb-admin',
@@ -532,32 +533,32 @@ class CSB_Admin {
         return trim($text, '-');
     }
 
+
     private function processStructure(array &$map,string $keyword,PromptContext $context,bool $use_existing_root=false,string $existing_root_url=null){
         $prompt=$this->prompter->structure($keyword,3,3,$context);
         
         $raw = $this->generator->generateTexte($keyword, $this->debugModContent, "", $prompt, true); 
-        error_log($raw);
+        //error_log($raw);
        $this->mapIdPost = $this->convertStructureToMap($raw, $keyword, $use_existing_root ? $existing_root_url : null);
-        print_r($this->mapIdPost);
+        //print_r($this->mapIdPost);
     }
+
 
     private function processImageDescription(int $post_id, array &$map, string $keyword, PromptContext $context): string {
-    if ($this->debugModImage) 
-        return ''; 
-    else{
-        $title = $map[$post_id]['title'];
+        if ($this->debugModImage) 
+            return ''; 
+        else{
+            $title = $map[$post_id]['title'];
 
-        // 1. Générer le prompt d'image
-        $prompt = $this->prompter->image($keyword, $title, $context);
+            // 1. Générer le prompt d'image
+            $prompt = $this->prompter->image($keyword, $title, $context);
 
-        // 2. Générer la description via GPT
-        $description = $this->generator->generateTexte($title, false, '', $prompt, $this->debugModContent);
+            // 2. Générer la description via GPT
+            $description = $this->generator->generateTexte($title, false, '', $prompt, $this->debugModContent);
 
-        return $description ?: '';
+            return $description ?: '';
+        }
     }
-
-    
-}
 
 
 
@@ -592,7 +593,13 @@ class CSB_Admin {
                 }
 
                 // Génération de l’image
+                $imageDescription = $map[$post_id]['imageDescription'] ?? '';
                 $title = $map[$post_id]['title'];
+                if (!$this->debugModImage) {
+                    $image_url = $this->generator->generateImage($title, $imageDescription, $context, $this->defaultImage, $this->debugModImage);
+                    $this->publisher->setFeaturedImage($post_id, $image_url);
+                }
+                
     
                 // Ajout des liens internes
                 $links = $this->linker->generateStructuredLinks($map, $post_id);
@@ -601,7 +608,7 @@ class CSB_Admin {
                 $this->publisher->fillAndPublishContent($post_id, $content);
 
             } catch (\Throwable $e) {
-                //error_log("Erreur dans processNode pour post_id $post_id : " . $e->getMessage());
+                error_log("Erreur dans processNode pour post_id $post_id : " . $e->getMessage());
             }
         }
     }
@@ -813,20 +820,26 @@ class CSB_Admin {
     public function convertStructureToMap(string $raw, string $keyword, ?string $forced_link = null): array {
         $parsed_lines = $this->parseStructureLines($raw);
 
-        // Injecte le mot-clé principal comme racine
-        array_walk($parsed_lines, function (&$item) {
-            $item['level'] += 1; // Décale les niveaux
-        });
+        // Vérifie si la racine est déjà dans les lignes (niveau 0 avec le bon titre)
+        $hasRoot = !empty($parsed_lines) && $parsed_lines[0]['level'] === 0 && strtolower(trim($parsed_lines[0]['title'])) === strtolower(trim($keyword));
 
-        array_unshift($parsed_lines, [
-            'index' => -1,
-            'level' => 0,
-            'title' => $keyword,
-            'raw_indent' => 0
-        ]);
+        // Si pas de racine explicite, on l’ajoute manuellement
+        if (!$hasRoot) {
+            array_walk($parsed_lines, function (&$item) {
+                $item['level'] += 1; // Décale les niveaux
+            });
+
+            array_unshift($parsed_lines, [
+                'index' => -1,
+                'level' => 0,
+                'title' => $keyword,
+                'raw_indent' => 0
+            ]);
+        }
 
         return $this->buildMapFromParsedLines($parsed_lines, $forced_link);
     }
+
 
 
 

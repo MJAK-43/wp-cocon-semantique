@@ -29,7 +29,7 @@ class PromptContext
     public function toString(): string {
         if (empty($this->context)) return "";
 
-        $lines = [$introDuctionOfContext];
+        $lines = [self::$introDuctionOfContext];
         foreach ($this->context as $key => $value) {
             $keyLabel = ucfirst(str_replace('_', ' ', $key));
             $lines[] = "- {$keyLabel} : « {$value} »";
