@@ -666,11 +666,7 @@ class CSB_Admin {
 
         if ($isLeaf) {
             // Feuille réelle : récupérer les titres des enfants virtuels (niveau 3)
-            foreach ($node['children_ids'] as $child_id) {
-                if (isset($map[$child_id]) && $map[$child_id]['post_id'] < 0) {
-                    $subparts[$map[$child_id]['title']] = null;
-                }
-            }
+            $prompt= $this->prompter->fullArticleLeaf($keyword,$title,$context);
         } 
         else {
             // Article non-feuille : récupérer les titres + liens des enfants réels
@@ -680,10 +676,10 @@ class CSB_Admin {
                     $subparts[$child['title']] = $child['link'];
                 }
             }
+            $prompt= $this->prompter->fullArticle($keyword,$title,$subparts,$context);
         }
 
         // Génération du contenu HTML 
-        $prompt= $this->prompter->fullArticle($keyword,$title,$subparts,$context);
         $content = $this->generator->generateTexte($title,$this->debugModContent,"",$prompt);
         return '<article class="article-csb">' . $content . '<!-- Mode rapide -->' . '</article>';
 
@@ -816,7 +812,6 @@ class CSB_Admin {
     }
 
 
-
     public function convertStructureToMap(string $raw, string $keyword, ?string $forced_link = null): array {
         $parsed_lines = $this->parseStructureLines($raw);
 
@@ -839,7 +834,6 @@ class CSB_Admin {
 
         return $this->buildMapFromParsedLines($parsed_lines, $forced_link);
     }
-
 
 
 
@@ -940,6 +934,7 @@ class CSB_Admin {
         return $map;
     }
 
+    
     private function rebuildCoconRecursive(int $post_id, array &$map): void {
         $title = get_the_title($post_id);
         $parent_id = get_post_meta($post_id, '_csb_parent_id', true);
