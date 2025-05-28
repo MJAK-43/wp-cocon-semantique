@@ -537,7 +537,7 @@ class CSB_Admin {
         
         $raw = $this->generator->generateTexte($keyword, $this->debugModContent, "", $prompt, true); 
         error_log($raw);
-        $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
+       $this->mapIdPost = $this->convertStructureToMap($raw, $keyword, $use_existing_root ? $existing_root_url : null);
         print_r($this->mapIdPost);
     }
 
@@ -721,40 +721,23 @@ class CSB_Admin {
 
     private function createMapEntry(string $title, ?int $parent_id, ?string $forced_link = null, int $level = 0, ?int $post_id = null): array {
         $link = '';
-        
+
         if ($post_id === null) {
-            // Cas classique : création d’un vrai article WordPress
+            // Création classique
             $post_id = $this->publisher->createPostDraft($title, $level, $parent_id);
             $this->publisher->storeMeta($post_id, $level, $parent_id);
 
-            if ($level === 0 && $forced_link !== null) {
-                //error_log("voici le titre $title");
-                $link = $forced_link;
-            } 
-            else {
-                $link = '/' . get_post_field('post_name', $post_id);
-            }
-        } 
-        else {
-            //error_log( "voici le titre $title");
-            // Cas d’une feuille virtuelle (pas de vrai post WP)
-            if ($forced_link !== null) {
-                $post = get_page_by_path(ltrim($forced_link, '/'), OBJECT, 'post');
-                if ($post) {
-                    $post_id = $post->ID;
-                    $link = $forced_link;
+            $link = ($level === 0 && $forced_link !== null) 
+                ? $forced_link 
+                : '/' . get_post_field('post_name', $post_id);
+        } else {
+            // Post déjà existant fourni (ex: racine existante)
+            $link = ($forced_link !== null) 
+                ? $forced_link 
+                : '/' . get_post_field('post_name', $post_id);
 
-                    // 🎯 Si c'est une racine, marquer comme telle
-                    if ($level === 0) {
-                        $this->publisher->markAsRoot($post_id);
-                    }
-                } 
-                else {
-                    $link = '/leaf-' . sanitize_title($title);
-                }
-            }
-            else {
-                $link = '/leaf-' . sanitize_title($title);
+            if ($level === 0) {
+                $this->publisher->markAsRoot($post_id);
             }
         }
 
@@ -777,7 +760,6 @@ class CSB_Admin {
             if (preg_match('/^(\s*)-\s*(.+)$/', $line, $matches)) {
                 $indent = strlen($matches[1]);
                 $title = trim($matches[2]);
-                $title = $this->capitalizeEachWord($title);
                 $level = intval($indent / 4);
                 $parsed[] = [
                     'index' => $index,
@@ -790,13 +772,11 @@ class CSB_Admin {
 
         return $parsed;
     }
-    
 
 
     private function buildMapFromParsedLines(array $parsed_lines, ?string $forced_link = null): array {
         $map = [];
         $stack = [];
-        $virtualId = -1;
         $total = count($parsed_lines);
 
         foreach ($parsed_lines as $i => $item) {
@@ -805,32 +785,17 @@ class CSB_Admin {
 
             $parent_id = $level === 0 ? null : ($stack[$level - 1]['post_id'] ?? null);
 
-            //Détermine si c’est une feuille
-            $isLeaf = true;
-            if ($i + 1 < $total && $parsed_lines[$i + 1]['level'] > $level) {
-                $isLeaf = false;
-            }
-
-            //Résolution préalable du post existant pour level 0
+            // Résolution de l'ID pour la racine si nécessaire
             $resolved_post_id = null;
             if ($level === 0 && $forced_link !== null) {
                 $post = get_page_by_path(ltrim($forced_link, '/'), OBJECT, ['post', 'page']);
                 if ($post) {
                     $resolved_post_id = $post->ID;
                 }
-                //error_log(" voici l'id $resolved_post_id");
-                //error_log("forced_link reçu : $forced_link");
             }
 
-            //Crée l’entrée
-            if ($isLeaf) {
-                $entry = $this->createMapEntry($title, $parent_id, null, $level, $virtualId);
-                $post_id = $virtualId;
-                $virtualId--;
-            } else {
-                $entry = $this->createMapEntry($title, $parent_id, $level === 0 ? $forced_link : null, $level, $resolved_post_id);
-                $post_id = $entry['post_id'];
-            }
+            $entry = $this->createMapEntry($title, $parent_id, $level === 0 ? $forced_link : null, $level, $resolved_post_id);
+            $post_id = $entry['post_id'];
 
             $map[$post_id] = $entry;
             $stack[$level] = &$map[$post_id];
@@ -838,17 +803,31 @@ class CSB_Admin {
             if ($parent_id !== null && isset($map[$parent_id])) {
                 $map[$parent_id]['children_ids'][] = $post_id;
             }
-            
         }
 
         return $map;
     }
 
 
-    public function convertStructureToMap(string $raw, ?string $forced_link = null): array {
+
+    public function convertStructureToMap(string $raw, string $keyword, ?string $forced_link = null): array {
         $parsed_lines = $this->parseStructureLines($raw);
+
+        // Injecte le mot-clé principal comme racine
+        array_walk($parsed_lines, function (&$item) {
+            $item['level'] += 1; // Décale les niveaux
+        });
+
+        array_unshift($parsed_lines, [
+            'index' => -1,
+            'level' => 0,
+            'title' => $keyword,
+            'raw_indent' => 0
+        ]);
+
         return $this->buildMapFromParsedLines($parsed_lines, $forced_link);
     }
+
 
 
     private function updateMapFromPost(array &$map, array $posted_structure): void {
@@ -866,7 +845,7 @@ class CSB_Admin {
                     // }
                 }
 
-                $map[$post_id]['title'] = $this->capitalizeEachWord($new_title);
+                $map[$post_id]['title'] = $new_title;
             }
         }
     }
