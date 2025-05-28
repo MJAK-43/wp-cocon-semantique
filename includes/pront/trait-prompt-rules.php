@@ -49,14 +49,12 @@ trait PromptRulesTrait
     ];
 
     protected array $structureRules = [
-        "- EXACTEMENT {depth} niveaux de profondeur hiérarchique.",
-        "- Chaque nœud NON-FEUILLE doit contenir EXACTEMENT {breadth} sous-éléments.",
-        "- Chaque nœud FEUILLE se trouve uniquement au niveau {depth}.",
-        "- La structure doit former un arbre complet et équilibré : pas de niveaux manquants.",
-        "- Format en texte brut avec indentation de 4 espaces par niveau.",
-        "- Chaque ligne commence par « - » suivi du titre du nœud.",
-        "- Les titres sont en français, uniques, explicites, sans termes génériques, et avec Majuscule À Chaque Mot.",
-        "- AUCUN commentaire, AUCUNE balise, AUCUNE ligne vide.",
+        //"- Arbre équilibré de 4 niveaux.",
+        //"- Chaque nœud non-feuille a 2 sous-nœuds.",
+        //"- Tous les nœuds de niveau 4 sont des feuilles.",
+        "- Pas de commentaires, balises ou lignes vides.",
+        //"- Format texte brut avec indentation de 4 espaces.",
+        //"- Chaque ligne commence par « - » suivi d’un titre en français, clair, unique, avec Majuscule À Chaque Mot."
     ];
 
     protected array $imageRules = [
@@ -72,10 +70,11 @@ trait PromptRulesTrait
     protected string $roleImage = "un expert en iconographie et banques d’images comme Freepik.";
 
     protected string $structureExample = "";
+
     protected string $introExemple = "";
     protected string $developmentExemple = "";
     protected string $conclusionExemple = "";
-    protected string $imageExemple = "";
+    protected string $imageExemple ="";
 
     protected function getRuleIntro(): string {
         return "Consignes :\n" . implode("\n", array_merge($this->introRules, $this->generalRulesContents)) . "\n\n" . $this->introExemple;
@@ -95,15 +94,12 @@ trait PromptRulesTrait
             $this->structureRules
         );
 
-        return "{$this->roleStructure}
+        $rules_text = implode("\n", $rules);
 
-        Ta mission : générer une structure STRICTEMENT conforme à ces règles :
-
-        " . implode("\n", $rules) . "
-
-        Mot-clé racine : « $keyword »
-
-        {$this->structureExample}";
+        return <<<TEXT
+    Contraintes :
+    $rules_text
+    TEXT;
     }
 
     protected function getRuleImage(): string {
