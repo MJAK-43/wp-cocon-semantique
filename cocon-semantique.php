@@ -45,10 +45,9 @@ if (function_exists('opcache_reset')) {
 function csb_initialize_plugin() {
     $defaultImage = plugin_dir_url(__FILE__) . 'assets/img/defaultImage.png';
     $api_key = get_option('csb_openai_api_key');
+    $prompter=new CSB_CustomPrompts();
 
     $generator = new CSB_Generator(
-        new CSB_CustomPrompts(),
-        $defaultImage,
         $api_key
     );
 
@@ -57,10 +56,9 @@ function csb_initialize_plugin() {
     $cssPath = 'assets/css/csb-front.css';
 
     // Instanciation avec les chemins
-    new CSB_Admin($generator, $jsPath, $cssPath);
+    new CSB_Admin($generator,$prompter,$jsPath, $cssPath);
     new CSB_Settings();
 }
-
 
 // Initialisation différée
 add_action('plugins_loaded', function () {

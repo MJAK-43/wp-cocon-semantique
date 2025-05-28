@@ -9,12 +9,12 @@ class CSB_Generator implements GeneratorInterface {
     private $temperature;
     private $style;
     //private $image_description;
-    private PromptProviderInterface $promptProvider;
+    //private PromptProviderInterface $promptProvider;
     private $tokens_used = 0;
     private $defaultImage;
 
     
-    public function __construct(PromptProviderInterface $promptProvider,$defaultImage ,$api_key = null) {
+    public function __construct($api_key = null) {
         $this->promptProvider = $promptProvider;
         $this->api_key = $api_key ?: get_option('csb_openai_api_key');
         $this->model = get_option('csb_model', 'gpt-3.5-turbo');
@@ -25,44 +25,6 @@ class CSB_Generator implements GeneratorInterface {
     }
 
 
-    private static function getDefaultIntro(string $title): string {
-        return "<p><em>Introduction par défaut sur «&nbsp;$title&nbsp;».</em></p>";
-    }
-
-    private static function getDefaultDevelopment(string $title): string {
-        return "<p><em>Développement par défaut pour «&nbsp;$title&nbsp;».</em></p>";
-    }
-
-    private static function getDefaultConclusion(string $title): string {
-        return "<p><em>Conclusion par défaut sur «&nbsp;$title&nbsp;».</em></p>";
-    }
-
-    private static function generateDefaultStructure(string $keyword = 'Thème Principal'): string {
-        $structure = "- " . ucwords($keyword) . "\n";
-
-        // Niveau 1
-        foreach (['A', 'B'] as $lvl1) {
-            $structure .= "    - Niveau 1 $lvl1\n";
-
-            // Niveau 2
-            foreach ([1, 2] as $i) {
-                $structure .= "        - Niveau 2 {$lvl1}{$i}\n";
-
-                // Niveau 3 (feuilles)
-                foreach (['a', 'b'] as $j) {
-                    $structure .= "            - Niveau 3 {$lvl1}{$i}{$j}\n";
-                }
-            }
-        }
-
-        return $structure;
-    }
-
-    private static function getDefaultImage(){return plugin_dir_url(dirname(__DIR__)) . 'image_test.png';}
-
-    public function getTokensUsed() {
-        return $this->tokens_used;
-    }
 
 
 
@@ -144,14 +106,7 @@ class CSB_Generator implements GeneratorInterface {
     }
 
 
-    public function generateStructure(string $keyword, int $depth, int $breadth, PromptContext $context, bool $test = false): string {
-        $default = self::generateDefaultStructure($keyword, $depth, $breadth);
-        $prompt = $this->promptProvider->structure($keyword, $depth, $breadth, $context);
-        error_log($prompt);
-        return $this->generateTexte($keyword, $test, $default, $prompt, true);
-    }
-
-    public function generateImage(string $title, string $keyword, PromptContext $context, bool $test = false): string {
+    public function generateImage(string $title, string $keyword, PromptContext $context,bool $test = false,string $getDefaultImage): string {
         $default_image_url = $this->getDefaultImage();
         $prompt = $this->promptProvider->image($keyword, $title, $context);
 
@@ -163,34 +118,9 @@ class CSB_Generator implements GeneratorInterface {
         );
     }
 
-    public function generateIntro(string $title, string $structure, PromptContext $context, bool $test): string {
-        $prompt = $this->promptProvider->intro($title, $structure, $context);
-        $default = self::getDefaultIntro($title);
-        return $this->generateTexte($title, $test, $default, $prompt);
-    }
 
-    public function generateDevelopment(string $title, string $structure, PromptContext $context, bool $test): string {
-        $prompt = $this->promptProvider->development($title, $structure, $context);
-        $default = self::getDefaultDevelopment($title);
-        return $this->generateTexte($title, $test, $default, $prompt);
-    }
 
-    public function generateConclusion(string $title, string $structure, PromptContext $context, bool $test): string {
-        $prompt = $this->promptProvider->conclusion($title, $structure, $context);
-        $default = self::getDefaultConclusion($title);
-        return $this->generateTexte($title, $test, $default, $prompt);
-    }
-
-    public function generateFullContent(string $keyword, string $title, string $structure, array $subparts, PromptContext $context, bool $test = false): string {
-        $prompt = $this->promptProvider->fullArticle($keyword, $title,$subparts, $context);
-        error_log("$prompt");
-        $default = self::getDefaultIntro($title)
-                . self::getDefaultDevelopment($title)
-                . self::getDefaultConclusion($title);
-        return $this->generateTexte($title, $test, $default, $prompt, true);
-    }
-
-    private function generateTexte(string $title, bool $test, string $defaultContent, string $prompt, bool $preserveFormatting = false): string {
+    public function generateTexte(string $title, bool $test, string $defaultContent, string $prompt, bool $preserveFormatting = false): string {
         return $this->generate(fn($p) => $this->callApi($p, false, $preserveFormatting), $prompt, $test, $defaultContent);
     }
 

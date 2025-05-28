@@ -1,12 +1,13 @@
 <?php
 if (!defined('ABSPATH')) exit;
-require_once __DIR__ . '/pront/class-prompt-context.php';
+//require_once __DIR__ . '/prompt/class-prompt-context.php';
 
 class CSB_Admin {
     private int $nb;
     private $mapIdPost=[];
     private $mapIdPostLoaded=[];
     private GeneratorInterface $generator;
+    private PromptProviderInterface $prompter;
     private $publisher;
     private $linker; 
     private static int $depth=4;
@@ -31,16 +32,17 @@ class CSB_Admin {
 
     private bool $debugModStructure=false;
     private bool $debugModContent=false;
-    private bool $debugModImage=true;
+    private bool $debugModImage=false;
 
 
-    public function __construct(GeneratorInterface $generator,string $jsFile,string $cssFile) {
+    public function __construct(GeneratorInterface $generator,PromptProviderInterface $prompter,string $jsFile,string $cssFile) {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('wp_ajax_csb_process_node', [$this, 'ajaxProcessNode']); 
         $this->nb=3;
         $this->jsFile=$jsFile;
         $this->cssFile=$cssFile;
+        $this->prompter=$prompter;
 
         //echo "DOG";
         // add_action('admin_init', [$this, 'maybe_delete_author_posts']);
@@ -157,15 +159,19 @@ class CSB_Admin {
                 $context = new PromptContext($context_data);
                 $this->processStructure(
                     $this->mapIdPost,
-                    $this->nb,
                     $keyword,
                     $context,
                     $use_existing_root,
                     $existing_root_url
                 );
 
+
                 foreach ($this->mapIdPost as $post_id => $node) {
-                    $this->processImage($post_id, $this->mapIdPost, $keyword, $context);
+
+                    echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
+                    print_r($this->processImageDescription($post_id, $this->mapIdPost, $keyword, $context));
+                    echo '</pre>';
+                    //$this->processImageDescription($post_id, $this->mapIdPost, $keyword, $context);
                 }
                 
 
@@ -471,6 +477,7 @@ class CSB_Admin {
     }
 
 
+
     public function enqueue_admin_assets() {
         wp_enqueue_script(
             'csb-admin',
@@ -525,25 +532,33 @@ class CSB_Admin {
         return trim($text, '-');
     }
 
-    private function processStructure(array &$map,$breadth,string $keyword,PromptContext $context,bool $use_existing_root=false,string $existing_root_url=null){
-        $raw = $this->generator->generateStructure($keyword, self::$depth, $this->nb, $context, $this->debugModStructure);
+    private function processStructure(array &$map,string $keyword,PromptContext $context,bool $use_existing_root=false,string $existing_root_url=null){
+        $prompt=$this->prompter->structure($keyword,3,3,$context);
+        
+        $raw = $this->generator->generateTexte($keyword, $this->debugModContent, "", $prompt, true); 
+        error_log($raw);
         $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
+        print_r($this->mapIdPost);
     }
 
-    private function processImage(int $post_id, array &$map,string $keyword,PromptContext $context): string {
+    private function processImageDescription(int $post_id, array &$map, string $keyword, PromptContext $context): string {
+    if ($this->debugModImage) 
+        return ''; 
+    else{
         $title = $map[$post_id]['title'];
-        if (!$this->debugModImage) {
-            $image_url = $this->generator->generateImage($title, $keyword, $context, $this->debugModImage);
-            $this->publisher->setFeaturedImage($post_id, $image_url);
-        }
+
+        // 1. Générer le prompt d'image
+        $prompt = $this->prompter->image($keyword, $title, $context);
+
+        // 2. Générer la description via GPT
+        $description = $this->generator->generateTexte($title, false, '', $prompt, $this->debugModContent);
+
+        return $description ?: '';
     }
 
-    private function processAllImage(int $post_id, array &$map,string $keyword,PromptContext $context): string {
-        foreach ($map as $id => $node) {
-            $this->processImage($post_id,$map,$keyword,$context);
-        }
     
-    }
+}
+
 
 
 
@@ -595,42 +610,42 @@ class CSB_Admin {
 
 
     private function processNodeSafe(int $post_id, array &$map, int $nb, string $keyword,PromptContext $context): string {
-        $node = $map[$post_id];
-        $title = $node['title'];
-        $slug = get_post_field('post_name', $post_id);
-        $structure = $this->toBulletArchitecture($map);
+        // $node = $map[$post_id];
+        // $title = $node['title'];
+        // $slug = get_post_field('post_name', $post_id);
+        // $structure = $this->toBulletArchitecture($map);
 
-        // 🔸 Introduction
-        $intro = $this->generator->generateIntro($title, $structure, $context, $this->debugModContent);
-        $intro = "<div id='csb-intro-$slug' class='csb-content csb-intro'>$intro</div>";
+        // // 🔸 Introduction
+        // $intro = $this->generator->generateIntro($title, $structure, $context, $this->debugModContent);
+        // $intro = "<div id='csb-intro-$slug' class='csb-content csb-intro'>$intro</div>";
 
-        // 🔸 Développements
-        $developments_html = '';
+        // // 🔸 Développements
+        // $developments_html = '';
 
-        if (!empty($node['children_ids'])) {
-            foreach ($node['children_ids'] as $child_id) {
-                if (isset($map[$child_id])) {
-                    $child = $map[$child_id];
-                    $child_title = $child['title'];
-                    $child_slug = $this->slugify($child_title);
-                    $dev = $this->generator->generateDevelopment($child_title, $structure, $context,$this->debugModContent);
-                    $block_id = ($child_id < 0) ? "csb-leaf-$child_slug" : "csb-development-$child_slug";
-                    $dev_html = "<div id='$block_id' class='csb-content csb-development'>$dev</div>";
+        // if (!empty($node['children_ids'])) {
+        //     foreach ($node['children_ids'] as $child_id) {
+        //         if (isset($map[$child_id])) {
+        //             $child = $map[$child_id];
+        //             $child_title = $child['title'];
+        //             $child_slug = $this->slugify($child_title);
+        //             $dev = $this->generator->generateDevelopment($child_title, $structure, $context,$this->debugModContent);
+        //             $block_id = ($child_id < 0) ? "csb-leaf-$child_slug" : "csb-development-$child_slug";
+        //             $dev_html = "<div id='$block_id' class='csb-content csb-development'>$dev</div>";
 
-                    if ($child_id >= 0) {
-                        $link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link']) . '">' . esc_html($child_title) . '</a>.</p>';
-                        $dev_html .= $link;
-                    }
+        //             if ($child_id >= 0) {
+        //                 $link = '<p>Pour en savoir plus, découvrez notre article sur <a href="' . esc_url($child['link']) . '">' . esc_html($child_title) . '</a>.</p>';
+        //                 $dev_html .= $link;
+        //             }
 
-                    $developments_html .= $dev_html;
-                }
-            }
-        }
+        //             $developments_html .= $dev_html;
+        //         }
+        //     }
+        // }
 
-        // Conclusion
-        $conclusion = $this->generator->generateConclusion($title, $structure,  $context,$this->debugModContent);
-        $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
-        return $intro . $developments_html . $conclusion . '<!-- Mode sécurisé -->';
+        // // Conclusion
+        // $conclusion = $this->generator->generateConclusion($title, $structure,  $context,$this->debugModContent);
+        // $conclusion = "<div id='csb-conclusion-$slug' class='csb-content csb-conclusion'>$conclusion</div>";
+        // return $intro . $developments_html . $conclusion . '<!-- Mode sécurisé -->';
     }
 
     
@@ -661,14 +676,8 @@ class CSB_Admin {
         }
 
         // Génération du contenu HTML 
-        $content = $this->generator->generateFullContent(
-            keyword: $keyword,
-            title: $title,
-            structure: $structure,
-            subparts: $subparts,
-            context: $context,
-            test: $this->debugModContent
-        );
+        $prompt= $this->prompter->fullArticle($keyword,$title,$subparts,$context);
+        $content = $this->generator->generateTexte($title,$this->debugModContent,"",$prompt);
         return '<article class="article-csb">' . $content . '<!-- Mode rapide -->' . '</article>';
 
     
@@ -834,7 +843,6 @@ class CSB_Admin {
 
         return $map;
     }
-
 
 
     public function convertStructureToMap(string $raw, ?string $forced_link = null): array {
