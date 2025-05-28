@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) exit;
 class PromptContext
 {
     private array $context = [];
-    private static $introDuctionOfContext="Contexte :";
+    private static $introDuctionOfContext="Sachant que l'éditeur de blog propose ";
 
     public function __construct(array $context = []) {
         $this->context = $context;
@@ -27,13 +27,27 @@ class PromptContext
     }
 
     public function toString(): string {
-        if (empty($this->context)) return "";
-
-        $lines = [self::$introDuctionOfContext];
-        foreach ($this->context as $key => $value) {
-            $keyLabel = ucfirst(str_replace('_', ' ', $key));
-            $lines[] = "- {$keyLabel} : « {$value} »";
+        if (empty($this->context)){
+            //error_log("Contexte vide");
+            return "";
         }
-        return implode("\n", $lines) . "\n\n";
+        else{
+                    $produit = $this->context['produit'] ?? null;
+        $public = $this->context['public'] ?? null;
+        // error_log("produit $produit");
+        // error_log("public $public");
+
+        if (!$produit || !$public){
+            //error_log("Vide produit ou public");
+            return "";
+        }
+        else{
+            //error_log("produit ou public");
+        }       
+        return self::$introDuctionOfContext . "les services suivants : $produit  à la cible suivante : $public.\n\n";
+        }
+
+
     }
+
 }
