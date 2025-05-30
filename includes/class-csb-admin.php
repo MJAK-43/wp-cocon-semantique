@@ -687,10 +687,10 @@ class CSB_Admin {
                 //error_log("resultat génération $result");
                 // Génération de l’image
                 $imageDescription = $map[$post_id]['imageDescription'] ?? '';
-                if($imageDescription=='')
-                    error_log("Description image vide");
-                else
-                    error_log("Image description $imageDescription");
+                // if($imageDescription=='')
+                //     error_log("Description image vide");
+                // else
+                //     error_log("Image description $imageDescription");
 
                 $title = $map[$post_id]['title'];
                 if (!$this->debugModImage) {
@@ -702,7 +702,7 @@ class CSB_Admin {
                 // Ajout des liens internes
                 $links = $this->linker->generateStructuredLinks($map, $post_id);
                 $content = $result . $links;
-                error_log("Contenue :  $content");
+                //error_log("Contenue :  $content");
                 $this->publisher->fillAndPublishContent($post_id, $content);
                 //error_log("Arrive à la fin");
 
