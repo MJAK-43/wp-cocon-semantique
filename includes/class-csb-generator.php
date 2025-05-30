@@ -100,7 +100,7 @@ class CSB_Generator implements GeneratorInterface {
                 }
             }
         }
-        error_log($result);
+        //error_log($result);
 
         return $base64 ? base64_encode($result) : $result;
     }

@@ -12,6 +12,11 @@ define('CSB_PATH', plugin_dir_path(__FILE__));
 define('CSB_URL', plugin_dir_url(__FILE__));
 
 // Inclure les fichiers du plugin
+add_action('init', function () {
+    if (defined('DOING_AJAX') && DOING_AJAX && session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();   // libère le verrou avant l’appel à tes callbacks
+    }
+}, 0); // priorité 0 = le plus tôt possible
 
 
 $includes = [
