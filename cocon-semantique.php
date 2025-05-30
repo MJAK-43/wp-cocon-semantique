@@ -42,9 +42,9 @@ foreach ($includes as $file) {
 
 
 
-if (function_exists('opcache_reset')) {
-    opcache_reset();
-}
+// if (function_exists('opcache_reset')) {
+//     opcache_reset();
+// }
 
 
 function csb_initialize_plugin() {
