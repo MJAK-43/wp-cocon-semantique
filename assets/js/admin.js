@@ -87,13 +87,77 @@ jQuery(document).ready(function ($) {
 
 
     // ✅ Génération simultanée de tous les boutons
+    // function processAllNodesSimultaneously() {
+    //     $('.csb-generate-node').each(function () {
+    //         if (!csbStopRequested) {
+    //             $(this).trigger('click');
+    //         }
+    //     });
+    // }
+    
+    // ✅ Génération simultanée de tous les boutons
     function processAllNodesSimultaneously() {
-        $('.csb-generate-node').each(function () {
-            if (!csbStopRequested) {
-                $(this).trigger('click');
-            }
-        });
+        const ajaxCalls = [];
+            const buttons = $('.csb-generate-node');
+            const total = buttons.length;
+            let completed = 0;
+
+            $('#csb-progress').text(`🛠️ 0 / ${total} nœuds générés...`);
+
+            buttons.each(function () {
+                const button = $(this);
+                const postId = button.data('post-id');
+                const status = $('.csb-node-status[data-post-id="' + postId + '"]');
+                const form = button.closest('form');
+                const startTime = Date.now();
+
+                const formData = form.serializeArray();
+
+                formData.push(
+                    { name: 'action', value: 'csb_process_node' },
+                    { name: 'nonce', value: csbData.nonce },
+                    { name: 'post_id', value: postId },
+                    { name: 'csb_product', value: $('#csb_product').val() || '' },
+                    { name: 'csb_demographic', value: $('#csb_demographic').val() || '' },
+                    { name: 'csb_keyword', value: $('#csb_keyword').val() || '' }
+                );
+
+                button.prop('disabled', true).text('⏳ Génération...');
+                status.html('⏳ En cours...');
+
+                const request = $.ajax({
+                    url: csbData.ajaxurl,
+                    method: 'POST',
+                    data: formData
+                }).done(function (response) {
+                    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+                    const tokensUsed = response.data.tokens || 0;
+                    const currentTotal = parseInt($('#csb-token-count').text()) || 0;
+                    $('#csb-token-count').text(currentTotal + tokensUsed);
+
+                    //status.html('✅ <a href="' + response.data.link + '" target="_blank">Voir</a>');
+                    button.text(`✅ Fait (${duration}s)`);
+                }).fail(function (jqXHR) {
+                    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+                    status.text('❌ Erreur');
+                    button.text(`⚠️ Erreur (${duration}s)`);
+                    console.warn('❌ Erreur AJAX :', jqXHR.responseText);
+                }).always(function () {
+                    completed++;
+                    $('#csb-progress').text(`🛠️ ${completed} / ${total} nœuds générés...`);
+                    setTimeout(() => {
+                        button.prop('disabled', false).text('⚙️ Générer');
+                    }, 3000);
+                });
+
+                ajaxCalls.push(request);
+            });
+
+            Promise.allSettled(ajaxCalls).then(() => {
+                $('#csb-progress').text(`✅ Tous les nœuds (${total}) ont été générés.`);
+            });
     }
+
 
 
     let lastClickedButton = null;
