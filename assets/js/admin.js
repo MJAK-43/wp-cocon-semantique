@@ -88,6 +88,16 @@ jQuery(document).ready(function ($) {
 
     // ✅ Génération simultanée de tous les boutons
     function processAllNodesSimultaneously() {
+        $('.csb-generate-node').each(function () {
+            if (!csbStopRequested) {
+                $(this).trigger('click');
+            }
+        });
+    }
+
+    /*
+    
+        function processAllNodesSimultaneously() {
     const ajaxCalls = [];
         const buttons = $('.csb-generate-node');
         const total = buttons.length;
@@ -149,6 +159,8 @@ jQuery(document).ready(function ($) {
         });
     }
 
+
+    */
 
     let lastClickedButton = null;
 
