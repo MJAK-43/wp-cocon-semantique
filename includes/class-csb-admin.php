@@ -40,6 +40,8 @@ class CSB_Admin {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('wp_ajax_csb_process_node', [$this, 'ajaxProcessNode']); 
+        add_action('wp_ajax_csb_regenerate_image', [$this, 'ajaxRegenerateImage']);
+
         $this->nb=3;
         $this->jsFile=$jsFile;
         $this->cssFile=$cssFile;
@@ -357,8 +359,10 @@ class CSB_Admin {
                 //echo ' <em>(feuille)</em>';
             }
 
+
             if ($generation) {
                 echo '<button type="button" class="button csb-generate-node" data-post-id="' . esc_attr($id) . '">⚙️ Générer </button>';
+                echo '<button type="button" class="button csb-regenerate-image" data-post-id="' . esc_attr($id) . '">🎨 Régénérer l’image</button>';
             }
 
             echo '<span class="csb-node-status" data-post-id="' . esc_attr($id) . '"></span>';
@@ -398,6 +402,61 @@ class CSB_Admin {
     }
 
 
+    public function ajaxRegenerateImage() {
+        $result = [
+            'success' => false,
+            'data' => ['message' => 'Erreur inconnue'],
+            'code' => 500
+        ];
+
+        if (!current_user_can('manage_options') || !check_ajax_referer('csb_nonce', 'nonce', false)) {
+            $result['data']['message'] = 'Non autorisé';
+            $result['code'] = 403;
+        } else {
+            $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+            $keyword = isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '';
+            $product = isset($_POST['csb_product']) ? sanitize_text_field($_POST['csb_product']) : null;
+            $demographic = isset($_POST['csb_demographic']) ? sanitize_text_field($_POST['csb_demographic']) : null;
+
+            $context_data = ['keyword' => $keyword];
+            if (!empty($product)) $context_data['product'] = $product;
+            if (!empty($demographic)) $context_data['demographic'] = $demographic;
+            $context = new PromptContext($context_data);
+
+            $this->mapIdPost = get_option('csb_structure_map', []);
+            if (!isset($this->mapIdPost[$post_id])) {
+                $result['data']['message'] = 'Nœud introuvable';
+                $result['code'] = 400;
+            } else {
+                $title = $this->mapIdPost[$post_id]['title'];
+
+                try {
+                    $description = $this->generator->generateTexte($title, false, '', $this->prompter->image($keyword, $title, $context), $this->debugModContent);
+                    $this->mapIdPost[$post_id]['imageDescription'] = $description;
+
+                    $image_url = $this->generator->generateImage($title, $description, $context, $this->defaultImage, false);
+                    $this->publisher->setFeaturedImage($post_id, $image_url);
+                    update_option('csb_structure_map', $this->mapIdPost);
+
+                    $result['success'] = true;
+                    $result['data'] = ['message' => 'Image régénérée avec succès'];
+                    $result['code'] = 200;
+                } catch (\Throwable $e) {
+                    $result['data'] = ['message' => 'Erreur lors de la régénération', 'details' => $e->getMessage()];
+                    $result['code'] = 500;
+                }
+            }
+        }
+
+        if ($result['success']) {
+            wp_send_json_success($result['data'], $result['code']);
+        } else {
+            wp_send_json_error($result['data'], $result['code']);
+        }
+    }
+
+
+
     public function ajaxProcessNode() {
         //error_log("⚙️ AJAX reçu : " . json_encode($_POST));
 
@@ -406,6 +465,17 @@ class CSB_Admin {
             'data' => ['message' => 'Erreur inconnue'],
             'code' => 500
         ];
+
+        $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+
+        if (empty($this->mapIdPost)) {
+            $this->mapIdPost = get_option('csb_structure_map', []);
+        }
+
+        $tempTitle = $this->mapIdPost[$post_id]['title'] ?? '(titre inconnu)';
+        $startTime = microtime(true); 
+        error_log("🟡 [START] ajaxProcessNode de \"$tempTitle\" lancé à " . date('H:i:s'));
+
 
         $hasPermission = current_user_can('manage_options');
         $nonceValid = check_ajax_referer('csb_nonce', 'nonce', false);
@@ -459,7 +529,7 @@ class CSB_Admin {
                         } 
                         else {
                             $nb = $this->nb;
-                            $keyword = reset($this->mapIdPost)['title'] ?? '';
+                            $keyword = isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '';
                             $product = !empty($_POST['csb_product']) ? sanitize_text_field($_POST['csb_product']) : null;
                             $demographic = !empty($_POST['csb_demographic']) ? sanitize_text_field($_POST['csb_demographic']) : null;
 
@@ -490,6 +560,11 @@ class CSB_Admin {
                 }
             }
         }
+
+        $endTime = microtime(true);
+        $duration = number_format($endTime - $startTime, 3);
+        error_log("✅ [END] ajaxProcessNode terminé à " . date('H:i:s') . " (⏱️ $duration sec)");
+
 
         // ✅ Unique retour à la fin
         if ($result['success']) {
