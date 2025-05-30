@@ -23,8 +23,7 @@ class CSB_Generator implements GeneratorInterface {
         
     }
 
-
-
+    public function getTokensUsed(){return $this->tokens_used;}
 
 
     private function normalizeKeyword($title) {
@@ -47,12 +46,13 @@ class CSB_Generator implements GeneratorInterface {
     */
     private function callApi(string $prompt, bool $base64 = false, bool $preserveFormatting = false): string {
         $result = '';
-        //error_log("clé $this->api_key");
+        //error_log("Call openIA promt : $prompt");
 
         if (empty($this->api_key)) {
             $result = '❌ Clé API non configurée.';
             error_log("[CSB ERROR] Clé API manquante.");
-        } else {
+        } 
+        else {
             $url = 'https://api.openai.com/v1/chat/completions';
 
             $data = [
@@ -71,7 +71,7 @@ class CSB_Generator implements GeneratorInterface {
                     'Authorization' => 'Bearer ' . $this->api_key,
                 ],
                 'body' => json_encode($data),
-                'timeout' => 30,
+                'timeout' => 60,
                 'httpversion' => '1.1',
             ];
 
@@ -100,6 +100,7 @@ class CSB_Generator implements GeneratorInterface {
                 }
             }
         }
+        error_log($result);
 
         return $base64 ? base64_encode($result) : $result;
     }

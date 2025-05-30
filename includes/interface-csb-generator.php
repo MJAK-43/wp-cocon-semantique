@@ -14,5 +14,6 @@ interface GeneratorInterface
     public function generateImage(string $title, string $prompt, PromptContext $context, string $defaultImage, bool $test = false): string;
     public function generateTexte(string $title, bool $test, 
     string $defaultContent, string $prompt, bool $preserveFormatting = false): string;
+    public function getTokensUsed();
     
 }

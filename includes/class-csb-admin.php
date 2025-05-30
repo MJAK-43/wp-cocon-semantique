@@ -172,11 +172,10 @@ class CSB_Admin {
                     $this->mapIdPost[$post_id]["imageDescription"]=$this->processImageDescription($post_id, $this->mapIdPost, $keyword, $context);
                     //$this->processImageDescription($post_id, $this->mapIdPost, $keyword, $context);
                 }
-                
 
 
                 // echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
-                // echo esc_html($raw);
+                // print_r($this->mapIdPost);
                 // echo '</pre>';
                 
                 
@@ -400,83 +399,106 @@ class CSB_Admin {
 
 
     public function ajaxProcessNode() {
-        $result = null;
+        //error_log("⚙️ AJAX reçu : " . json_encode($_POST));
 
-        if (!current_user_can('manage_options') || !check_ajax_referer('csb_nonce', 'nonce', false)){
-            $result = [
-                'success' => false,
-                'data' => ['message' => 'Non autorisé'],
-                'code' => 403
-            ];
+        $result = [
+            'success' => false,
+            'data' => ['message' => 'Erreur inconnue'],
+            'code' => 500
+        ];
+
+        $hasPermission = current_user_can('manage_options');
+        $nonceValid = check_ajax_referer('csb_nonce', 'nonce', false);
+
+        if (!$hasPermission) {
+            error_log("⛔ Accès refusé : utilisateur sans permission");
+            $result['data']['message'] = 'Non autorisé';
+            $result['code'] = 403;
         } 
-        else{
-            session_write_close(); 
-
-            if (empty($this->mapIdPost)) {
-                $this->mapIdPost = get_option('csb_structure_map', []);
-            }
-
-            $structure = $_POST['structure'] ?? [];
-            $this->updateMapFromPost($this->mapIdPost, $structure);
-            // $stringmMapIdPost="";
-            // foreach ($array as $key => $value) {
-            //     $stringmMapIdPost .= "$key = $value; ";
-            // }
-            // error_log("$stringmMapIdPost");
-
-            $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
-            $nb = $this->nb;
-
-            if (!$post_id || !isset($this->mapIdPost[$post_id])) {
-                $result = [
-                    'success' => false,
-                    'data' => ['message' => 'Post ID invalide ou introuvable'],
-                    'code' => 400
-                ];
+        else {
+            if (!$nonceValid) {
+                error_log("⛔ Nonce invalide");
+                $result['data']['message'] = 'Nonce invalide';
+                $result['code'] = 403;
             } 
-            else{
-                try{
-                    $keyword = reset($this->mapIdPost)['title'] ?? '';
-                    $product = !empty($_POST['csb_product']) ? sanitize_text_field($_POST['csb_product']) : null;
-                    $demographic = !empty($_POST['csb_demographic']) ? sanitize_text_field($_POST['csb_demographic']) : null;
-
-                    $this->processNode($post_id, $this->mapIdPost, $nb, $keyword, $product, $demographic);
-
-                    update_option('csb_structure_map', $this->mapIdPost);
-
-                    $result = [
-                        'success' => true,
-                        'data' => [
-                            'message' => 'Nœud généré avec succès',
-                            'link' => $this->mapIdPost[$post_id]['link'] ?? '',
-                            'tokens' => $this->generator->getTokensUsed()
-                        ],
-                        'code' => 200
-                    ];
+            else {
+                if (empty($_POST)) {
+                    error_log("❗ Requête AJAX vide");
+                    $result['data']['message'] = 'Requête vide';
+                    $result['code'] = 400;
                 } 
-                catch (\Throwable $e) {
-                    //error_log("❌ Erreur lors de la génération du nœud $post_id : " . $e->getMessage());
+                else {
+                    session_write_close();
 
-                    $result = [
-                        'success' => false,
-                        'data' => [
-                            'message' => '❌ Une erreur est survenue lors de la génération.',
-                            'details' => $e->getMessage()
-                        ],
-                        'code' => 500
-                    ];
+                    if (empty($this->mapIdPost)) {
+                        $this->mapIdPost = get_option('csb_structure_map', []);
+                        //error_log("📦 mapIdPost chargé : " . implode(',', array_keys($this->mapIdPost)));
+                    }
+
+                    $structure = $_POST['structure'] ?? [];
+                    if (!empty($structure)) {
+                        $this->updateMapFromPost($this->mapIdPost, $structure);
+                        //error_log("✍️ Structure mise à jour");
+                    } 
+                    else {
+                        error_log("⚠️ Aucune structure transmise");
+                    }
+
+                    $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+
+                    if ($post_id === 0) {
+                        error_log("❌ post_id manquant ou invalide");
+                        $result['data']['message'] = 'post_id manquant ou invalide';
+                        $result['code'] = 400;
+                    } 
+                    else {
+                        if (!isset($this->mapIdPost[$post_id])) {
+                            error_log("❌ post_id $post_id introuvable dans la map");
+                            $result['data']['message'] = 'post_id introuvable dans la structure';
+                            $result['code'] = 400;
+                        } 
+                        else {
+                            $nb = $this->nb;
+                            $keyword = reset($this->mapIdPost)['title'] ?? '';
+                            $product = !empty($_POST['csb_product']) ? sanitize_text_field($_POST['csb_product']) : null;
+                            $demographic = !empty($_POST['csb_demographic']) ? sanitize_text_field($_POST['csb_demographic']) : null;
+
+                            try {
+                                //error_log("🚀 Lancement de processNode pour post_id: $post_id");
+                                $this->processNode($post_id, $this->mapIdPost, $nb, $keyword, $product, $demographic);
+
+                                update_option('csb_structure_map', $this->mapIdPost);
+
+                                $result['success'] = true;
+                                $result['data'] = [
+                                    'message' => 'Nœud généré avec succès',
+                                    'link' => $this->mapIdPost[$post_id]['link'] ?? '',
+                                    'tokens' => $this->generator->getTokensUsed()
+                                ];
+                                $result['code'] = 200;
+                            } 
+                            catch (\Throwable $e) {
+                                error_log("❌ Erreur dans processNode($post_id) : " . $e->getMessage());
+                                $result['data'] = [
+                                    'message' => 'Une erreur est survenue lors de la génération.',
+                                    'details' => $e->getMessage()
+                                ];
+                                $result['code'] = 500;
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        
-        if ($result['success']){
+        // ✅ Unique retour à la fin
+        if ($result['success']) {
             wp_send_json_success($result['data'], $result['code']);
-        } 
-        else{
+        } else {
             wp_send_json_error($result['data'], $result['code']);
         }
     }
+
 
 
     public function enqueue_admin_assets() {
@@ -539,7 +561,7 @@ class CSB_Admin {
         
         $raw = $this->generator->generateTexte($keyword, $this->debugModContent, "", $prompt, true); 
         //error_log($raw);
-       $this->mapIdPost = $this->convertStructureToMap($raw, $keyword, $use_existing_root ? $existing_root_url : null);
+        $this->mapIdPost = $this->convertStructureToMap($raw, $keyword, $use_existing_root ? $existing_root_url : null);
         //print_r($this->mapIdPost);
     }
 
@@ -586,14 +608,15 @@ class CSB_Admin {
                 $context = new PromptContext($context_data);
 
                 // Choix du mode de génération
-                if ($maxTime < self::$minExecutionTimeForSafe) {
-                    $result = $this->processNodeFast($post_id, $map, $nb, $keyword, $context);
-                } else {
-                    $result = $this->processNodeSafe($post_id, $map, $nb, $keyword, $context);
-                }
-
+                $result = $this->processNodeFast($post_id, $map, $nb, $keyword, $context);
+                //error_log("resultat génération $result");
                 // Génération de l’image
                 $imageDescription = $map[$post_id]['imageDescription'] ?? '';
+                if($imageDescription=='')
+                    error_log("Description image vide");
+                else
+                    error_log("Image description $imageDescription");
+
                 $title = $map[$post_id]['title'];
                 if (!$this->debugModImage) {
                     $image_url = $this->generator->generateImage($title, $imageDescription, $context, $this->defaultImage, $this->debugModImage);
@@ -604,16 +627,16 @@ class CSB_Admin {
                 // Ajout des liens internes
                 $links = $this->linker->generateStructuredLinks($map, $post_id);
                 $content = $result . $links;
-
+                error_log("Contenue :  $content");
                 $this->publisher->fillAndPublishContent($post_id, $content);
+                //error_log("Arrive à la fin");
 
-            } catch (\Throwable $e) {
+            } 
+            catch (\Throwable $e) {
                 error_log("Erreur dans processNode pour post_id $post_id : " . $e->getMessage());
             }
         }
     }
-
-
 
 
     private function processNodeSafe(int $post_id, array &$map, int $nb, string $keyword,PromptContext $context): string {
@@ -681,6 +704,7 @@ class CSB_Admin {
 
         // Génération du contenu HTML 
         $content = $this->generator->generateTexte($title,$this->debugModContent,"",$prompt);
+        //error_log("Contenue dans node $content");
         return '<article class="article-csb">' . $content . '<!-- Mode rapide -->' . '</article>';
 
     
@@ -815,22 +839,17 @@ class CSB_Admin {
     public function convertStructureToMap(string $raw, string $keyword, ?string $forced_link = null): array {
         $parsed_lines = $this->parseStructureLines($raw);
 
-        // Vérifie si la racine est déjà dans les lignes (niveau 0 avec le bon titre)
-        $hasRoot = !empty($parsed_lines) && $parsed_lines[0]['level'] === 0 && strtolower(trim($parsed_lines[0]['title'])) === strtolower(trim($keyword));
+        // Injecte le mot-clé principal comme racine
+        array_walk($parsed_lines, function (&$item) {
+            $item['level'] += 1; // Décale les niveaux
+        });
 
-        // Si pas de racine explicite, on l’ajoute manuellement
-        if (!$hasRoot) {
-            array_walk($parsed_lines, function (&$item) {
-                $item['level'] += 1; // Décale les niveaux
-            });
-
-            array_unshift($parsed_lines, [
-                'index' => -1,
-                'level' => 0,
-                'title' => $keyword,
-                'raw_indent' => 0
-            ]);
-        }
+        array_unshift($parsed_lines, [
+            'index' => -1,
+            'level' => 0,
+            'title' => $keyword,
+            'raw_indent' => 0
+        ]);
 
         return $this->buildMapFromParsedLines($parsed_lines, $forced_link);
     }

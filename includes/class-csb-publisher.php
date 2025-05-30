@@ -20,7 +20,8 @@ class CSB_Publisher {
     
 
     public function fillAndPublishContent(int $post_id, string $html_content): void {
-        $this->publishedCount++; 
+        $this->publishedCount++;
+        //error_log("Parametre fillAndPublishContent : $html_content");
         $updated = wp_update_post([
             'ID'           => $post_id,
             'post_content' => $html_content,
@@ -55,10 +56,13 @@ class CSB_Publisher {
     public function markAsGenerated(int $post_id): void {
         update_post_meta($post_id, '_csb_generated', 1);
     }
+
+    
     public function markAsRoot(int $post_id): void {
         $this->storeMeta($post_id, 0, 0);
         $this->markAsGenerated($post_id);
     }
+
 
     public function deletePost(int $post_id): void {
         if ($post_id > 0 && get_post($post_id)) {
