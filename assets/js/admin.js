@@ -71,7 +71,7 @@ jQuery(document).ready(function ($) {
                 const currentTotal = parseInt($('#csb-token-count').text()) || 0;
                 $('#csb-token-count').text(currentTotal + tokensUsed);
 
-                status.html('✅ <a href="' + response.data.link + '" target="_blank">Voir l’article</a>');
+                //status.html('✅ <a href="' + response.data.link + '" target="_blank">Voir l’article</a>');
                 button.text(`✅ Fait (${duration}s)`);
             } else {
                 status.text('❌ Erreur');

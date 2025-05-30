@@ -90,9 +90,9 @@ class CSB_Admin {
 
 
     private function capitalizeEachWord($text) {
-        $text = strtolower($text);
-        $text = preg_replace('#[/\\\\]+#', ' ', $text);
-        $text = ucwords($text);
+        // $text = strtolower($text);
+        // $text = preg_replace('#[/\\\\]+#', ' ', $text);
+        // $text = ucwords($text);
         return $text;
     }
 
@@ -171,8 +171,8 @@ class CSB_Admin {
 
 
                 foreach ($this->mapIdPost as $post_id => $node) {
-                    $this->mapIdPost[$post_id]["imageDescription"]=$this->processImageDescription($post_id, $this->mapIdPost, $keyword, $context);
-                    //$this->processImageDescription($post_id, $this->mapIdPost, $keyword, $context);
+                    $this->processImage($post_id, $this->mapIdPost, $keyword, $context);
+                    //$this->processImage($post_id, $this->mapIdPost, $keyword, $context);
                 }
 
 
@@ -342,35 +342,42 @@ class CSB_Admin {
         echo '<ul class="csb-structure-list level-' . $level . '" style="--level: ' . $level . ';">';
 
         foreach ($this->mapIdPost as $id => $node) {
-            if ($node['parent_id'] !== $parent_id) continue;
+            if ($node['parent_id'] === $parent_id){
+                $isLeaf = empty($node['children_ids']);
+                $isVirtual = $id < 0;
+                $node_prefix = $prefix . "[" . $id . "]";
+                $readonly = $generation ? '' : 'readonly';
 
-            $isLeaf = empty($node['children_ids']);
-            $isVirtual = $id < 0;
-            $node_prefix = $prefix . "[" . $id . "]";
-            $readonly = $generation ? '' : 'readonly';
+                echo '<li class="csb-node-item">';
+                echo '<div class="csb-node-controls">';
+                echo '<span class="csb-node-indent">-</span>';
 
-            echo '<li class="csb-node-item">';
-            echo '<div class="csb-node-controls">';
-            echo '<span class="csb-node-indent">-</span>';
+                echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" ' . $readonly . ' required />';
 
-            echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" ' . $readonly . ' required />';
+                // ► lien vers l’article s’il existe déjà
+                $linkHtml = '';
+                if (!empty($node['link']) && $node['post_id'] > 0) {
+                    $linkHtml = ' <a href="' . esc_url($node['link']) . '" target="_blank" class="csb-view-article">Voir</a>';
+                }
 
-            if ($isLeaf) {
-                //echo ' <em>(feuille)</em>';
+
+                if ($generation) {
+                    echo '<button type="button" class="button csb-generate-node" data-post-id="' . esc_attr($id) . '">⚙️ Générer </button>';
+                    echo '<button type="button" class="button csb-regenerate-image" data-post-id="' . esc_attr($id) . '">🎨 Régénérer l’image</button>';
+                }
+                // le span de statut contiendra encore la MAJ JS, mais on pré-remplit déjà le lien
+                echo '<span class="csb-node-status" data-post-id="' . esc_attr($id) . '">' . $linkHtml . '</span>';
+
+
+                echo '<span class="csb-node-status" data-post-id="' . esc_attr($id) . '"></span>';
+                echo '</div>';
+
+                // Récursion
+                $this->renderStructureFields($id, $prefix, $level + 1, $generation);
+                echo '</li>';
             }
 
-
-            if ($generation) {
-                echo '<button type="button" class="button csb-generate-node" data-post-id="' . esc_attr($id) . '">⚙️ Générer </button>';
-                echo '<button type="button" class="button csb-regenerate-image" data-post-id="' . esc_attr($id) . '">🎨 Régénérer l’image</button>';
-            }
-
-            echo '<span class="csb-node-status" data-post-id="' . esc_attr($id) . '"></span>';
-            echo '</div>';
-
-            // Récursion
-            $this->renderStructureFields($id, $prefix, $level + 1, $generation);
-            echo '</li>';
+            
         }
 
         echo '</ul>';
@@ -481,19 +488,19 @@ class CSB_Admin {
         $nonceValid = check_ajax_referer('csb_nonce', 'nonce', false);
 
         if (!$hasPermission) {
-            error_log("⛔ Accès refusé : utilisateur sans permission");
+            //error_log("⛔ Accès refusé : utilisateur sans permission");
             $result['data']['message'] = 'Non autorisé';
             $result['code'] = 403;
         } 
         else {
             if (!$nonceValid) {
-                error_log("⛔ Nonce invalide");
+                //error_log("⛔ Nonce invalide");
                 $result['data']['message'] = 'Nonce invalide';
                 $result['code'] = 403;
             } 
             else {
                 if (empty($_POST)) {
-                    error_log("❗ Requête AJAX vide");
+                    //error_log("❗ Requête AJAX vide");
                     $result['data']['message'] = 'Requête vide';
                     $result['code'] = 400;
                 } 
@@ -534,7 +541,7 @@ class CSB_Admin {
                             $demographic = !empty($_POST['csb_demographic']) ? sanitize_text_field($_POST['csb_demographic']) : null;
 
                             try {
-                                //error_log("🚀 Lancement de processNode pour post_id: $post_id");
+                                error_log("🚀 Lancement de processNode pour post_id: $post_id");
                                 $this->processNode($post_id, $this->mapIdPost, $nb, $keyword, $product, $demographic);
 
                                 update_option('csb_structure_map', $this->mapIdPost);
@@ -563,7 +570,7 @@ class CSB_Admin {
 
         $endTime = microtime(true);
         $duration = number_format($endTime - $startTime, 3);
-        error_log("✅ [END] ajaxProcessNode terminé à " . date('H:i:s') . " (⏱️ $duration sec)");
+        error_log("✅ [END] $tempTitle ajaxProcessNode terminé à " . date('H:i:s') . " (⏱️ $duration sec)");
 
 
         // ✅ Unique retour à la fin
@@ -641,21 +648,39 @@ class CSB_Admin {
     }
 
 
-    private function processImageDescription(int $post_id, array &$map, string $keyword, PromptContext $context): string {
-        if ($this->debugModImage) 
-            return ''; 
-        else{
-            $title = $map[$post_id]['title'];
+    private function processImage(int $post_id, array &$map, string $keyword, PromptContext $context): void
+    {
+        if (!$this->debugModImage) {
+            $title   = $map[$post_id]['title'];
+            $prompt  = $this->prompter->image($keyword, $title, $context);
 
-            // 1. Générer le prompt d'image
-            $prompt = $this->prompter->image($keyword, $title, $context);
+            // description purement transitoire : on ne la stocke plus
+            $description = $this->generator->generateTexte(
+                $title,
+                false,
+                '',
+                $prompt,
+                $this->debugModContent
+            );
+            //error_log("Description : $description");
 
-            // 2. Générer la description via GPT
-            $description = $this->generator->generateTexte($title, false, '', $prompt, $this->debugModContent);
+            $image_url = $this->generator->generateImage(
+                $title,
+                $description,
+                $context,
+                $this->defaultImage,
+                false
+            );
 
-            return $description ?: '';
+            error_log("Url : $image_url");
+
+            $this->publisher->setFeaturedImage($post_id, $image_url);
         }
+        else
+            error_log("Mod debug image");
+
     }
+
 
 
 
@@ -693,10 +718,10 @@ class CSB_Admin {
                 //     error_log("Image description $imageDescription");
 
                 $title = $map[$post_id]['title'];
-                if (!$this->debugModImage) {
-                    $image_url = $this->generator->generateImage($title, $imageDescription, $context, $this->defaultImage, $this->debugModImage);
-                    $this->publisher->setFeaturedImage($post_id, $image_url);
-                }
+                // if (!$this->debugModImage) {
+                //     $image_url = $this->generator->generateImage($title, $imageDescription, $context, $this->defaultImage, $this->debugModImage);
+                //     $this->publisher->setFeaturedImage($post_id, $image_url);
+                // }
                 
     
                 // Ajout des liens internes

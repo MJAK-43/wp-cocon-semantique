@@ -106,9 +106,22 @@ class CSB_Generator implements GeneratorInterface {
     }
 
 
-    public function generateImage(string $title, string $imageDescription, PromptContext $context, string $defaultImage, bool $test = false): string {
+    public function generateImage(
+        string $title,
+        string $imageDescription,
+        PromptContext $context,
+        string $defaultImage,
+        bool   $test = false
+    ): string {
+
         return $this->generate(
-            fn($desc) => $this->fetchImageFromPosteria($title, $desc),
+            function (string $desc) use ($title, $defaultImage) {
+                // tente de récupérer l’image distante
+                $url = $this->fetchImageFromPosteria($title, $desc);
+
+                // si l’API renvoie null ou chaîne vide → on bascule sur l’image par défaut
+                return empty($url) ? $defaultImage : $url;
+            },
             $imageDescription,
             $test,
             $defaultImage
@@ -139,32 +152,34 @@ class CSB_Generator implements GeneratorInterface {
 
 
     private function fetchImageFromPosteria(string $title, string $text): ?string {
-        // 🔥 Normalisation du titre et du texte
-        $normalized_title = $this->normalizeKeyword($title);
-        $normalized_text = $this->normalizeKeyword($text);
-        // echo "<br>";echo "<br>";
-        // print_r($normalized_title);
-        // echo "<br>";
-        // print_r($normalized_text);
-        // echo "<br>";echo "<br>";
-        // Construction de l'URL
-        $api_url = 'https://app.posteria.fr/crons/freepikImageCoconSemantique/' . rawurlencode($normalized_title) . '/' . rawurlencode($normalized_text);
-    
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $api_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    
-        $response = curl_exec($ch);
-        $err = curl_error($ch);
+
+        $keyword =$this->normalizeKeyword($title); 
+        $desc= $this->normalizeKeyword($text);     
+
+        error_log("Mot clé principal ".rawurlencode($keyword));
+        error_log("Text ".rawurlencode($desc));
+        
+        $api_url = 'https://app.posteria.fr/crons/freepikImageCoconSemantique/' . rawurlencode($keyword) . '/' . rawurlencode($desc);
+
+        $ch = curl_init($api_url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT        => 20,
+        ]);
+
+        $body   = curl_exec($ch);
+        $code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $err    = curl_error($ch);
         curl_close($ch);
-    
-        if ($err) {
-            error_log("Erreur lors de l'appel API d'image : " . $err);
-            return null;
+
+        if ($err || $code !== 200) {
+            error_log("❌ Image API error ($code) : $err | url=$api_url");
+            return null;                      
         }
-    
-        return trim($response); // Toujours trim au cas où il y a des espaces
-    }  
+
+        return trim($body);
+    }
+
 
 }
