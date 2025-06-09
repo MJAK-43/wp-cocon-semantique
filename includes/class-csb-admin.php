@@ -218,7 +218,7 @@ class CSB_Admin {
 
 
         $roots = $this->publisher->getAllRootNodesFromMeta();
-        echo '<h2>🌳 Racines des cocons exis</h2><ul>';
+        echo '<h2>🌳 Racines des cocons existant</h2><ul>';
         foreach ($roots as $root) {
             echo '<li><strong>' . esc_html($root['title']) . '</strong> - ';
             $this->renderLoadExistingButton($root['post_id']);
