@@ -184,9 +184,6 @@ class CSB_Admin {
                     background: #f8f8f8;
                     margin: 0;
                     padding: 40px;
-                    font-size: 36px;
-                    color: #0d2b52;
-                   
                 }
 
                 .header {
