@@ -216,6 +216,7 @@ class CSB_Admin {
                 color: #0d2b52;
                 display: flex;
                 align-items: center;
+                font-family: Arial, sans-serif;
             }
 
             .box h2::before {
@@ -226,6 +227,57 @@ class CSB_Admin {
                 background: #0d2b52;
                 margin-right: 10px;
                 border-radius: 3px;
+            }
+
+            /* Styles des boutons */
+            .button {
+                background-color: #0d2b52;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-family: Arial, sans-serif;
+                font-size: 14px;
+                margin: 5px;
+                transition: background-color 0.3s ease;
+            }
+
+            .button:hover {
+                background-color: #1a3d6b;
+            }
+
+            /* Style pour les boutons spéciaux */
+            .csb-generate-node {
+                background-color: #0d2b52;
+            }
+
+            .csb-regenerate-image {
+                background-color: #2c5282;
+            }
+
+            /* Style pour les titres de section */
+            h1, h2, h3 {
+                font-family: Arial, sans-serif;
+                color: #0d2b52;
+            }
+
+            /* Style pour les labels */
+            label {
+                font-family: Arial, sans-serif;
+                color: #0d2b52;
+                font-weight: bold;
+            }
+
+            /* Style pour les inputs */
+            input[type="text"], 
+            input[type="number"],
+            select {
+                font-family: Arial, sans-serif;
+                padding: 8px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                margin: 5px 0;
             }
         </style>
 
