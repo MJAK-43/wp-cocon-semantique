@@ -180,23 +180,14 @@ class CSB_Admin {
             <title>COCON SÉMANTIQUE GENERATOR</title>
             <style>
                 body {
-                    
-                    font-family: Arial, sans-serif; /* même que le body */
-    font-size: 36px;
-    color: #0d2b52;
-    display: flex;
-    align-items: center;
+                    font-family: Arial, sans-serif;
+                    background: #f8f8f8;
+                    margin: 0;
+                    padding: 40px;
+                    font-size: 36px;
+                    color: #0d2b52;
+                   
                 }
-
-                .main-title::before {
-    content: "";
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    background: #0d2b52;
-    margin-right: 10px;
-    border-radius: 3px;
-}
 
                 .header {
                     display: flex;
