@@ -233,6 +233,7 @@ class CSB_Admin {
             <div class="logo">
                 <img src="<?php echo CSB_URL . 'assets/img/Logo Plugin WP.png'; ?>" alt="COCON SÉMANTIQUE GENERATOR">
             </div>
+            <h1 style="margin-left: 20px; color: #0d2b52; font-size: 32px;">COCON SÉMANTIQUE GENERATOR</h1>
         </div>
 
         <div class="container">
