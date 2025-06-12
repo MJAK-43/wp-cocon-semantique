@@ -111,13 +111,11 @@ class CSB_Admin {
 
 
     public function render_admin_page() {
-
-        $keyword =$this->capitalizeEachWord(isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '');
+        $keyword = $this->capitalizeEachWord(isset($_POST['csb_keyword']) ? sanitize_text_field($_POST['csb_keyword']) : '');
         $this->nb = isset($_POST['csb_nb_nodes']) ? intval($_POST['csb_nb_nodes']) : 3;
         $use_existing_root = isset($_POST['use_existing_root']) ? 1 : 0;
         $existing_root_url = isset($_POST['existing_root_url']) ? $_POST['existing_root_url'] : '';
         $existing_root_url = $this->sanitizeToRelativeUrl($existing_root_url);
-
 
         if (empty($this->mapIdPost)) {
             $this->mapIdPost = get_option('csb_structure_map', []);
@@ -127,20 +125,14 @@ class CSB_Admin {
         if (isset($_POST['csb_clear_structure'])) {
             foreach ($this->mapIdPost as $node){
                 $post_id = $node['post_id'];
-                // Ne supprimer que les articles WordPress valides
                 if ($post_id > 0 && get_post($post_id)) {
                     $this->publisher->deletePost($post_id);
                 }
             }
-                
-            
             $this->mapIdPost = [];
             update_option('csb_structure_map', []);
             echo '<div class="notice notice-success is-dismissible"><p>🧹 Structure nettoyée et brouillons supprimés.</p></div>';
         }
-
-
-
 
         if (isset($_POST['load_existing_cocon'])) {
             $root_post_id = intval($_POST['load_existing_cocon']);
@@ -151,50 +143,26 @@ class CSB_Admin {
 
         if((!empty($keyword) && !empty($this->nb) && isset($_POST['submit']))||(isset($_POST['structure']))){
             if (!empty($keyword) && !empty($this->nb) && isset($_POST['submit'])) {
-
-                //$this->generator->setKeyword($keyword);
                 $product = isset($_POST['csb_product']) ? sanitize_text_field($_POST['csb_product']) : null;
                 $demographic = isset($_POST['csb_demographic']) ? sanitize_text_field($_POST['csb_demographic']) : null;
 
                 $context_data = [];
                 if (!empty($product)) $context_data['produit'] = $product;
                 if (!empty($demographic)) $context_data['public'] = $demographic;
-                //error_log(print_r($context));
                 $context = new PromptContext($context_data);
-                $this->processStructure(
-                    $this->mapIdPost,
-                    $keyword,
-                    $context,
-                    $use_existing_root,
-                    $existing_root_url
-                );
-
-
-                foreach ($this->mapIdPost as $post_id => $node) {
-                    $this->processImage($post_id, $this->mapIdPost, $keyword, $context);
-                    //$this->processImage($post_id, $this->mapIdPost, $keyword, $context);
-                }
-
-
-                // echo '<pre style="white-space: pre-wrap; background:#f7f7f7; padding:1em; border:1px solid #ccc;">';
-                // print_r($this->mapIdPost);
-                // echo '</pre>';
-                
-                
+                $raw = $this->generator->generateStructure($keyword, self::$depth, $this->nb, $context, $this->debugModStructure);
+                $this->mapIdPost = $this->convertStructureToMap($raw, $use_existing_root ? $existing_root_url : null);
                 update_option('csb_structure_map', $this->mapIdPost);
             }
 
             if (isset($_POST['structure'])) {
                 $this->handleStructureActionsMap($this->mapIdPost);
-                 // Synchronise les modifications utilisateur (titres)
                 if (isset($_POST['structure']) && is_array($_POST['structure'])) {
                     $this->updateMapFromPost($this->mapIdPost, $_POST['structure']);
                     update_option('csb_structure_map', $this->mapIdPost);
                 }
-
             }
         }
-
 
         if ($use_existing_root && !empty($existing_root_url)) {
             $first_node = reset($this->mapIdPost);
@@ -203,53 +171,120 @@ class CSB_Admin {
             }
         }
 
+        // Styles de référence
+        ?>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background: #f8f8f8;
+                margin: 0;
+                padding: 40px;
+            }
 
-        // echo '<div id="csb-token-tracker">';
-        // echo '<strong>🧠 Tokens utilisés :</strong> <span id="csb-token-count">0</span>';
-        // echo '</div>';
+            .header {
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                margin-bottom: 40px;
+            }
 
+            .logo img {
+                height: 250px;
+            }
 
+            .container {
+                display: flex;
+                justify-content: center;
+                gap: 50px;
+            }
 
-        echo '<div class="wrap">';
-        echo '<h1>Générateur de Cocon Sémantique</h1>';
-        // Vérification des paramètres système
-        $errors = $this->checkServerRequirements();
+            .box {
+                background: #fff;
+                padding: 40px;
+                border-radius: 15px;
+                box-shadow: 0 0 12px rgba(0,0,0,0.15);
+                width: 800px;
+                height: 800px;
+                text-align: left;
+                display: flex;
+                flex-direction: column;
+            }
 
-        if(!empty($errors)){
-            echo '<div class="notice notice-error"><ul>';
-            foreach ($errors as $error) {
-                echo '<li>' . esc_html($error) . '</li>';
+            .box h2 {
+                font-size: 22px;
+                margin-top: 0;
+                color: #0d2b52;
+                display: flex;
+                align-items: center;
+            }
+
+            .box h2::before {
+                content: "";
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                background: #0d2b52;
+                margin-right: 10px;
+                border-radius: 3px;
+            }
+        </style>
+
+        <div class="header">
+            <div class="logo">
+                <img src="<?php echo CSB_URL . 'assets/img/Logo Plugin WP.png'; ?>" alt="COCON SÉMANTIQUE GENERATOR">
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="box">
+                <h2>Paramètres</h2>
+                <?php
+                $errors = $this->checkServerRequirements();
+                if(!empty($errors)){
+                    echo '<div class="notice notice-error"><ul>';
+                    foreach ($errors as $error) {
+                        echo '<li>' . esc_html($error) . '</li>';
+                    }
+                    echo '</ul></div>';
+                } else {
+                    $this->checkDegradedModeNotice();
+                    $this->renderKeywordForm($keyword, $this->nb);
+                }
+                ?>
+            </div>
+            <div class="box">
+                <h2>Structure générée</h2>
+                <?php
+                $this->renderStructureForm('structure', 0, $use_existing_root, $existing_root_url);
+                ?>
+            </div>
+        </div>
+
+        <div class="csb-api-settings" style="margin-top: 20px; text-align: center;">
+            <p><strong>🔐 Clé API :</strong> <a href="<?php echo admin_url('admin.php?page=csb_settings'); ?>">Configurer ici</a></p>
+        </div>
+
+        <?php
+        $roots = $this->publisher->getAllRootNodesFromMeta();
+        if (!empty($roots)) {
+            echo '<div style="margin-top: 40px; text-align: center;">';
+            echo '<h2>🌳 Racines des cocons existants</h2><ul style="list-style: none; padding: 0;">';
+            foreach ($roots as $root) {
+                echo '<li style="margin: 10px 0;"><strong>' . esc_html($root['title']) . '</strong> - ';
+                $this->renderLoadExistingButton($root['post_id']);
+                echo '</li>';
             }
             echo '</ul></div>';
         }
-        else{
-            $this->checkDegradedModeNotice(); 
-            $this->renderKeywordForm($keyword, $this->nb);
-            $this->renderStructureForm('structure', 0, $use_existing_root, $existing_root_url);
-        }
-
-        echo '</div>';
-
-        echo '<div class="csb-api-settings">';
-        echo '<p><strong>🔐 Clé API :</strong> <a href="' . admin_url('admin.php?page=csb_settings') . '">Configurer ici</a></p>';
-        echo '</div>';
-
-
-
-        $roots = $this->publisher->getAllRootNodesFromMeta();
-        echo '<h2>🌳 Racines des cocons existants</h2><ul>';
-        foreach ($roots as $root) {
-            echo '<li><strong>' . esc_html($root['title']) . '</strong> - ';
-            $this->renderLoadExistingButton($root['post_id']);
-            echo '</li>';
-        }
-        echo '</ul>';
-
 
         if (!empty($this->mapIdPostLoaded)) {
+            echo '<div style="margin-top: 40px; text-align: center;">';
             echo '<h2>📂 Structure du cocon chargé</h2>';
             $this->renderLoadedStructure();
+            echo '</div>';
         }
+        ?>
+        <?php
     }
 
 
@@ -306,12 +341,12 @@ class CSB_Admin {
         echo '<td><input type="checkbox" id="use_existing_root" name="use_existing_root" value="1" ' . checked(1, $use_existing_root, false) . '></td></tr>';
 
         // Champ URL
-        echo '<tr><th><label for="existing_root_url">URL de l’article racine</label></th>';
+        echo '<tr><th><label for="existing_root_url">URL de l\'article racine</label></th>';
         echo '<td><input type="text" id="existing_root_url" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" class="regular-text">';
         echo '<p class="description">Uniquement une URL relative (ex: /mon-article)</p>';
 
         if (!empty($original_url) && str_starts_with($original_url, 'http')) {
-            echo '<p>❗ L’URL absolue a été automatiquement convertie en lien relatif';
+            echo '<p>❗ L\'URL absolue a été automatiquement convertie en lien relatif';
         }
 
         echo '</td></tr>';
@@ -354,7 +389,7 @@ class CSB_Admin {
 
                 echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" ' . $readonly . ' required />';
 
-                // ► lien vers l’article s’il existe déjà
+                // ► lien vers l'article s'il existe déjà
                 $linkHtml = '';
                 if (!empty($node['link']) && $node['post_id'] > 0) {
                     $linkHtml = ' <a href="' . esc_url($node['link']) . '" target="_blank" class="csb-view-article">Voir</a>';
@@ -363,7 +398,7 @@ class CSB_Admin {
 
                 if ($generation) {
                     echo '<button type="button" class="button csb-generate-node" data-post-id="' . esc_attr($id) . '">⚙️ Générer </button>';
-                    echo '<button type="button" class="button csb-regenerate-image" data-post-id="' . esc_attr($id) . '">🎨 Régénérer l’image</button>';
+                    echo '<button type="button" class="button csb-regenerate-image" data-post-id="' . esc_attr($id) . '">🎨 Régénérer l\'image</button>';
                 }
                 // le span de statut contiendra encore la MAJ JS, mais on pré-remplit déjà le lien
                 echo '<span class="csb-node-status" data-post-id="' . esc_attr($id) . '">' . $linkHtml . '</span>';
@@ -710,7 +745,7 @@ class CSB_Admin {
                 // Choix du mode de génération
                 $result = $this->processNodeFast($post_id, $map, $nb, $keyword, $context);
                 //error_log("resultat génération $result");
-                // Génération de l’image
+                // Génération de l'image
                 $imageDescription = $map[$post_id]['imageDescription'] ?? '';
                 // if($imageDescription=='')
                 //     error_log("Description image vide");
@@ -818,7 +853,7 @@ class CSB_Admin {
             }
         }
 
-        // Aucun enfant réel trouvé ⇒ c’est une feuille
+        // Aucun enfant réel trouvé ⇒ c'est une feuille
         return true;
     }
 
