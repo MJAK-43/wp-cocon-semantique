@@ -171,145 +171,138 @@ class CSB_Admin {
             }
         }
 
-        // Nouvelle structure HTML
+        // Styles de référence
         ?>
-        <!DOCTYPE html>
-        <html lang="fr">
-        <head>
-            <meta charset="UTF-8">
-            <title>COCON SÉMANTIQUE GENERATOR</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    background: #f8f8f8;
-                    margin: 0;
-                    padding: 40px;
-                }
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background: #f8f8f8;
+                margin: 0;
+                padding: 40px;
+            }
 
-                .header {
-                    display: flex;
-                    align-items: center;
-                    justify-content: flex-start;
-                    margin-bottom: 40px;
-                }
+            .header {
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                margin-bottom: 40px;
+            }
 
-                .logo img {
-                    height: 250px;
-                }
+            .logo img {
+                height: 250px;
+            }
 
-                .container {
-                    display: flex;
-                    justify-content: center;
-                    gap: 50px;
-                }
+            .container {
+                display: flex;
+                justify-content: center;
+                gap: 50px;
+            }
 
-                .box {
-                    background: #fff;
-                    padding: 40px;
-                    border-radius: 15px;
-                    box-shadow: 0 0 12px rgba(0,0,0,0.15);
-                    width: 800px;
-                    height: 800px;
-                    text-align: left;
-                    display: flex;
-                    flex-direction: column;
-                }
+            .box {
+                background: #fff;
+                padding: 40px;
+                border-radius: 15px;
+                box-shadow: 0 0 12px rgba(0,0,0,0.15);
+                width: 800px;
+                height: 800px;
+                text-align: left;
+                display: flex;
+                flex-direction: column;
+            }
 
-                .box h2 {
-                    font-size: 22px;
-                    margin-top: 0;
-                    color: #0d2b52;
-                    display: flex;
-                    align-items: center;
-                }
+            .box h2 {
+                font-size: 22px;
+                margin-top: 0;
+                color: #0d2b52;
+                display: flex;
+                align-items: center;
+            }
 
-                .box h2::before {
-                    content: "";
-                    display: inline-block;
-                    width: 20px;
-                    height: 20px;
-                    background: #0d2b52;
-                    margin-right: 10px;
-                    border-radius: 3px;
-                }
+            .box h2::before {
+                content: "";
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                background: #0d2b52;
+                margin-right: 10px;
+                border-radius: 3px;
+            }
 
-                /* Styles WordPress existants */
-                .notice {
-                    margin: 5px 0 15px;
-                    padding: 1px 12px;
-                }
-                .notice-success {
-                    border-left: 4px solid #46b450;
-                    background: #ecf7ed;
-                }
-                .notice-error {
-                    border-left: 4px solid #dc3232;
-                    background: #fbeaea;
-                }
-                .notice-warning {
-                    border-left: 4px solid #ffb900;
-                    background: #fff8e5;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <div class="logo">
-                    <img src="<?php echo CSB_URL . 'assets/img/Logo Plugin WP.png'; ?>" alt="COCON SÉMANTIQUE GENERATOR">
-                </div>
+            /* Styles WordPress existants */
+            .notice {
+                margin: 5px 0 15px;
+                padding: 1px 12px;
+            }
+            .notice-success {
+                border-left: 4px solid #46b450;
+                background: #ecf7ed;
+            }
+            .notice-error {
+                border-left: 4px solid #dc3232;
+                background: #fbeaea;
+            }
+            .notice-warning {
+                border-left: 4px solid #ffb900;
+                background: #fff8e5;
+            }
+        </style>
+
+        <div class="header">
+            <div class="logo">
+                <img src="<?php echo CSB_URL . 'assets/img/Logo Plugin WP.png'; ?>" alt="COCON SÉMANTIQUE GENERATOR">
             </div>
+            <h1 style="margin-left: 20px; color: #0d2b52; font-size: 32px;">COCON SÉMANTIQUE GENERATOR</h1>
+        </div>
 
-            <div class="container">
-                <div class="box">
-                    <h2>Paramètres</h2>
-                    <?php
-                    $errors = $this->checkServerRequirements();
-                    if(!empty($errors)){
-                        echo '<div class="notice notice-error"><ul>';
-                        foreach ($errors as $error) {
-                            echo '<li>' . esc_html($error) . '</li>';
-                        }
-                        echo '</ul></div>';
-                    } else {
-                        $this->checkDegradedModeNotice();
-                        $this->renderKeywordForm($keyword, $this->nb);
+        <div class="container">
+            <div class="box">
+                <h2>Paramètres</h2>
+                <?php
+                $errors = $this->checkServerRequirements();
+                if(!empty($errors)){
+                    echo '<div class="notice notice-error"><ul>';
+                    foreach ($errors as $error) {
+                        echo '<li>' . esc_html($error) . '</li>';
                     }
-                    ?>
-                </div>
-                <div class="box">
-                    <h2>Structure générée</h2>
-                    <?php
-                    $this->renderStructureForm('structure', 0, $use_existing_root, $existing_root_url);
-                    ?>
-                </div>
-            </div>
-
-            <div class="csb-api-settings" style="margin-top: 20px; text-align: center;">
-                <p><strong>🔐 Clé API :</strong> <a href="<?php echo admin_url('admin.php?page=csb_settings'); ?>">Configurer ici</a></p>
-            </div>
-
-            <?php
-            $roots = $this->publisher->getAllRootNodesFromMeta();
-            if (!empty($roots)) {
-                echo '<div style="margin-top: 40px; text-align: center;">';
-                echo '<h2>🌳 Racines des cocons existants</h2><ul style="list-style: none; padding: 0;">';
-                foreach ($roots as $root) {
-                    echo '<li style="margin: 10px 0;"><strong>' . esc_html($root['title']) . '</strong> - ';
-                    $this->renderLoadExistingButton($root['post_id']);
-                    echo '</li>';
+                    echo '</ul></div>';
+                } else {
+                    $this->checkDegradedModeNotice();
+                    $this->renderKeywordForm($keyword, $this->nb);
                 }
-                echo '</ul></div>';
-            }
+                ?>
+            </div>
+            <div class="box">
+                <h2>Structure générée</h2>
+                <?php
+                $this->renderStructureForm('structure', 0, $use_existing_root, $existing_root_url);
+                ?>
+            </div>
+        </div>
 
-            if (!empty($this->mapIdPostLoaded)) {
-                echo '<div style="margin-top: 40px; text-align: center;">';
-                echo '<h2>📂 Structure du cocon chargé</h2>';
-                $this->renderLoadedStructure();
-                echo '</div>';
+        <div class="csb-api-settings" style="margin-top: 20px; text-align: center;">
+            <p><strong>🔐 Clé API :</strong> <a href="<?php echo admin_url('admin.php?page=csb_settings'); ?>">Configurer ici</a></p>
+        </div>
+
+        <?php
+        $roots = $this->publisher->getAllRootNodesFromMeta();
+        if (!empty($roots)) {
+            echo '<div style="margin-top: 40px; text-align: center;">';
+            echo '<h2>🌳 Racines des cocons existants</h2><ul style="list-style: none; padding: 0;">';
+            foreach ($roots as $root) {
+                echo '<li style="margin: 10px 0;"><strong>' . esc_html($root['title']) . '</strong> - ';
+                $this->renderLoadExistingButton($root['post_id']);
+                echo '</li>';
             }
-            ?>
-        </body>
-        </html>
+            echo '</ul></div>';
+        }
+
+        if (!empty($this->mapIdPostLoaded)) {
+            echo '<div style="margin-top: 40px; text-align: center;">';
+            echo '<h2>📂 Structure du cocon chargé</h2>';
+            $this->renderLoadedStructure();
+            echo '</div>';
+        }
+        ?>
         <?php
     }
 
