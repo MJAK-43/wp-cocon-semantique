@@ -1,0 +1,323 @@
+/* COCON SÉMANTIQUE ADMIN STYLES */
+
+/* Reset et styles de base */
+body.cocon-semantique-admin {
+    font-family: Arial, sans-serif;
+    background: #f8f8f8;
+    margin: 0;
+    padding: 40px;
+}
+
+/* Header avec logo */
+.csb-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 40px;
+}
+
+.csb-logo img {
+    height: 250px;
+}
+
+.csb-logo h1 {
+    color: #0d2b52;
+    font-size: 32px;
+    margin: 0;
+    font-weight: bold;
+}
+
+/* Container principal */
+.csb-container {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    margin-top: 20px;
+}
+
+/* Boîtes de contenu */
+.csb-box {
+    background: #fff;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.15);
+    width: 800px;
+    height: 800px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.csb-box h2 {
+    font-size: 22px;
+    margin-top: 0;
+    color: #0d2b52;
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.csb-box h2::before {
+    content: "";
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background: #0d2b52;
+    margin-right: 10px;
+    border-radius: 3px;
+}
+
+/* Styles pour les formulaires */
+.csb-form-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.csb-form-table th {
+    text-align: left;
+    padding: 12px 0;
+    font-weight: 600;
+    color: #333;
+    width: 200px;
+    vertical-align: top;
+}
+
+.csb-form-table td {
+    padding: 12px 0;
+}
+
+.csb-form-table input[type="text"],
+.csb-form-table input[type="number"],
+.csb-form-table input[type="url"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.csb-form-table input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.csb-form-table .description {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+/* Boutons */
+.csb-button {
+    background: #0d2b52;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.3s ease;
+}
+
+.csb-button:hover {
+    background: #1a4a8a;
+}
+
+.csb-button-primary {
+    background: #0073aa;
+}
+
+.csb-button-primary:hover {
+    background: #005a87;
+}
+
+.csb-button-danger {
+    background: #dc3232;
+}
+
+.csb-button-danger:hover {
+    background: #a00;
+}
+
+/* Structure générée */
+.csb-structure-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.csb-structure-list ul {
+    padding-left: 20px;
+    margin: 10px 0;
+}
+
+.csb-node-item {
+    margin: 10px 0;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 5px;
+    border-left: 3px solid #0d2b52;
+}
+
+.csb-node-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.csb-node-indent {
+    color: #666;
+    font-weight: bold;
+}
+
+.csb-node-controls input[type="text"] {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.csb-node-status {
+    font-size: 12px;
+    color: #666;
+}
+
+/* Actions de structure */
+.csb-structure-actions {
+    margin-top: 20px;
+    padding: 20px 0;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Notices WordPress */
+.notice {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 5px;
+    border-left: 4px solid;
+}
+
+.notice-success {
+    background: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+}
+
+.notice-error {
+    background: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.notice-warning {
+    background: #fff3cd;
+    border-color: #ffc107;
+    color: #856404;
+}
+
+/* Éléments supplémentaires */
+.csb-api-settings {
+    margin: 30px 0;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.csb-api-settings p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.csb-api-settings a {
+    color: #0073aa;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.csb-api-settings a:hover {
+    text-decoration: underline;
+}
+
+/* Styles pour les racines existantes */
+.csb-container + h2 {
+    color: #0d2b52;
+    font-size: 24px;
+    margin: 40px 0 20px 0;
+    padding-left: 40px;
+}
+
+.csb-container + h2 + ul {
+    padding-left: 40px;
+    margin-bottom: 30px;
+}
+
+.csb-container + h2 + ul li {
+    margin: 10px 0;
+    padding: 10px;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .csb-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .csb-box {
+        width: 100%;
+        max-width: 800px;
+        height: auto;
+        min-height: 600px;
+    }
+}
+
+@media (max-width: 768px) {
+    body.cocon-semantique-admin {
+        padding: 20px;
+    }
+    
+    .csb-box {
+        padding: 20px;
+    }
+    
+    .csb-form-table th,
+    .csb-form-table td {
+        display: block;
+        width: 100%;
+    }
+    
+    .csb-form-table th {
+        padding-bottom: 5px;
+    }
+}
+
+/* Scrollbar personnalisée */
+.csb-box::-webkit-scrollbar {
+    width: 8px;
+}
+
+.csb-box::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.csb-box::-webkit-scrollbar-thumb {
+    background: #0d2b52;
+    border-radius: 4px;
+}
+
+.csb-box::-webkit-scrollbar-thumb:hover {
+    background: #1a4a8a;
+} 

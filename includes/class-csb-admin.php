@@ -189,10 +189,24 @@ class CSB_Admin {
         // echo '<strong>🧠 Tokens utilisés :</strong> <span id="csb-token-count">0</span>';
         // echo '</div>';
 
+        // Ajout de la classe CSS au body
+        echo '<script>document.body.classList.add("cocon-semantique-admin");</script>';
 
+        // Header avec logo
+        echo '<div class="csb-header">';
+        echo '<div class="csb-logo">';
+        $logo_path = plugin_dir_path(__DIR__) . 'assets/img/Logo Plugin WP.png';
+        if (file_exists($logo_path)) {
+            echo '<img src="' . plugin_dir_url(__DIR__) . 'assets/img/Logo Plugin WP.png" alt="COCON SÉMANTIQUE GENERATOR">';
+        } else {
+            echo '<h1 style="color: #0d2b52; font-size: 32px; margin: 0;">COCON SÉMANTIQUE GENERATOR</h1>';
+        }
+        echo '</div>';
+        echo '</div>';
 
-        echo '<div class="wrap">';
-        echo '<h1>Générateur de Cocon Sémantique</h1>';
+        // Container principal
+        echo '<div class="csb-container">';
+
         // Vérification des paramètres système
         $errors = $this->checkServerRequirements();
 
@@ -205,11 +219,21 @@ class CSB_Admin {
         }
         else{
             $this->checkDegradedModeNotice(); 
-            $this->renderKeywordForm($keyword, $this->nb);
-            $this->renderStructureForm('structure', 0, $use_existing_root, $existing_root_url);
         }
 
+        // Boîte gauche - Paramètres
+        echo '<div class="csb-box">';
+        echo '<h2>Paramètres</h2>';
+        $this->renderKeywordForm($keyword, $this->nb);
         echo '</div>';
+
+        // Boîte droite - Structure générée
+        echo '<div class="csb-box">';
+        echo '<h2>Structure générée</h2>';
+        $this->renderStructureForm('structure', 0, $use_existing_root, $existing_root_url);
+        echo '</div>';
+
+        echo '</div>'; // Fin du container
 
         echo '<div class="csb-api-settings">';
         echo '<p><strong>🔐 Clé API :</strong> <a href="' . admin_url('admin.php?page=csb_settings') . '">Configurer ici</a></p>';
@@ -252,9 +276,9 @@ class CSB_Admin {
         }
 
         echo '<div class="csb-structure-actions">';
-        echo '<button type="button" id="csb-generate-all" class="button button-primary">🚀 Tout générer</button> ';
-        echo '<button type="submit" name="csb_stop_generation" class="button">🛑 Stopper la génération</button> ';
-        echo '<button type="submit" name="csb_clear_structure" class="button button-danger" onclick="return confirm(\'Supprimer la structure et tous les brouillons ?\');">Supprimer le cocon</button>';
+        echo '<button type="button" id="csb-generate-all" class="csb-button csb-button-primary">🚀 Tout générer</button> ';
+        echo '<button type="submit" name="csb_stop_generation" class="csb-button">🛑 Stopper la génération</button> ';
+        echo '<button type="submit" name="csb_clear_structure" class="csb-button csb-button-danger" onclick="return confirm(\'Supprimer la structure et tous les brouillons ?\');">Supprimer le cocon</button>';
         echo '</div>';
 
         echo '</form>';
@@ -272,27 +296,27 @@ class CSB_Admin {
 
         
         echo '<form method="post">';
-        echo '<table class="form-table">';
+        echo '<table class="csb-form-table">';
 
         // Champ mot-clé
         echo '<tr><th><label for="csb_keyword">Mots Clés principaux</label></th>';
-        echo '<td><input type="text" id="csb_keyword" name="csb_keyword" value="' . esc_attr($keyword) . '" class="regular-text" required></td></tr>';
+        echo '<td><input type="text" id="csb_keyword" name="csb_keyword" value="' . esc_attr($keyword) . '" required></td></tr>';
 
         // Champ nombre de niveaux
         echo '<tr><th><label for="csb_nb_nodes">Nombre de sous-niveaux</label></th>';
-        echo '<td><input type="number" id="csb_nb_nodes" name="csb_nb_nodes" value="' . esc_attr($nb) . '" min="1" max="5" required class="regular-text" /></td></tr>';
+        echo '<td><input type="number" id="csb_nb_nodes" name="csb_nb_nodes" value="' . esc_attr($nb) . '" min="1" max="5" required /></td></tr>';
 
         // Case à cocher
         echo '<tr><th><label for="use_existing_root">Utiliser un article racine existant</label></th>';
         echo '<td><input type="checkbox" id="use_existing_root" name="use_existing_root" value="1" ' . checked(1, $use_existing_root, false) . '></td></tr>';
 
         // Champ URL
-        echo '<tr><th><label for="existing_root_url">URL de l’article racine</label></th>';
-        echo '<td><input type="text" id="existing_root_url" name="existing_root_url" value="' . esc_attr($existing_root_url) . '" class="regular-text">';
+        echo '<tr><th><label for="existing_root_url">URL de l\'article racine</label></th>';
+        echo '<td><input type="text" id="existing_root_url" name="existing_root_url" value="' . esc_attr($existing_root_url) . '">';
         echo '<p class="description">Uniquement une URL relative (ex: /mon-article)</p>';
 
         if (!empty($original_url) && str_starts_with($original_url, 'http')) {
-            echo '<p>❗ L’URL absolue a été automatiquement convertie en lien relatif';
+            echo '<p>❗ L\'URL absolue a été automatiquement convertie en lien relatif';
         }
 
         echo '</td></tr>';
@@ -304,17 +328,17 @@ class CSB_Admin {
 
         // Champ Produit
         echo '<tr><th><label for="csb_product">Produit vendu</label></th>';
-        echo '<td><input type="text" id="csb_product" name="csb_product" value="' . esc_attr($product) . '" class="regular-text">';
+        echo '<td><input type="text" id="csb_product" name="csb_product" value="' . esc_attr($product) . '">';
         echo '<p class="description">Ex : formations, bijoux, vêtements, accompagnement, etc.</p></td></tr>';
 
 
         // Champ Démographique
         echo '<tr><th><label for="csb_demographic">Démographique</label></th>';
-        echo '<td><input type="text" id="csb_demographic" name="csb_demographic" value="' . esc_attr($demographic) . '" class="regular-text">';
+        echo '<td><input type="text" id="csb_demographic" name="csb_demographic" value="' . esc_attr($demographic) . '">';
         echo '<p class="description">Ex : parents, retraités, étudiants, etc.</p></td></tr>';
 
         echo '</table>';
-        submit_button('Générer la structure', 'primary', 'submit');
+        echo '<button type="submit" name="submit" class="csb-button csb-button-primary">Générer la structure</button>';
         echo '</form>';
     }
 
@@ -335,10 +359,10 @@ class CSB_Admin {
                 echo '<span class="csb-node-indent">-</span>';
                 
                 $readonly = $generation ? '' : 'readonly';
-                echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" class="regular-text" ' . $readonly . ' required />';
+                echo '<input type="text" name="' . esc_attr($node_prefix . '[title]') . '" value="' . esc_attr($node['title']) . '" ' . $readonly . ' required />';
 
                 if ($generation) {
-                    echo '<button type="button" class="button csb-generate-node" data-post-id="' . esc_attr($id) . '">⚙️ Générer </button>';
+                    echo '<button type="button" class="csb-button csb-generate-node" data-post-id="' . esc_attr($id) . '">⚙️ Générer </button>';
                 }
 
                 echo '<span class="csb-node-status" data-post-id="' . esc_attr($id) . '"></span>';
@@ -460,6 +484,13 @@ class CSB_Admin {
 
 
     public function enqueue_admin_assets() {
+        // Vérifier que nous sommes sur la page d'administration du plugin
+        $screen = get_current_screen();
+        if ($screen && $screen->id !== 'toplevel_page_csb_admin') {
+            return;
+        }
+
+        // JavaScript
         wp_enqueue_script(
             'csb-admin',
             plugin_dir_url(__DIR__) . $this->jsFile,
@@ -468,12 +499,12 @@ class CSB_Admin {
             true
         );
 
-        // CSS
+        // CSS d'administration
         wp_enqueue_style(
             'csb-admin-style',
-            plugin_dir_url(__DIR__) . $this->cssFile,
+            plugin_dir_url(__DIR__) . 'assets/css/csb-admin.css',
             [],
-            filemtime(plugin_dir_path(__DIR__) . $this->cssFile)
+            filemtime(plugin_dir_path(__DIR__) . 'assets/css/csb-admin.css')
         );
 
         wp_localize_script('csb-admin', 'csbData', [
@@ -541,7 +572,7 @@ class CSB_Admin {
                     $result = $this->processNodeSafe($post_id, $map, $nb, $keyword, $context);
                 }
 
-                // Génération de l’image
+                // Génération de l'image
                 $title = $map[$post_id]['title'];
                 if (!$this->debugModImage) {
                     $image_url = $this->generator->generateImage($title, $keyword, $context, $this->debugModImage);
@@ -651,7 +682,7 @@ class CSB_Admin {
             }
         }
 
-        // Aucun enfant réel trouvé ⇒ c’est une feuille
+        // Aucun enfant réel trouvé ⇒ c'est une feuille
         return true;
     }
 
@@ -683,7 +714,7 @@ class CSB_Admin {
         $link = '';
         
         if ($post_id === null) {
-            // Cas classique : création d’un vrai article WordPress
+            // Cas classique : création d'un vrai article WordPress
             $post_id = $this->publisher->createPostDraft($title, $level, $parent_id);
             $this->publisher->storeMeta($post_id, $level, $parent_id);
 
@@ -697,7 +728,7 @@ class CSB_Admin {
         } 
         else {
             //error_log( "voici le titre $title");
-            // Cas d’une feuille virtuelle (pas de vrai post WP)
+            // Cas d'une feuille virtuelle (pas de vrai post WP)
             if ($forced_link !== null) {
                 $post = get_page_by_path(ltrim($forced_link, '/'), OBJECT, 'post');
                 if ($post) {
@@ -764,7 +795,7 @@ class CSB_Admin {
 
             $parent_id = $level === 0 ? null : ($stack[$level - 1]['post_id'] ?? null);
 
-            //Détermine si c’est une feuille
+            //Détermine si c'est une feuille
             $isLeaf = true;
             if ($i + 1 < $total && $parsed_lines[$i + 1]['level'] > $level) {
                 $isLeaf = false;
@@ -781,7 +812,7 @@ class CSB_Admin {
                 //error_log("forced_link reçu : $forced_link");
             }
 
-            //Crée l’entrée
+            //Crée l'entrée
             if ($isLeaf) {
                 $entry = $this->createMapEntry($title, $parent_id, null, $level, $virtualId);
                 $post_id = $virtualId;

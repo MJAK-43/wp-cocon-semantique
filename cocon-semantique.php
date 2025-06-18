@@ -54,7 +54,7 @@ function csb_initialize_plugin() {
 
     // Chemins relatifs pour JS et CSS
     $jsPath = 'assets/js/admin.js';
-    $cssPath = 'assets/css/csb-front.css';
+    $cssPath = 'assets/css/csb-admin.css';
 
     // Instanciation avec les chemins
     new CSB_Admin($generator, $jsPath, $cssPath);
